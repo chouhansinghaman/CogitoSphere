@@ -41,58 +41,60 @@ export default function Login() {
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-red-700">
       {/* Left: Form */}
       <div className="flex items-center justify-center p-10">
-        <form onSubmit={onSubmit} className="w-full max-w-sm space-y-6">
-          <h1 className="text-3xl font-bold">Welcome back!</h1>
-          <p className="text-gray-600 text-sm">
-            Simplify your workflow and boost your productivity with <b>ScholarSphere</b>.
-            Get started for free.
-          </p>
+        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+          <form onSubmit={onSubmit} className="w-full max-w-sm space-y-6">
+            <h1 className="text-3xl font-bold">Welcome back!</h1>
+            <p className="text-gray-600 text-sm">
+              Simplify your workflow and boost your productivity with <b>ScholarSphere</b>.
+              Get started for free.
+            </p>
 
-          <input
-            className="w-full border rounded-lg px-4 py-2"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <div className="relative">
             <input
-              type={showPassword ? "text" : "password"}
               className="w-full border rounded-lg px-4 py-2"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <span
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-2 cursor-pointer text-gray-500"
-            >
-              {showPassword ? "🙈" : "👁️"}
-            </span>
-          </div>
 
-          <div className="flex justify-between items-center text-sm">
-            <Link to="/forgot" className="text-gray-500 hover:underline">
-              Forgot Password?
-            </Link>
-          </div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="w-full border rounded-lg px-4 py-2"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2 cursor-pointer text-gray-500"
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </span>
+            </div>
 
-          <button className="w-full bg-black text-white rounded-full py-2">
-            Login
-          </button>
+            <div className="flex justify-between items-center text-sm">
+              <Link to="/forgot" className="text-gray-500 hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
 
-          <p className="text-sm text-center">
-            Not a member?{" "}
-            <button onClick={handleSwitch} className="text-green-600 hover:underline">
-              Register now
+            <button className="w-full bg-black text-white rounded-full py-2">
+              Login
             </button>
-          </p>
-        </form>
+
+            <p className="text-sm text-center">
+              Not a member?{" "}
+              <button onClick={handleSwitch} className="text-green-600 hover:underline">
+                Register now
+              </button>
+            </p>
+          </form>
+        </div>
       </div>
 
       {/* Right: Illustration */}

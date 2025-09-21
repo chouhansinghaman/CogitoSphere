@@ -8,6 +8,7 @@ import {
   FaCog,
   FaUser,
 } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const navItems = [
   { id: "home", icon: <FaHome size={20} />, label: "Home" },
@@ -19,6 +20,12 @@ const navItems = [
 
 export default function Sidebar() {
   const [active, setActive] = useState("home");
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    nav("/login"); // redirect user back to login after logout
+  };
 
   return (
     <aside className="bg-black text-white flex flex-col items-center py-6 rounded-r-3xl min-h-screen w-20 shadow-lg">
@@ -33,9 +40,8 @@ export default function Sidebar() {
           <div
             key={item.id}
             onClick={() => setActive(item.id)}
-            className={`relative group flex items-center justify-center p-3 rounded-xl cursor-pointer transition-all duration-300 ${
-              active === item.id ? "bg-green-500 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"
-            }`}
+            className={`relative group flex items-center justify-center p-3 rounded-xl cursor-pointer transition-all duration-300 ${active === item.id ? "bg-green-500 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"
+              }`}
           >
             {item.icon}
             {/* Tooltip */}
@@ -52,6 +58,14 @@ export default function Sidebar() {
           <FaUser size={22} />
         </div>
       </div>
+
+      {/* Logout button */}
+      <button
+        onClick={handleLogout}
+        className="w-full bg-red-600 text-white rounded py-2 hover:bg-red-700"
+      >
+        Logout
+      </button>
     </aside>
   );
 }
