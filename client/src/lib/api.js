@@ -1,17 +1,20 @@
+// src/lib/api.js
 import axios from "axios";
 
 const API = axios.create({
+<<<<<<< HEAD
   baseURL: import.meta.env.VITE_API_BASE_URL,
+=======
+  baseURL: import.meta.env.VITE_API_URL, // ✅ points to local or production backend
+>>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
 });
 
-// attach bearer token if present
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// optional: response error normalization
 API.interceptors.response.use(
   (r) => r,
   (err) => {

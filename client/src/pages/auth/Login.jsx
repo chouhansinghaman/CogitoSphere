@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
+<<<<<<< HEAD
 import { loginApi } from "../../services/api.auth.js"; // ✅ fixed path
+=======
+import { loginApi } from "../../services/api.auth.js";
+>>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
 import Loader from "../../components/Loader";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 
@@ -58,7 +62,12 @@ export default function Login() {
 
     setIsApiLoading(true);
     try {
+<<<<<<< HEAD
       const res = await loginApi(formData.email, formData.password); // ✅ use helper
+=======
+      // ✅ Use helper function
+      const res = await loginApi(formData.email, formData.password);
+>>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
       login(res.data.token, res.data.user);
       toast.success("Login successful! Welcome back.");
       navigate("/home");
@@ -167,14 +176,22 @@ export default function Login() {
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* Right Panel */}
+=======
+      {/* Right Panel: Slider */}
+>>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
       <div className="hidden lg:flex flex-col justify-center items-center bg-black p-10 text-white text-center relative overflow-hidden">
         <div className="w-full max-w-md h-[60vh] relative">
           {sliderImages.map((img, index) => (
             <img
               key={index}
               src={img}
+<<<<<<< HEAD
               alt={`Slide ${index + 1}`}
+=======
+              alt={`Slider image ${index + 1}`}
+>>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
               className={`absolute top-0 left-0 w-full h-full object-cover rounded-2xl transition-opacity duration-1000 ${
                 index === currentSlide ? "opacity-100" : "opacity-0"
               }`}
@@ -192,8 +209,7 @@ export default function Login() {
           ))}
         </div>
         <p className="mt-6 text-lg max-w-xs">
-          Make your work easier and organized with{" "}
-          <span className="font-bold">ScholarSphere</span>
+          Make your work easier and organized with <span className="font-bold">ScholarSphere</span>
         </p>
       </div>
     </div>
