@@ -128,16 +128,13 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-<<<<<<< HEAD
       const res = await fetch(`${API_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
-=======
       const res = await fetch('import.meta.env.VITE_API_URL/api/notifications', {
         // 👇 ADD THIS HEADERS OBJECT
         headers: {
           'Authorization': `Bearer ${token}`,
         },
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
       });
       if (!res.ok) throw new Error('Failed to fetch notifications.');
       const data = await res.json();
@@ -171,13 +168,10 @@ const Notifications = () => {
   const handleSave = async (formData) => {
     const isEditing = !!notificationToEdit;
     const url = isEditing
-<<<<<<< HEAD
       ? `${API_URL}/api/notifications/${notificationToEdit._id}`
       : `${API_URL}/api/notifications`;
-=======
       ? `import.meta.env.VITE_API_URL/api/notifications/${notificationToEdit._id}`
       : 'import.meta.env.VITE_API_URL/api/notifications';
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
@@ -196,7 +190,6 @@ const Notifications = () => {
   };
 
   const handleDelete = async (id) => {
-<<<<<<< HEAD
     if (!window.confirm('Are you sure you want to delete this notification?')) return;
     try {
       const res = await fetch(`${API_URL}/api/notifications/${id}`, {
@@ -208,7 +201,6 @@ const Notifications = () => {
       fetchNotifications();
     } catch (error) {
       toast.error(error.message);
-=======
     if (window.confirm('Are you sure you want to delete this notification?')) {
       try {
         const res = await fetch(`import.meta.env.VITE_API_URL/api/notifications/${id}`, {
@@ -221,7 +213,6 @@ const Notifications = () => {
       } catch (error) {
         toast.error(error.message);
       }
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
     }
   };
 
