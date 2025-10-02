@@ -23,39 +23,30 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  process.env.FRONTEND_URL
+  process.env.FRONTEND_URL // e.g. your Vercel frontend URL
 ].filter(Boolean);
 
-// CORS middleware — must be BEFORE routes
+// CORS middleware (must be before routes)
 app.use(cors({
-  // Use the origin list from your most recent changes
-  origin: [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    process.env.FRONTEND_URL // Vercel frontend URL for production
-  ].filter(Boolean), // removes undefined if FRONTEND_URL is not set
-
-  // Add these for good measure from the other version
+  origin: allowedOrigins,
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  
-  // Keep credentials as false, as you intended for bearer tokens
-  credentials: false 
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // Parse JSON
 app.use(express.json());
 
-// Routes
-app.use("/auth", authRoutes);
-app.use("/questions", questionRoutes);
-app.use("/submissions", submissionRoutes);
-app.use("/quizzes", quizRoutes);
-app.use("/leaderboard", leaderboardRoutes);
-app.use("/posts", postRoutes);
-app.use("/user", userRoutes);
-app.use("/courses", courseRoutes);
-app.use("/notifications", notificationRoutes);
+// Routes with /api prefix
+app.use("/api/auth", authRoutes);
+app.use("/api/questions", questionRoutes);
+app.use("/api/submissions", submissionRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Test route
 app.get("/", (req, res) => res.send("🎓 Scholarsphere Backend is running..."));
