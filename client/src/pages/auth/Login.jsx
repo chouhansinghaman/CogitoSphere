@@ -58,12 +58,9 @@ export default function Login() {
 
     setIsApiLoading(true);
     try {
-<<<<<<< HEAD
       const res = await loginApi(formData.email, formData.password); // ✅ use helper
-=======
       // ✅ Use helper function
       const res = await loginApi(formData.email, formData.password);
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
       login(res.data.token, res.data.user);
       toast.success("Login successful! Welcome back.");
       navigate("/home");
