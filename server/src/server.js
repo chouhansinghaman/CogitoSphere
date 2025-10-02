@@ -14,10 +14,7 @@ import userRoutes from "./routes/userRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 
-// Load environment variables
 dotenv.config();
-
-// Connect to DB
 connectDB();
 
 const app = express();
@@ -29,7 +26,7 @@ const allowedOrigins = [
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-// CORS middleware MUST be BEFORE routes
+// CORS middleware — must be BEFORE routes
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
@@ -37,25 +34,23 @@ app.use(cors({
   allowedHeaders: ["Content-Type","Authorization"]
 }));
 
-// Middleware
+// Parse JSON
 app.use(express.json());
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/questions", questionRoutes);
-app.use("/api/submissions", submissionRoutes);
-app.use("/api/quizzes", quizRoutes);
-app.use("/api/leaderboard", leaderboardRoutes);
-app.use("/api/posts", postRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/courses", courseRoutes);
-app.use("/api/notifications", notificationRoutes);
+app.use("/auth", authRoutes);
+app.use("/questions", questionRoutes);
+app.use("/submissions", submissionRoutes);
+app.use("/quizzes", quizRoutes);
+app.use("/leaderboard", leaderboardRoutes);
+app.use("/posts", postRoutes);
+app.use("/user", userRoutes);
+app.use("/courses", courseRoutes);
+app.use("/notifications", notificationRoutes);
 
-// Test Route
-app.get("/", (req, res) => {
-  res.send("🎓 Scholarsphere Backend is running...");
-});
+// Test route
+app.get("/", (req, res) => res.send("🎓 Scholarsphere Backend is running..."));
 
-// Server Listen
+// Listen
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
