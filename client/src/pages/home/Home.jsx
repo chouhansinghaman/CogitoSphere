@@ -5,7 +5,6 @@ import { useAuth } from "../../context/AuthContext";
 import { updateUserAvatarApi, checkInApi } from "../../services/api.user.js";
 import Confetti from 'react-confetti';
 import CountUp from 'react-countup';
-import Skeleton from "../../components/Skeleton"; // Ensure this exists
 
 // --- Icons ---
 const TrashIcon = () => (
