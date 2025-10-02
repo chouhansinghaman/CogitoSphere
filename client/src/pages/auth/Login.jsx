@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
-import API from "../../lib/api.js";
+import { loginApi } from "../../api/auth";
 import Loader from "../../components/Loader";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 
-// ==> Make sure to import your slider images
+// Slider images
 import Illustration1 from "../../assets/illus-1.PNG";
 import Illustration2 from "../../assets/illus-2.PNG";
 import Illustration3 from "../../assets/illus-3.PNG";
@@ -58,7 +58,8 @@ export default function Login() {
 
     setIsApiLoading(true);
     try {
-      const res = await API.post("/auth/login", formData);
+      // ✅ Use helper function
+      const res = await loginApi(formData.email, formData.password);
       login(res.data.token, res.data.user);
       toast.success("Login successful! Welcome back.");
       navigate("/home");
@@ -89,7 +90,7 @@ export default function Login() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* ==> UPDATED: Email field with floating label */}
+            {/* Email */}
             <div className="relative">
               <input
                 id="email"
@@ -109,7 +110,7 @@ export default function Login() {
               </label>
             </div>
 
-            {/* ==> UPDATED: Password field with floating label */}
+            {/* Password */}
             <div className="relative">
               <input
                 id="password"
@@ -163,7 +164,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right Panel: Image Slider */}
+      {/* Right Panel: Slider */}
       <div className="hidden lg:flex flex-col justify-center items-center bg-black p-10 text-white text-center relative overflow-hidden">
         <div className="w-full max-w-md h-[60vh] relative">
           {sliderImages.map((img, index) => (
@@ -171,7 +172,9 @@ export default function Login() {
               key={index}
               src={img}
               alt={`Slider image ${index + 1}`}
-              className={`absolute top-0 left-0 w-full h-full object-cover rounded-2xl transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"}`}
+              className={`absolute top-0 left-0 w-full h-full object-cover rounded-2xl transition-opacity duration-1000 ${
+                index === currentSlide ? "opacity-100" : "opacity-0"
+              }`}
             />
           ))}
         </div>
@@ -179,13 +182,14 @@ export default function Login() {
           {sliderImages.map((_, index) => (
             <div
               key={index}
-              className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide ? "w-8 bg-white" : "w-2 bg-gray-600"}`}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index === currentSlide ? "w-8 bg-white" : "w-2 bg-gray-600"
+              }`}
             ></div>
           ))}
         </div>
         <p className="mt-6 text-lg max-w-xs">
-          Make your work easier and organized with{" "}
-          <span className="font-bold">ScholarSphere</span>
+          Make your work easier and organized with <span className="font-bold">ScholarSphere</span>
         </p>
       </div>
     </div>
