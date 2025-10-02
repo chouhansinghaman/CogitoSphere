@@ -169,22 +169,15 @@ export default function Login() {
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* Right Panel */}
-=======
       {/* Right Panel: Slider */}
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
       <div className="hidden lg:flex flex-col justify-center items-center bg-black p-10 text-white text-center relative overflow-hidden">
         <div className="w-full max-w-md h-[60vh] relative">
           {sliderImages.map((img, index) => (
             <img
               key={index}
               src={img}
-<<<<<<< HEAD
               alt={`Slide ${index + 1}`}
-=======
               alt={`Slider image ${index + 1}`}
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
               className={`absolute top-0 left-0 w-full h-full object-cover rounded-2xl transition-opacity duration-1000 ${
                 index === currentSlide ? "opacity-100" : "opacity-0"
               }`}
