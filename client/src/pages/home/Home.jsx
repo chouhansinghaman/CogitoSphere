@@ -647,7 +647,7 @@ const ExploreCourses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await fetch('import.meta.env.VITE_API_BASE_URL/api/courses');
+        const res = await fetch('import.meta.env.VITE_API_URL/api/courses');
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Could not fetch courses');
         setCourses(data.courses || data || []);
@@ -719,7 +719,7 @@ const Home = () => {
     const fetchSubmissions = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch('import.meta.env.VITE_API_BASE_URL/api/submissions/my', {
+        const res = await fetch('import.meta.env.VITE_API_URL/api/submissions/my', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
