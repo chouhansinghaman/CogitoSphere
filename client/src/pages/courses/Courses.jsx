@@ -95,9 +95,7 @@ const Courses = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState(null);
 
-<<<<<<< HEAD
   const API_URL = import.meta.env.VITE_API_BASE_URL; // ✅ FIXED
-=======
     // --- DATA FETCHING ---
     useEffect(() => {
         const fetchCourses = async () => {
@@ -117,7 +115,6 @@ const Courses = () => {
         };
         fetchCourses();
     }, []);
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
 
   // --- FETCH COURSES ---
   useEffect(() => {
