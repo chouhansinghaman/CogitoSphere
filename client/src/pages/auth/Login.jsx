@@ -2,11 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
-<<<<<<< HEAD
-import { loginApi } from "../../services/api.auth.js"; // ✅ fixed path
-=======
-import { loginApi } from "../../services/api.auth.js";
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
+import { loginApi } from "../../services/api.auth.js"; 
 import Loader from "../../components/Loader";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 
