@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  // FIX: Changed VITE_API_URL to VITE_API_BASE_URL to match your Vercel variable
+  baseURL: import.meta.env.VITE_API_BASE_URL, 
 });
 
 // attach bearer token if present
