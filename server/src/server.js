@@ -1,7 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
-import { connectDB } from "./config/db.js";
 import cors from "cors";
+import { connectDB } from "./config/db.js";
+
+// Routes
 import authRoutes from "./routes/authRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
@@ -20,16 +22,23 @@ connectDB();
 
 const app = express();
 
-// allow your frontend origin
+// Allowed origins
+const allowedOrigins = [
+  "http://localhost:5173",        // Local dev
+  "http://127.0.0.1:5173",       // Local dev alternative
+  process.env.FRONTEND_URL        // Production frontend
+].filter(Boolean);
+
+// CORS middleware
 app.use(cors({
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],// vite default; update if different
-  credentials: false // we use bearer tokens, so no cookies
+  origin: allowedOrigins,
+  credentials: true
 }));
 
 // Middleware
-app.use(express.json()); // allows parsing JSON in requests
+app.use(express.json());
 
-// routes
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/submissions", submissionRoutes);
