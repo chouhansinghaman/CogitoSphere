@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { FiHome, FiBookOpen, FiUsers, FiEdit, FiSettings, FiLogOut } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useEffect, useState, useRef } from "react";
-import Logo from "../assets/Logo.png";
+import Logo from "../assets/logo.png";
 
 export default function Sidebar() {
   const navigate = useNavigate();

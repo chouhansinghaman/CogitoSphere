@@ -7,9 +7,9 @@ import Loader from "../../components/Loader";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 
 // ==> Make sure to import your slider images
-import Illustration1 from "../../assets/illus-1.png";
-import Illustration2 from "../../assets/illus-2.png";
-import Illustration3 from "../../assets/illus-3.png";
+import Illustration1 from "../../assets/illus-1.PNG";
+import Illustration2 from "../../assets/illus-2.PNG";
+import Illustration3 from "../../assets/illus-3.PNG";
 
 const sliderImages = [Illustration1, Illustration2, Illustration3];
 
