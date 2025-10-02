@@ -5,7 +5,7 @@ import axios from "axios";
 const AuthContext = createContext();
 
 // Set Axios default base URL
-axios.defaults.baseURL = "http://localhost:5001"; // <-- backend port
+axios.defaults.baseURL = "import.meta.env.VITE_API_BASE_URL"; // <-- backend port
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token") || null);

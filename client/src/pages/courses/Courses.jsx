@@ -123,7 +123,7 @@ const Courses = () => {
         const fetchCourses = async () => {
             setLoading(true);
             try {
-                const res = await fetch("http://localhost:5001/api/courses");
+                const res = await fetch("import.meta.env.VITE_API_BASE_URL/api/courses");
                 if (!res.ok) throw new Error("Failed to fetch courses");
                 const data = await res.json();
                 setCourses(data);
@@ -165,7 +165,7 @@ const Courses = () => {
     const confirmDelete = async () => {
         if (!courseToDelete) return;
         try {
-            const res = await fetch(`http://localhost:5001/api/courses/${courseToDelete}`, {
+            const res = await fetch(`import.meta.env.VITE_API_BASE_URL/api/courses/${courseToDelete}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` },
             });

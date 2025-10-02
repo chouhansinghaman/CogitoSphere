@@ -25,7 +25,7 @@ const CourseEdit = () => {
     const fetchCourse = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:5001/api/courses/${courseId}`);
+        const res = await fetch(`import.meta.env.VITE_API_BASE_URL/api/courses/${courseId}`);
         if (!res.ok) throw new Error('Course not found.');
         const data = await res.json();
         setCourse(data);
@@ -58,7 +58,7 @@ const CourseEdit = () => {
       formPayload.append('content', updatedData.content);
       if (file) formPayload.append('pdfFile', file);
 
-      const res = await fetch(`http://localhost:5001/api/courses/${courseId}`, {
+      const res = await fetch(`import.meta.env.VITE_API_BASE_URL/api/courses/${courseId}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
         body: formPayload,

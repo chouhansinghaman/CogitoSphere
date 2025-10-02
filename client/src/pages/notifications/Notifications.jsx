@@ -130,7 +130,7 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5001/api/notifications', {
+      const res = await fetch('import.meta.env.VITE_API_BASE_URL/api/notifications', {
         // 👇 ADD THIS HEADERS OBJECT
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -168,8 +168,8 @@ const Notifications = () => {
   const handleSave = async (formData) => {
     const isEditing = !!notificationToEdit;
     const url = isEditing
-      ? `http://localhost:5001/api/notifications/${notificationToEdit._id}`
-      : 'http://localhost:5001/api/notifications';
+      ? `import.meta.env.VITE_API_BASE_URL/api/notifications/${notificationToEdit._id}`
+      : 'import.meta.env.VITE_API_BASE_URL/api/notifications';
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
@@ -194,7 +194,7 @@ const Notifications = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this notification?')) {
       try {
-        const res = await fetch(`http://localhost:5001/api/notifications/${id}`, {
+        const res = await fetch(`import.meta.env.VITE_API_BASE_URL/api/notifications/${id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         });

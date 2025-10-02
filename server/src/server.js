@@ -22,7 +22,11 @@ const app = express();
 
 // allow your frontend origin
 app.use(cors({
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],// vite default; update if different
+  origin: [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    process.env.FRONTEND_URL // Vercel frontend URL for production
+  ].filter(Boolean), // removes undefined if FRONTEND_URL is not set
   credentials: false // we use bearer tokens, so no cookies
 }));
 

@@ -84,7 +84,7 @@ const AdminSection = ({ setActiveTab }) => {
 
     try {
       // This API endpoint needs to exist on your server
-      const res = await fetch("http://localhost:5001/api/user/make-admin", {
+      const res = await fetch("import.meta.env.VITE_API_BASE_URL/api/user/make-admin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -228,7 +228,7 @@ const SecuritySection = () => {
     const toastId = toast.loading("Sending reset link...");
     try {
       // ✅ Call your backend forgot-password endpoint
-      const res = await fetch("http://localhost:5001/api/auth/forgot-password", {
+      const res = await fetch("import.meta.env.VITE_API_BASE_URL/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: resetEmail }),
@@ -356,7 +356,7 @@ const PrivacySection = () => {
 
   const handleDeleteAccount = async () => {
     try {
-      const res = await fetch("http://localhost:5001/api/user/delete", {
+      const res = await fetch("import.meta.env.VITE_API_BASE_URL/api/user/delete", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -484,7 +484,7 @@ const ProfileSection = () => {
     if (!name.trim()) return toast.error("Name cannot be empty");
     setIsSavingName(true);
     try {
-      const res = await fetch("http://localhost:5001/api/user/update", {
+      const res = await fetch("import.meta.env.VITE_API_BASE_URL/api/user/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name }),
@@ -511,7 +511,7 @@ const ProfileSection = () => {
         avatar: newAvatar, // The new avatar URL we want to save
       };
 
-      const res = await fetch("http://localhost:5001/api/user/update", {
+      const res = await fetch("import.meta.env.VITE_API_BASE_URL/api/user/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload), // Send the updated payload
