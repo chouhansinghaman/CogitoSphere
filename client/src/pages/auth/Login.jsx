@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
-import { loginApi } from "../../services/apo.auth.js";
+import { loginApi } from "../../services/api.auth.js";
 import Loader from "../../components/Loader";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 
