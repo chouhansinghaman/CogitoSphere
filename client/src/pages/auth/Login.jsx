@@ -58,8 +58,7 @@ export default function Login() {
 
     setIsApiLoading(true);
     try {
-      const res = await loginApi(formData.email, formData.password); // ✅ use helper
-      // ✅ Use helper function
+      // ✅ Removed duplicate declaration
       const res = await loginApi(formData.email, formData.password);
       login(res.data.token, res.data.user);
       toast.success("Login successful! Welcome back.");
@@ -133,7 +132,7 @@ export default function Login() {
               </label>
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-5 top-3.5 cursor-pointer text-xl"
+                className="absolute right-5 top-3.5 cursor-pointer text-xl select-none"
               >
                 {showPassword ? "🙈" : "👁️"}
               </span>
@@ -176,7 +175,6 @@ export default function Login() {
             <img
               key={index}
               src={img}
-              alt={`Slide ${index + 1}`}
               alt={`Slider image ${index + 1}`}
               className={`absolute top-0 left-0 w-full h-full object-cover rounded-2xl transition-opacity duration-1000 ${
                 index === currentSlide ? "opacity-100" : "opacity-0"
@@ -195,7 +193,8 @@ export default function Login() {
           ))}
         </div>
         <p className="mt-6 text-lg max-w-xs">
-          Make your work easier and organized with <span className="font-bold">ScholarSphere</span>
+          Make your work easier and organized with{" "}
+          <span className="font-bold">ScholarSphere</span>
         </p>
       </div>
     </div>
