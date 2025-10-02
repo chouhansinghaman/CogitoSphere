@@ -9,8 +9,13 @@ import { adminOnly } from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
-router.post("/:quizId", protect, submitQuiz);          // student submits attempt
-router.get("/my", protect, getMySubmissions);          // student history
-router.get("/quiz/:quizId", protect, adminOnly, getQuizSubmissions); // admin: see all attempts
+// Student: Submits a quiz
+router.post("/:quizId", protect, submitQuiz);
+
+// Student: Gets their own submission history
+router.get("/my", protect, getMySubmissions);
+
+// Admin: Gets all submissions for a single quiz
+router.get("/quiz/:quizId", protect, adminOnly, getQuizSubmissions);
 
 export default router;

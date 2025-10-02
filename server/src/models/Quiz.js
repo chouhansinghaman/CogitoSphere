@@ -11,16 +11,23 @@ const quizSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // Add this new 'level' field
+    level: {
+      type: String,
+      required: true,
+      enum: ["Beginner", "Intermediate", "Advanced"], // Ensures only these values are accepted
+    },
     questions: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Question", // link to MCQs
-        required: true,
+        ref: "Question",
+        // No longer required at creation time
+        // required: true, 
       },
     ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // admin who made the quiz
+      ref: "User",
       required: true,
     },
   },

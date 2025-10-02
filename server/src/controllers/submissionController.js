@@ -18,29 +18,29 @@ export const submitQuiz = async (req, res) => {
     let correctCount = 0;
     const processedAnswers = [];
 
-    for (let ans of answers) {
+    // Use a for...of loop to handle async operations correctly if needed
+    for (const ans of answers) {
       const question = await Question.findById(ans.question);
-      if (!question) continue;
+      if (!question) continue; // Skip if question ID is invalid
 
       const isCorrect = ans.selectedOption && question.answer === ans.selectedOption;
       if (isCorrect) correctCount++;
 
       processedAnswers.push({
         question: question._id,
-        selectedOption: ans.selectedOption || null, // allow null if skipped
+        selectedOption: ans.selectedOption || null,
         isCorrect,
       });
     }
 
-    const score = correctCount;
     const totalQuestions = quiz.questions.length;
-    const percentage = (score / totalQuestions) * 100;
+    const percentage = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
 
     const submission = await Submission.create({
       quiz: quiz._id,
       student: req.user._id,
       answers: processedAnswers,
-      score,
+      score: correctCount,
       totalQuestions,
       percentage,
       timeTaken,
@@ -64,7 +64,6 @@ export const getMySubmissions = async (req, res) => {
 
     res.json(submissions);
   } catch (err) {
-    console.error("❌ Error in getMySubmissions:", err);
     res.status(500).json({ message: "Error fetching submissions", error: err.message });
   }
 };
@@ -75,8 +74,7 @@ export const getMySubmissions = async (req, res) => {
 export const getQuizSubmissions = async (req, res) => {
   try {
     const submissions = await Submission.find({ quiz: req.params.quizId })
-      .populate("student", "name userName email")
-      .populate("quiz", "title subject")
+      .populate("student", "name username email")
       .sort({ createdAt: -1 });
 
     if (!submissions || submissions.length === 0) {
@@ -85,7 +83,6 @@ export const getQuizSubmissions = async (req, res) => {
 
     res.json(submissions);
   } catch (err) {
-    console.error("❌ Error in getQuizSubmissions:", err);
     res.status(500).json({ message: "Error fetching quiz submissions", error: err.message });
   }
 };

@@ -1,3 +1,111 @@
+@font-face {
+  font-family: "Foda Display";
+  src: url("./assets/fonts/FodaDisplay.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Tailwind CSS imports should be at the top */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* --- SVG Drawing Animation --- */
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw 2s ease-in-out forwards;
+}
+
+/* Stagger the animation of each part */
+.animate-draw #cap-top {
+  animation-delay: 0s;
+}
+
+.animate-draw #cap-border {
+  animation-delay: 0.2s;
+}
+
+.animate-draw #cap-body {
+  animation-delay: 0.4s;
+}
+
+.animate-draw #tassel-string {
+  animation-delay: 0.6s;
+}
+
+.animate-draw #tassel-end {
+  animation-delay: 0.8s;
+}
+
+.animate-draw #diploma {
+  animation-delay: 1s;
+}
+
+.animate-draw #ribbon {
+  animation-delay: 1.2s;
+}
+
+/* Quill Content Fixes for Tailwind */
+.ql-editor h1 {
+  @apply text-3xl font-bold mb-4;
+}
+
+.ql-editor h2 {
+  @apply text-2xl font-semibold mb-3;
+}
+
+.ql-editor h3 {
+  @apply text-xl font-medium mb-2;
+}
+
+.ql-editor ul {
+  @apply list-disc list-inside ml-6 mb-4;
+}
+
+.ql-editor ol {
+  @apply list-decimal list-inside ml-6 mb-4;
+}
+
+.ql-editor blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 my-4;
+}
+
+.ql-editor p {
+  @apply mb-3 leading-relaxed;
+}
+
+.ql-editor .ql-indent-1 {
+  @apply ml-4;
+}
+
+.ql-editor .ql-indent-2 {
+  @apply ml-8;
+}
+
+.ql-editor .ql-indent-3 {
+  @apply ml-12;
+}
+
+/* --- Quill Editor Container & HR Styles --- */
+.editor-container .ql-editor {
+  min-height: 300px;
+  padding: 16px;
+  border: 1px solid #d1d5db;
+  /* Tailwind gray-300 */
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.editor-container .ql-editor hr {
+  border: none;
+  border-top: 2px solid #d1d5db;
+  /* Tailwind gray-300 */
+  margin: 1.5rem 0;
+}

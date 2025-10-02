@@ -31,7 +31,7 @@ const submissionSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    timeTaken: {
+    timeTaken: { // The extra field that makes this model better
       type: Number,
       default: 0,
     },

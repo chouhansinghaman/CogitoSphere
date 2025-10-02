@@ -1,3 +1,5 @@
+// models/User.js
+
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
@@ -8,14 +10,14 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    userName: {
+    username: {
       type: String,
       trim: true,
     },
     email: {
       type: String,
       required: true,
-      unique: true, // no duplicate emails
+      unique: true,
       lowercase: true,
     },
     password: {
@@ -23,23 +25,36 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
+    avatar: { // <-- ADD THIS
+      type: String,
+      default: "https://i.pinimg.com/736x/51/19/95/511995729851564ed88c865f42e1844b.jpg",
+    },
+    studyStreak: { // <-- ADD THIS
+      type: Number,
+      default: 0,
+    },
+    lastCheckIn: { // <-- ADD THIS
+      type: Date,
+    },
     role: {
       type: String,
-      default: "student", // default role
+      default: "student",
     },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   },
   { timestamps: true }
 );
 
-// 🔐 Password hashing before saving user
+// Password hashing before saving user
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next(); // only hash if password is changed/new
+  if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// 🔑 Method to compare entered password with stored hash
+// Method to compare entered password with stored hash
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

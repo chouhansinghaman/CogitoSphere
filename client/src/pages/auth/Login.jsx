@@ -1,111 +1,191 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
+import API from "../../lib/api.js";
 import Loader from "../../components/Loader";
-import Sidebar from "../../components/Sidebar";
+import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
+
+// ==> Make sure to import your slider images
+import Illustration1 from "../../assets/illus-1.png";
+import Illustration2 from "../../assets/illus-2.png";
+import Illustration3 from "../../assets/illus-3.png";
+
+const sliderImages = [Illustration1, Illustration2, Illustration3];
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [isApiLoading, setIsApiLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const handleSwitch = () => {
-    setLoading(true);
-    setTimeout(() => {
-      navigate("/register");
-      setLoading(false);
-    }, 800);
+  const shouldDisplayLoader = useMinimumLoadingTime(
+    isApiLoading || isTransitioning,
+    3000
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prevSlide) => (prevSlide + 1) % sliderImages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const onSubmit = async (e) => {
+  const validateForm = () => {
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!formData.email || !emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return false;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
+    setIsApiLoading(true);
     try {
-      await login(email, password);
-      toast.success("Welcome back!");
-      setLoggedIn(true);
+      const res = await API.post("/auth/login", formData);
+      login(res.data.token, res.data.user);
+      toast.success("Login successful! Welcome back.");
+      navigate("/home");
     } catch (err) {
-      toast.error(err.message);
+      const errorMessage =
+        err.response?.data?.message || "Login failed. Please check your credentials.";
+      toast.error(errorMessage);
+    } finally {
+      setIsApiLoading(false);
     }
   };
 
-  if (loggedIn || user) {
-    return <Sidebar nav={navigate} />;
-  }
+  const handleSwitchToRegister = () => {
+    setIsTransitioning(true);
+    setTimeout(() => navigate("/register"), 3000);
+  };
 
-  if (loading) return <Loader />;
+  if (shouldDisplayLoader) return <Loader />;
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-red-700">
-      {/* Left: Form */}
-      <div className="flex items-center justify-center p-10">
-        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-          <form onSubmit={onSubmit} className="w-full max-w-sm space-y-6">
-            <h1 className="text-3xl font-bold">Welcome back!</h1>
-            <p className="text-gray-600 text-sm">
-              Simplify your workflow and boost your productivity with <b>ScholarSphere</b>.
-              Get started for free.
-            </p>
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 font-sans">
+      {/* Left Panel: Form */}
+      <div className="flex flex-col justify-center items-center px-8 py-12 bg-white">
+        <div className="w-full max-w-sm">
+          <h1 className="text-4xl font-bold mb-2">Welcome back!</h1>
+          <p className="text-gray-500 mb-8">
+            Simplify your workflow and boost your productivity with ScholarSphere.
+          </p>
 
-            <input
-              className="w-full border rounded-lg px-4 py-2"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ==> UPDATED: Email field with floating label */}
             <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
-                className="w-full border rounded-lg px-4 py-2"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                className="peer w-full h-14 px-6 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black placeholder-transparent transition"
                 required
               />
+              <label
+                htmlFor="email"
+                className="absolute left-6 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
+              >
+                Email
+              </label>
+            </div>
+
+            {/* ==> UPDATED: Password field with floating label */}
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                className="peer w-full h-14 px-6 pr-14 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black placeholder-transparent transition"
+                required
+              />
+              <label
+                htmlFor="password"
+                className="absolute left-6 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
+              >
+                Password
+              </label>
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2 cursor-pointer text-gray-500"
+                className="absolute right-5 top-3.5 cursor-pointer text-xl"
+                aria-label="Toggle password visibility"
               >
                 {showPassword ? "🙈" : "👁️"}
               </span>
             </div>
 
-            <div className="flex justify-between items-center text-sm">
-              <Link to="/forgot" className="text-gray-500 hover:underline">
+            <div className="text-right -mt-2">
+              <Link to="/forgot" className="text-sm font-medium text-gray-600 hover:underline">
                 Forgot Password?
               </Link>
             </div>
 
-            <button className="w-full bg-black text-white rounded-full py-2">
-              Login
+            <button
+              type="submit"
+              disabled={isApiLoading}
+              className="w-full bg-black text-white py-3 rounded-full font-semibold hover:bg-gray-800 transition disabled:opacity-75"
+            >
+              {isApiLoading ? "Logging in..." : "Login"}
             </button>
-
-            <p className="text-sm text-center">
-              Not a member?{" "}
-              <button onClick={handleSwitch} className="text-green-600 hover:underline">
-                Register now
-              </button>
-            </p>
           </form>
+
+          <p className="text-sm text-center text-gray-600 mt-6">
+            Not a member?{" "}
+            <button
+              onClick={handleSwitchToRegister}
+              className="text-green-500 font-medium hover:underline"
+            >
+              Register now
+            </button>
+          </p>
         </div>
       </div>
 
-      {/* Right: Illustration */}
-      <div className="flex flex-col items-center justify-center bg-black text-white p-10 rounded-l-3xl">
-        <img
-          src="/images/login-illustration.jpg"
-          alt="Illustration"
-          className="rounded-xl mb-6"
-        />
-        <p className="text-center text-lg">
-          Make your work easier and organized with <b>ScholarSphere</b>
+      {/* Right Panel: Image Slider */}
+      <div className="hidden lg:flex flex-col justify-center items-center bg-black p-10 text-white text-center relative overflow-hidden">
+        <div className="w-full max-w-md h-[60vh] relative">
+          {sliderImages.map((img, index) => (
+            <img
+              key={index}
+              src={img}
+              alt={`Slider image ${index + 1}`}
+              className={`absolute top-0 left-0 w-full h-full object-cover rounded-2xl transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"}`}
+            />
+          ))}
+        </div>
+        <div className="flex space-x-2 mt-8">
+          {sliderImages.map((_, index) => (
+            <div
+              key={index}
+              className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide ? "w-8 bg-white" : "w-2 bg-gray-600"}`}
+            ></div>
+          ))}
+        </div>
+        <p className="mt-6 text-lg max-w-xs">
+          Make your work easier and organized with{" "}
+          <span className="font-bold">ScholarSphere</span>
         </p>
       </div>
     </div>

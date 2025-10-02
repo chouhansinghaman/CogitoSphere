@@ -1,31 +1,61 @@
+// controllers/questionController.js
 import Question from "../models/Question.js";
+import Quiz from "../models/Quiz.js";
 
 // @desc    Create MCQ (Admin only)
 // @route   POST /api/questions
 // @access  Private/Admin
 export const createQuestion = async (req, res) => {
-  const { title, subject, options, answer } = req.body;
+  // NOTE: include `quiz` here so it's defined
+  const { title, subject, options, answer, quiz } = req.body;
 
   try {
-    // Check if a question with same title & subject already exists
+    // Basic validation
+    if (!title || !options || !answer) {
+      return res.status(400).json({ message: "Please provide title, options and answer." });
+    }
+
+    if (!Array.isArray(options) || options.length !== 4) {
+      return res.status(400).json({ message: "Options must be an array of exactly 4 strings." });
+    }
+
+    // Duplicate check (title + subject)
     const existingQuestion = await Question.findOne({ title, subject });
     if (existingQuestion) {
       return res.status(400).json({ message: "❌ This question already exists in the database" });
     }
 
+    // Create the question (include quiz field)
     const question = await Question.create({
       title,
       subject,
       options,
       answer,
-      createdBy: req.user._id, // admin who created it
+      createdBy: req.user._id, // protect middleware must set req.user
+      quiz: quiz || undefined,
     });
+
+    // If a quizId was passed, attach the question to that quiz
+    if (quiz) {
+      const quizDoc = await Quiz.findById(quiz);
+      if (!quizDoc) {
+        // If quiz not found, roll back created question to keep DB consistent
+        await Question.findByIdAndDelete(question._id);
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+
+      quizDoc.questions.push(question._id);
+      await quizDoc.save();
+    }
 
     res.status(201).json(question);
   } catch (err) {
+    // Log full error to server console for debugging
+    console.error("❌ Error in createQuestion:", err);
     res.status(500).json({ message: "Error creating question", error: err.message });
   }
 };
+
 
 // @desc    Get all questions (students & admins can view)
 // @route   GET /api/questions

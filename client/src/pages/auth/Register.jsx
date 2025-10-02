@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../../lib/api.js";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
-import Loader from "../../components/Loader"; 
+import Loader from "../../components/Loader";
 import Sidebar from "../../components/Sidebar.jsx";
+import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
+import Logo from "../../assets/logo.png";
+import Illustration from "../../assets/illustration.png";
+import API from "../../lib/api.js";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -12,187 +15,242 @@ export default function Register() {
 
   const [formData, setFormData] = useState({
     name: "",
-    userName: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
     role: "student",
   });
 
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [registered, setRegistered] = useState(false);
+  const [isApiLoading, setIsApiLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // handle form change
+  const shouldDisplayLoader = useMinimumLoadingTime(
+    isApiLoading || isTransitioning,
+    3000
+  );
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // handle register submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+
+    // Check for password length before anything else
+    if (formData.password.length < 6) {
+      return toast.error("Password must be at least 6 characters long");
+    }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      setLoading(false);
-      return;
+      return toast.error("Passwords do not match");
     }
+
+    setIsApiLoading(true);
 
     try {
-      await API.post("/auth/register", formData);
+      const { confirmPassword, ...apiData } = formData;
+      await API.post("/auth/register", apiData);
 
-      // auto-login with same credentials
-      await login(formData.email, formData.password);
+      const loginRes = await API.post("/auth/login", {
+        email: formData.email,
+        password: formData.password,
+      });
 
-      toast.success("Account created, welcome!");
-      setRegistered(true);
+      login(loginRes.data.token, {
+        _id: loginRes.data._id,
+        name: loginRes.data.name,
+        username: loginRes.data.username,
+        email: loginRes.data.email,
+        role: loginRes.data.role,
+      });
+
+      toast.success("Account created! Welcome!");
+      navigate("/home"); // Navigate to the home page on successful registration
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
-    } finally {
-      setLoading(false);
+      // Improved error handling
+      if (err.response) {
+        // Check if the response data is a string (like HTML) instead of an object (JSON)
+        if (typeof err.response.data === 'string' && err.response.data.includes('<!DOCTYPE')) {
+          toast.error("Server returned an unexpected response. Please try again.");
+          console.error("API Error: Expected JSON but received HTML.", err.response);
+        } else {
+          // Handle standard JSON error messages from the API
+          toast.error(err.response.data.message || "Registration failed");
+        }
+      } else {
+        // Handle network errors or other issues where there's no response
+        toast.error("Registration failed. Please check your connection.");
+      }
+      setIsApiLoading(false); // Make sure to stop loading on error
     }
   };
 
-  // handle switch to login with loader
   const handleSwitchToLogin = () => {
-    setLoading(true);
-    setTimeout(() => {
-      navigate("/login");
-      setLoading(false);
-    }, 800); // splash delay
+    setIsTransitioning(true);
+    setTimeout(() => navigate("/login"), 3000);
   };
 
-  // already logged in / registered
-  if (registered || user) {
-    return <Sidebar nav={navigate} />;
-  }
-
-  // loader state
-  if (loading) return <Loader />;
+  if (user) return <Sidebar nav={navigate} />;
+  if (shouldDisplayLoader) return <Loader />;
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-red-700">
-      {/* Left: Illustration */}
-      <div className="hidden md:flex items-center justify-center bg-black text-white p-10">
-        <div className="max-w-sm text-center">
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-[35%_65%] font-poppins">
+      {/* Left Panel */}
+      <div className="hidden md:flex flex-col items-center justify-center bg-black text-white relative">
+        <div className="absolute top-6 left-6 w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
           <img
-            src="/images/register-illustration.png"
-            alt="Illustration"
-            className="mb-6"
+            src={Logo}
+            alt="ScholarSphere Logo"
+            className="w-full h-full rounded-full object-cover"
           />
-          <p className="text-lg">
-            Join us for an amazing journey with <b>ScholarSphere</b>!
-          </p>
+        </div>
+        <div className="w-[80%] h-100 bg-gray-800 rounded-lg flex items-center justify-center">
+          <img
+            src={Illustration}
+            alt="ScholarSphere Illustration"
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
 
-      {/* Right: Form */}
-      <div className="flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Join us for an amazing journey!
-          </h2>
+      {/* Right Panel */}
+      <div className="flex items-center justify-center px-6 md:px-12 bg-white">
+        <div className="w-full max-w-md">
+          <h1 className="text-3xl md:text-4xl font-bold mb-8 leading-snug">
+            Join us for an <br /> amazing journey!
+          </h1>
 
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative">
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  value={formData.username}
+                  onChange={handleChange}
+                  placeholder="Username"
+                  className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
+                  required
+                />
+                <label
+                  htmlFor="username"
+                  className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
+                >
+                  Username
+                </label>
+              </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              name="userName"
-              placeholder="Username"
-              value={formData.userName}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-lg"
-              required
-            />
-
-            <input
-              type="text"
-              name="name"
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-lg"
-              required
-            />
-
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-lg"
-              required
-            />
-
-            {/* Password */}
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg"
-                required
-              />
-              <span
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2 cursor-pointer text-gray-500"
-              >
-                {showPassword ? "🙈" : "👁️"}
-              </span>
+              <div className="relative">
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Name"
+                  className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
+                  required
+                />
+                <label
+                  htmlFor="name"
+                  className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
+                >
+                  Name
+                </label>
+              </div>
             </div>
 
-            {/* Confirm Password */}
             <div className="relative">
               <input
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg"
+                placeholder="Email"
+                className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
                 required
               />
-              <span
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-2 cursor-pointer text-gray-500"
+              <label
+                htmlFor="email"
+                className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
               >
-                {showConfirmPassword ? "🙈" : "👁️"}
-              </span>
+                Email
+              </label>
             </div>
 
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-lg"
-              required
-            >
-              <option value="student">Student</option>
-              <option value="admin">Admin</option>
-            </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Password"
+                  className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
+                  required
+                />
+                <label
+                  htmlFor="password"
+                  className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
+                >
+                  Password
+                </label>
+                <span
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-3 cursor-pointer text-gray-500"
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </span>
+              </div>
+
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm Password"
+                  className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
+                  required
+                />
+                <label
+                  htmlFor="confirmPassword"
+                  className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
+                >
+                  Confirm Password
+                </label>
+                <span
+                  onClick={() =>
+                    setShowConfirmPassword(!showConfirmPassword)
+                  }
+                  className="absolute right-4 top-3 cursor-pointer text-gray-500"
+                >
+                  {showConfirmPassword ? "🙈" : "👁️"}
+                </span>
+              </div>
+            </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-black text-white rounded-full py-2 hover:bg-gray-800 transition disabled:opacity-50"
+              disabled={isApiLoading}
+              className="w-full bg-black text-white py-3 rounded-full font-semibold hover:bg-gray-800 transition disabled:opacity-75"
             >
-              {loading ? "Creating account..." : "Register"}
+              {isApiLoading ? "Creating Account..." : "Register"}
             </button>
           </form>
 
-          <p className="text-sm text-center mt-4">
+          <p className="text-sm text-center text-gray-600 mt-6">
             Already have an account?{" "}
             <button
               onClick={handleSwitchToLogin}
-              className="text-green-600 hover:underline"
+              className="text-green-500 font-medium hover:underline"
             >
               Login now
             </button>
@@ -202,3 +260,4 @@ export default function Register() {
     </div>
   );
 }
+

@@ -1,3 +1,4 @@
+// models/Question.js
 import mongoose from "mongoose";
 
 const questionSchema = new mongoose.Schema(
@@ -9,13 +10,12 @@ const questionSchema = new mongoose.Schema(
     },
     subject: {
       type: String,
-      required: true, // e.g. "Mathematics", "Computer Science"
     },
     options: {
       type: [String],
       validate: {
         validator: function (val) {
-          return val.length === 4; // always 4 options
+          return val.length === 4;
         },
         message: "A question must have exactly 4 options",
       },
@@ -23,13 +23,18 @@ const questionSchema = new mongoose.Schema(
     },
     answer: {
       type: String,
-      enum: ["A", "B", "C", "D"], // correct option
+      enum: ["A", "B", "C", "D"],
       required: true,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    // NEW: reference to quiz
+    quiz: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Quiz",
     },
   },
   { timestamps: true }

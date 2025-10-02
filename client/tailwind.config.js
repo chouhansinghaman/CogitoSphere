@@ -3,8 +3,16 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  theme: {
-    extend: {},
+   theme: {
+    darkMode: 'class',
+    extend: {
+      fontFamily: {
+        poppins: ["Poppins", "sans-serif"],
+        foda: ['"Foda Display"', "sans-serif"],
+      },
+    },
   },
-  plugins: [],
-}
+  plugins: [
+    require('tailwind-scrollbar-hide')
+  ],
+};
