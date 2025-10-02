@@ -6,7 +6,7 @@ import Loader from "../../components/Loader";
 import Sidebar from "../../components/Sidebar.jsx";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 import Logo from "../../assets/logo.png";
-import Illustration from "../../assets/illustration.png";
+import Illustration from "../../assets/illustration.PNG";
 import API from "../../lib/api.js";
 
 export default function Register() {
