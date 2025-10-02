@@ -647,11 +647,8 @@ const ExploreCourses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-<<<<<<< HEAD
         const res = await fetch(`${API_URL}/api/courses`);
-=======
         const res = await fetch('import.meta.env.VITE_API_URL/api/courses');
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Could not fetch courses');
         setCourses(data.courses || data || []);
@@ -725,15 +722,12 @@ const Home = () => {
     const fetchSubmissions = async () => {
       setIsLoading(true);
       try {
-<<<<<<< HEAD
         const res = await fetch(`${API_URL}/api/submissions/my`, {
           headers: { 'Authorization': `Bearer ${token}` }
-=======
         const res = await fetch('import.meta.env.VITE_API_URL/api/submissions/my', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
->>>>>>> 31fbc20d9410aa9b8ec6c40ba153562c1dc5dcda
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Could not fetch submissions');
