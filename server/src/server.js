@@ -28,19 +28,19 @@ const allowedOrigins = [
 
 // CORS middleware — must be BEFORE routes
 app.use(cors({
-<<<<<<< HEAD
+  // Use the origin list from your most recent changes
   origin: [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     process.env.FRONTEND_URL // Vercel frontend URL for production
   ].filter(Boolean), // removes undefined if FRONTEND_URL is not set
-  credentials: false // we use bearer tokens, so no cookies
-=======
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"]
->>>>>>> bbdf810b7a3674fc93e6a9a2ed0ebb8bde57712c
+
+  // Add these for good measure from the other version
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  
+  // Keep credentials as false, as you intended for bearer tokens
+  credentials: false 
 }));
 
 // Parse JSON
