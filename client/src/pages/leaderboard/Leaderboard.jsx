@@ -13,7 +13,6 @@ const Leaderboard = () => {
   const fetchLeaderboard = async () => {
     try {
       const res = await fetch(`${API_URL}/api/leaderboard`);
-      const res = await fetch("import.meta.env.VITE_API_URL/api/leaderboard");
       if (!res.ok) throw new Error("Failed to fetch leaderboard");
       const data = await res.json();
       setLeaders(data || []);
@@ -33,7 +32,6 @@ const Leaderboard = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/leaderboard/user/${studentId}`, {
-      const res = await fetch(`import.meta.env.VITE_API_URL/api/leaderboard/user/${studentId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -117,10 +115,11 @@ const Leaderboard = () => {
           </motion.p>
         </header>
 
+        {/* Top 3 podium */}
         <div className="flex flex-col sm:flex-row justify-center items-end gap-4 sm:gap-8 mb-12">
           {topThree.map((leader, index) => (
             <motion.div
-              key={leader._id?._id || index}
+              key={leader._id || index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -130,15 +129,16 @@ const Leaderboard = () => {
                 {getMedal(index)}
               </div>
               <div className="w-20 h-20 bg-gray-100 rounded-full mx-auto mb-4 border-2 border-gray-200 flex items-center justify-center text-3xl font-bold text-gray-500">
-                {leader._id?.name.charAt(0).toUpperCase() || "U"}
+                {leader.name?.charAt(0).toUpperCase() || "U"}
               </div>
-              <h3 className="text-xl font-semibold truncate">{leader._id?.name || "Unknown"}</h3>
+              <h3 className="text-xl font-semibold truncate">{leader.name || "Unknown"}</h3>
               <p className="text-2xl font-bold text-indigo-600">{leader.avgPercentage?.toFixed(2) || 0}%</p>
               <p className="text-sm text-gray-500">{leader.totalQuizzes || 0} Quizzes</p>
             </motion.div>
           ))}
         </div>
 
+        {/* Remaining leaderboard */}
         <div className="border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -155,7 +155,7 @@ const Leaderboard = () => {
             <tbody className="bg-white">
               {theRest.map((leader, index) => (
                 <motion.tr
-                  key={leader._id?._id || index}
+                  key={leader._id || index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
@@ -164,16 +164,16 @@ const Leaderboard = () => {
                   <td className="p-4 font-medium text-gray-600">{index + 4}</td>
                   <td className="p-4 font-medium flex items-center gap-3">
                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-bold text-gray-500 shrink-0">
-                      {leader._id?.name.charAt(0).toUpperCase() || "U"}
+                      {leader.name?.charAt(0).toUpperCase() || "U"}
                     </div>
-                    <span className="truncate">{leader._id?.name || "Unknown"}</span>
+                    <span className="truncate">{leader.name || "Unknown"}</span>
                   </td>
                   <td className="p-4 text-green-600 font-semibold">{leader.avgPercentage?.toFixed(2) || 0}%</td>
                   <td className="p-4 text-gray-500">{leader.totalQuizzes || 0}</td>
                   {user?.role === "admin" && (
                     <td className="p-4">
                       <button
-                        onClick={() => handleRemoveStudent(leader._id?._id)}
+                        onClick={() => handleRemoveStudent(leader._id)}
                         className="p-2 text-gray-400 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
                         aria-label="Remove student"
                       >
