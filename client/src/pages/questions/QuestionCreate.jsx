@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { createQuestionApi } from "../../services/api.questions";
-import DatabaseSeeder from '../../components/dev/DatabaseSeeder.jsx';
 
 const QuestionCreate = () => {
   const { quizId } = useParams(); // grab quiz id from URL if any
@@ -25,7 +24,7 @@ const QuestionCreate = () => {
       title,
       options: [options.A, options.B, options.C, options.D],
       answer,
-      quiz: quizId || undefined, // optional
+      quiz: quizId || undefined,
     };
 
     try {

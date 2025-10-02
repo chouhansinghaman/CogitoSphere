@@ -16,9 +16,7 @@ const QuizCard = ({ quiz, isAdmin, onEdit, onDelete, onAddQuestion }) => {
       <div className='p-6 flex flex-col flex-grow'>
         <div className='flex-grow'>
           <p className="text-sm font-semibold text-blue-600 mb-1">{quiz.subject}</p>
-          <h3 className="text-lg font-bold text-black leading-tight mb-2">
-            {quiz.title}
-          </h3>
+          <h3 className="text-lg font-bold text-black leading-tight mb-2">{quiz.title}</h3>
           <p className="text-xs text-gray-500">{quiz.level}</p>
         </div>
 
@@ -71,7 +69,6 @@ const QuizCard = ({ quiz, isAdmin, onEdit, onDelete, onAddQuestion }) => {
     </div>
   );
 };
-
 
 // --- MAIN QUIZZES PAGE COMPONENT ---
 export default function Quizzes() {

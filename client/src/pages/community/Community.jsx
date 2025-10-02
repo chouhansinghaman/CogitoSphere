@@ -2,7 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { FiPlus, FiTrash2, FiX } from 'react-icons/fi';
-import { getPostsApi, createPostApi, answerPostApi, deletePostApi } from "../../services/api.community";
+import { 
+  getPostsApi, 
+  createPostApi, 
+  answerPostApi, 
+  deletePostApi 
+} from "../../services/api.community.js"; // ✅ fixed path
+
+import Loader from '../../components/Loader.jsx';
 
 // ========================
 // Post Form Modal
@@ -17,9 +24,12 @@ const PostFormModal = ({ show, onClose, onSave }) => {
       return toast.error('All fields are required.');
     }
     setIsSubmitting(true);
-    await onSave(form);
-    setForm({ title: '', subject: '', body: '' });
-    setIsSubmitting(false);
+    try {
+      await onSave(form);
+      setForm({ title: '', subject: '', body: '' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!show) return null;
@@ -113,26 +123,19 @@ const PostCard = ({ post, currentUser, onDelete, onAddReply }) => {
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-6 flex items-start gap-4 relative group hover:shadow-md transition-shadow">
-      {/* Avatar */}
       <div className="flex-shrink-0 w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-lg">
         {getInitials(post.askedBy?.username)}
       </div>
 
-      {/* Content */}
       <div className="flex-1">
         <h3 className="text-lg font-bold text-gray-900">{post.title}</h3>
-
-        {/* Meta info row */}
         <p className="mt-1 text-sm text-gray-500 flex flex-wrap items-center gap-x-2">
           <span className="font-medium text-blue-600 bg-blue-100 py-0.5 px-2 rounded-full">{post.subject}</span>
           <span>• Posted by <span className="font-medium">{post.askedBy?.username || "Anonymous"}</span></span>
           <span>• {new Date(post.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
         </p>
-
-        {/* Body */}
         <p className="text-gray-700 mt-3 whitespace-pre-wrap">{post.body}</p>
 
-        {/* Replies */}
         <div className="mt-5">
           <h4 className="font-semibold text-gray-800 mb-2">Replies ({post.answers?.length || 0})</h4>
           <div className="space-y-3 border-l-2 border-gray-100 pl-4">
@@ -153,7 +156,6 @@ const PostCard = ({ post, currentUser, onDelete, onAddReply }) => {
         </div>
       </div>
 
-      {/* Delete Button */}
       {canDelete && (
         <button
           onClick={() => onDelete(post._id)}
@@ -175,12 +177,26 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
+  const handleApiError = (e, defaultMessage = "Something went wrong.") => {
+    if (e.response) {
+      if (typeof e.response.data === "string" && e.response.data.includes("<!DOCTYPE")) {
+        toast.error("Server returned an unexpected response.");
+        console.error("API returned HTML instead of JSON:", e.response.data);
+      } else {
+        toast.error(e.response.data.message || defaultMessage);
+      }
+    } else {
+      toast.error(defaultMessage);
+    }
+  };
+
   const loadPosts = async () => {
+    setLoading(true);
     try {
       const { data } = await getPostsApi();
       setPosts(data);
     } catch (e) {
-      toast.error(e.message || "Failed to load posts.");
+      handleApiError(e, "Failed to load posts.");
     } finally {
       setLoading(false);
     }
@@ -195,19 +211,18 @@ export default function CommunityPage() {
       setShowModal(false);
       loadPosts();
     } catch (e) {
-      toast.error(e.message || "Could not create post.");
+      handleApiError(e, "Could not create post.");
     }
   };
 
   const handleDeletePost = async (id) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      try {
-        await deletePostApi(id);
-        toast.success('Post deleted.');
-        loadPosts();
-      } catch (e) {
-        toast.error(e.message || "Failed to delete post.");
-      }
+    if (!window.confirm('Are you sure you want to delete this post?')) return;
+    try {
+      await deletePostApi(id);
+      toast.success('Post deleted.');
+      loadPosts();
+    } catch (e) {
+      handleApiError(e, "Failed to delete post.");
     }
   };
 
@@ -217,17 +232,14 @@ export default function CommunityPage() {
       toast.success('Reply added!');
       loadPosts();
     } catch (e) {
-      toast.error(e.message || "Failed to add reply.");
+      handleApiError(e, "Failed to add reply.");
     }
   };
 
   return (
     <div className="w-full h-full flex flex-col font-sans p-4 sm:p-0">
-      {/* Header */}
       <header className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-        <h1 className="text-3xl font-bold text-black text-center md:text-left">
-          Community Forum
-        </h1>
+        <h1 className="text-3xl font-bold text-black text-center md:text-left">Community Forum</h1>
         <button
           onClick={() => setShowModal(true)}
           className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
@@ -237,10 +249,9 @@ export default function CommunityPage() {
         </button>
       </header>
 
-      {/* Posts */}
       <main className="flex-1 space-y-4">
         {loading ? (
-          <p className="text-center text-gray-500">Loading posts...</p>
+          <Loader />
         ) : posts.length > 0 ? (
           posts.map(p => (
             <PostCard key={p._id} post={p} currentUser={user} onDelete={handleDeletePost} onAddReply={handleAddReply} />
@@ -253,7 +264,6 @@ export default function CommunityPage() {
         )}
       </main>
 
-      {/* Modal */}
       <PostFormModal show={showModal} onClose={() => setShowModal(false)} onSave={handleSavePost} />
     </div>
   );

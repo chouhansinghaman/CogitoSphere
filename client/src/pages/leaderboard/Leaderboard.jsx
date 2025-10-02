@@ -8,10 +8,11 @@ const Leaderboard = () => {
   const { user } = useAuth();
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch("import.meta.env.VITE_API_BASE_URL/api/leaderboard");
+      const res = await fetch(`${API_URL}/api/leaderboard`);
       if (!res.ok) throw new Error("Failed to fetch leaderboard");
       const data = await res.json();
       setLeaders(data || []);
@@ -24,13 +25,13 @@ const Leaderboard = () => {
 
   useEffect(() => {
     fetchLeaderboard();
-  }, []);
+  }, [API_URL]);
 
   const handleRemoveStudent = async (studentId) => {
     if (!window.confirm("Are you sure you want to remove this student's data?")) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`import.meta.env.VITE_API_BASE_URL/api/leaderboard/user/${studentId}`, {
+      const res = await fetch(`${API_URL}/api/leaderboard/user/${studentId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

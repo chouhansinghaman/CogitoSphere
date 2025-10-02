@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext'; // Assuming you have an AuthContext
+import { useAuth } from '../../context/AuthContext';
 import { FiBell, FiPlus, FiEdit, FiTrash2, FiX } from 'react-icons/fi';
 
 // --- NOTIFICATION CARD SUB-COMPONENT ---
@@ -62,9 +62,7 @@ const NotificationFormModal = ({ show, onClose, onSave, notificationToEdit }) =>
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !message) {
-      return toast.error('Title and message are required.');
-    }
+    if (!title || !message) return toast.error('Title and message are required.');
     setIsSubmitting(true);
     await onSave({ title, message });
     setIsSubmitting(false);
@@ -116,11 +114,11 @@ const NotificationFormModal = ({ show, onClose, onSave, notificationToEdit }) =>
   );
 };
 
-
 // --- MAIN NOTIFICATIONS PAGE COMPONENT ---
 const Notifications = () => {
   const { user, token } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -130,11 +128,8 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const res = await fetch('import.meta.env.VITE_API_BASE_URL/api/notifications', {
-        // 👇 ADD THIS HEADERS OBJECT
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const res = await fetch(`${API_URL}/api/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch notifications.');
       const data = await res.json();
@@ -148,7 +143,7 @@ const Notifications = () => {
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [API_URL, token]);
 
   const handleCreateClick = () => {
     setNotificationToEdit(null);
@@ -168,42 +163,37 @@ const Notifications = () => {
   const handleSave = async (formData) => {
     const isEditing = !!notificationToEdit;
     const url = isEditing
-      ? `import.meta.env.VITE_API_BASE_URL/api/notifications/${notificationToEdit._id}`
-      : 'import.meta.env.VITE_API_BASE_URL/api/notifications';
+      ? `${API_URL}/api/notifications/${notificationToEdit._id}`
+      : `${API_URL}/api/notifications`;
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
       const res = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData),
       });
       if (!res.ok) throw new Error(`Failed to ${isEditing ? 'update' : 'create'} notification.`);
-
       toast.success(`Notification ${isEditing ? 'updated' : 'created'} successfully!`);
       handleCloseModal();
-      fetchNotifications(); // Refresh the list
+      fetchNotifications();
     } catch (error) {
       toast.error(error.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this notification?')) {
-      try {
-        const res = await fetch(`import.meta.env.VITE_API_BASE_URL/api/notifications/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error('Failed to delete notification.');
-        toast.success('Notification deleted.');
-        fetchNotifications(); // Refresh the list
-      } catch (error) {
-        toast.error(error.message);
-      }
+    if (!window.confirm('Are you sure you want to delete this notification?')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/notifications/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to delete notification.');
+      toast.success('Notification deleted.');
+      fetchNotifications();
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
@@ -230,7 +220,7 @@ const Notifications = () => {
         {loading ? (
           <p className="text-center text-gray-500">Loading notifications...</p>
         ) : notifications.length > 0 ? (
-          notifications.map(notif => (
+          notifications.map((notif) => (
             <NotificationCard
               key={notif._id}
               notification={notif}

@@ -1,4 +1,5 @@
 import API from "../lib/api";
+
 export const getPostsApi = () => API.get("/posts");
 export const createPostApi = (payload) => API.post("/posts", payload);
 export const answerPostApi = (id, payload) => API.post(`/posts/${id}/answer`, payload);

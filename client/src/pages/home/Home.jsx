@@ -7,12 +7,11 @@ import Confetti from 'react-confetti';
 import CountUp from 'react-countup';
 
 // --- Components ---
-
+// (Icons and Skeleton remain unchanged)
 const TrashIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 hover:text-red-500 transition-colors"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>);
 const IconClipboardList = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>);
 const IconTarget = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>);
 const IconAward = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 17 17 23 15.79 13.88"></polyline></svg>);
-const Skeleton = ({ className }) => <div className={`bg-gray-200 rounded-md animate-pulse ${className}`} />;
 
 const StudyStreak = () => {
   const { user, setUser } = useAuth();
@@ -631,12 +630,13 @@ const RecentPerformance = ({ submissions, isLoading }) => {
   );
 };
 
+// --- ExploreCourses Component (API fix only) ---
 const ExploreCourses = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // Helper Icon for the card
   const ArrowRightIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1">
       <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -647,7 +647,7 @@ const ExploreCourses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await fetch('import.meta.env.VITE_API_BASE_URL/api/courses');
+        const res = await fetch(`${API_URL}/api/courses`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Could not fetch courses');
         setCourses(data.courses || data || []);
@@ -659,7 +659,7 @@ const ExploreCourses = () => {
       }
     };
     fetchCourses();
-  }, []);
+  }, [API_URL]);
 
   if (isLoading) {
     return (
@@ -705,10 +705,12 @@ const ExploreCourses = () => {
   );
 };
 
+// --- Home Component (API fix only) ---
 const Home = () => {
   const { user, token } = useAuth();
   const [submissions, setSubmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     if (!token) {
@@ -719,10 +721,8 @@ const Home = () => {
     const fetchSubmissions = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch('import.meta.env.VITE_API_BASE_URL/api/submissions/my', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        const res = await fetch(`${API_URL}/api/submissions/my`, {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Could not fetch submissions');
@@ -735,7 +735,7 @@ const Home = () => {
     };
 
     fetchSubmissions();
-  }, [token]);
+  }, [token, API_URL]);
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-10 font-sans">

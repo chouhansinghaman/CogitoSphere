@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import Loader from "../../components/Loader";
-import Sidebar from "../../components/Sidebar.jsx";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 import Logo from "../../assets/logo.png";
 import Illustration from "../../assets/illustration.PNG";
-import API from "../../lib/api.js";
+import { registerApi, loginApi } from "../../services/api.auth.js"; // ✅ helpers
 
 export default function Register() {
   const navigate = useNavigate();
@@ -39,7 +38,6 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check for password length before anything else
     if (formData.password.length < 6) {
       return toast.error("Password must be at least 6 characters long");
     }
@@ -52,39 +50,27 @@ export default function Register() {
 
     try {
       const { confirmPassword, ...apiData } = formData;
-      await API.post("/auth/register", apiData);
 
-      const loginRes = await API.post("/auth/login", {
-        email: formData.email,
-        password: formData.password,
-      });
+      await registerApi(apiData); // ✅ register helper
 
-      login(loginRes.data.token, {
-        _id: loginRes.data._id,
-        name: loginRes.data.name,
-        username: loginRes.data.username,
-        email: loginRes.data.email,
-        role: loginRes.data.role,
-      });
+      const loginRes = await loginApi(formData.email, formData.password); // ✅ login helper
+      login(loginRes.data.token, loginRes.data.user);
 
       toast.success("Account created! Welcome!");
-      navigate("/home"); // Navigate to the home page on successful registration
+      navigate("/home");
     } catch (err) {
-      // Improved error handling
       if (err.response) {
-        // Check if the response data is a string (like HTML) instead of an object (JSON)
-        if (typeof err.response.data === 'string' && err.response.data.includes('<!DOCTYPE')) {
+        if (typeof err.response.data === "string" && err.response.data.includes("<!DOCTYPE")) {
           toast.error("Server returned an unexpected response. Please try again.");
           console.error("API Error: Expected JSON but received HTML.", err.response);
         } else {
-          // Handle standard JSON error messages from the API
           toast.error(err.response.data.message || "Registration failed");
         }
       } else {
-        // Handle network errors or other issues where there's no response
         toast.error("Registration failed. Please check your connection.");
       }
-      setIsApiLoading(false); // Make sure to stop loading on error
+    } finally {
+      setIsApiLoading(false);
     }
   };
 
@@ -93,7 +79,7 @@ export default function Register() {
     setTimeout(() => navigate("/login"), 3000);
   };
 
-  if (user) return <Sidebar nav={navigate} />;
+  if (user) return null; // Keep your Sidebar or redirect logic
   if (shouldDisplayLoader) return <Loader />;
 
   return (
@@ -101,18 +87,10 @@ export default function Register() {
       {/* Left Panel */}
       <div className="hidden md:flex flex-col items-center justify-center bg-black text-white relative">
         <div className="absolute top-6 left-6 w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
-          <img
-            src={Logo}
-            alt="ScholarSphere Logo"
-            className="w-full h-full rounded-full object-cover"
-          />
+          <img src={Logo} alt="ScholarSphere Logo" className="w-full h-full rounded-full object-cover" />
         </div>
         <div className="w-[80%] h-100 bg-gray-800 rounded-lg flex items-center justify-center">
-          <img
-            src={Illustration}
-            alt="ScholarSphere Illustration"
-            className="w-full h-full object-cover"
-          />
+          <img src={Illustration} alt="ScholarSphere Illustration" className="w-full h-full object-cover" />
         </div>
       </div>
 
@@ -123,6 +101,7 @@ export default function Register() {
             Join us for an <br /> amazing journey!
           </h1>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="relative">
@@ -136,14 +115,10 @@ export default function Register() {
                   className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
                   required
                 />
-                <label
-                  htmlFor="username"
-                  className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
-                >
+                <label htmlFor="username" className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black">
                   Username
                 </label>
               </div>
-
               <div className="relative">
                 <input
                   id="name"
@@ -155,10 +130,7 @@ export default function Register() {
                   className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
                   required
                 />
-                <label
-                  htmlFor="name"
-                  className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
-                >
+                <label htmlFor="name" className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black">
                   Name
                 </label>
               </div>
@@ -175,10 +147,7 @@ export default function Register() {
                 className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
                 required
               />
-              <label
-                htmlFor="email"
-                className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
-              >
+              <label htmlFor="email" className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black">
                 Email
               </label>
             </div>
@@ -195,16 +164,10 @@ export default function Register() {
                   className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
                   required
                 />
-                <label
-                  htmlFor="password"
-                  className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
-                >
+                <label htmlFor="password" className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black">
                   Password
                 </label>
-                <span
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-3 cursor-pointer text-gray-500"
-                >
+                <span onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-3 cursor-pointer text-gray-500">
                   {showPassword ? "🙈" : "👁️"}
                 </span>
               </div>
@@ -220,38 +183,23 @@ export default function Register() {
                   className="peer h-12 w-full border border-gray-300 rounded-lg px-4 placeholder-transparent focus:outline-none focus:border-black"
                   required
                 />
-                <label
-                  htmlFor="confirmPassword"
-                  className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black"
-                >
+                <label htmlFor="confirmPassword" className="absolute left-4 -top-2.5 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black">
                   Confirm Password
                 </label>
-                <span
-                  onClick={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
-                  className="absolute right-4 top-3 cursor-pointer text-gray-500"
-                >
+                <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-3 cursor-pointer text-gray-500">
                   {showConfirmPassword ? "🙈" : "👁️"}
                 </span>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isApiLoading}
-              className="w-full bg-black text-white py-3 rounded-full font-semibold hover:bg-gray-800 transition disabled:opacity-75"
-            >
+            <button type="submit" disabled={isApiLoading} className="w-full bg-black text-white py-3 rounded-full font-semibold hover:bg-gray-800 transition disabled:opacity-75">
               {isApiLoading ? "Creating Account..." : "Register"}
             </button>
           </form>
 
           <p className="text-sm text-center text-gray-600 mt-6">
             Already have an account?{" "}
-            <button
-              onClick={handleSwitchToLogin}
-              className="text-green-500 font-medium hover:underline"
-            >
+            <button onClick={handleSwitchToLogin} className="text-green-500 font-medium hover:underline">
               Login now
             </button>
           </p>
@@ -260,4 +208,3 @@ export default function Register() {
     </div>
   );
 }
-
