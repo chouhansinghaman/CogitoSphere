@@ -84,7 +84,7 @@ export default function Quizzes() {
       setLoading(true);
       try {
         const { data } = await getQuizzesApi();
-        setQuizzes(data);
+        setQuizzes(data || []);
       } catch (error) {
         toast.error(error.message || "Could not fetch quizzes.");
       } finally {
@@ -100,14 +100,13 @@ export default function Quizzes() {
   const handleAddQuestion = (quizId) => navigate(`/questions/create/${quizId}`);
 
   const handleDelete = async (quizId) => {
-    if (window.confirm("Are you sure you want to delete this quiz?")) {
-      try {
-        await deleteQuizApi(quizId);
-        setQuizzes(prev => prev.filter(q => q._id !== quizId));
-        toast.success("Quiz deleted successfully!");
-      } catch (error) {
-        toast.error(error.message || "Could not delete the quiz.");
-      }
+    if (!window.confirm("Are you sure you want to delete this quiz?")) return;
+    try {
+      await deleteQuizApi(quizId);
+      setQuizzes(prev => prev.filter(q => q._id !== quizId));
+      toast.success("Quiz deleted successfully!");
+    } catch (error) {
+      toast.error(error.message || "Could not delete the quiz.");
     }
   };
 
