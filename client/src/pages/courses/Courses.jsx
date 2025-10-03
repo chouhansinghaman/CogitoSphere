@@ -101,7 +101,7 @@ const Courses = () => {
         const fetchCourses = async () => {
             setLoading(true);
             try {
-                const res = await fetch("import.meta.env.VITE_API_URL/api/courses");
+                const res = await fetch("import.meta.env.VITE_API_BASE_URL/api/courses");
                 if (!res.ok) throw new Error("Failed to fetch courses");
                 const data = await res.json();
                 setCourses(data);
