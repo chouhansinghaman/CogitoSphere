@@ -25,29 +25,30 @@ const CourseCard = ({ course, isAdmin, onEdit, onDelete }) => {
       onClick={handleCardClick}
       className="cursor-pointer bg-white border border-gray-200 rounded-xl flex flex-col justify-between h-full group transition-all duration-300 relative shadow-sm hover:shadow-xl"
     >
+      {/* Border animation */}
       <span className="absolute inset-0 border-2 border-blue-500 rounded-xl scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 ease-in-out"></span>
+
       <div className='p-6 flex flex-col h-full'>
         <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">{course.category}</p>
         <h3 className="text-xl font-bold text-black leading-tight mb-3">{course.title}</h3>
         <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 flex-grow">{description}</p>
+
         <div className="mt-6 border-t border-gray-100 pt-4 flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600 transition-colors group-hover:text-blue-500 group-hover:underline">
             View Course →
           </span>
+
           {isAdmin && (
-            <div
-              className="flex items-center gap-2 transition-opacity opacity-100 md:opacity-0 group-hover:opacity-100"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => onEdit(course._id)}
+                onClick={(e) => { e.stopPropagation(); onEdit(course._id); }}
                 className="p-2 bg-gray-100 hover:bg-blue-500 hover:text-white rounded-full text-gray-700 transition-colors"
                 aria-label="Edit course"
               >
                 <FiEdit size={16} />
               </button>
               <button
-                onClick={() => onDelete(course._id)}
+                onClick={(e) => { e.stopPropagation(); onDelete(course._id); }}
                 className="p-2 bg-gray-100 hover:bg-red-500 hover:text-white rounded-full text-gray-700 transition-colors"
                 aria-label="Delete course"
               >
