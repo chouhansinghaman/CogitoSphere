@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: cogitosphere
+    env: static
+    buildCommand: npm install && npm run build
+    publishPath: dist        # Vite outputs build files to dist/
+    routes:
+      - path: /*
+        rewrite: /index.html
