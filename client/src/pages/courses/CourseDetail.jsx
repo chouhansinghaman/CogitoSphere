@@ -15,7 +15,7 @@ export default function CourseDetail() {
             if (!course) {
                 setLoading(true);
                 try {
-                    const res = await fetch(`import.meta.env.VITE_API_BASE_URL/api/courses/${id}`);
+                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/courses/${id}`);
                     if (!res.ok) {
                         const errData = await res.json();
                         throw new Error(errData.message || "Course not found");

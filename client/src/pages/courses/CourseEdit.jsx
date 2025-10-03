@@ -25,7 +25,7 @@ const CourseEdit = () => {
     const fetchCourse = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`import.meta.env.VITE_API_BASE_URL/api/courses/${courseId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/courses/${courseId}`);
         if (!res.ok) throw new Error('Course not found.');
         const data = await res.json();
         setCourse(data);

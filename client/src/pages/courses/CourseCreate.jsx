@@ -51,7 +51,7 @@ const CourseCreate = () => {
             data.append('pdfFile', file);
         }
         try {
-            const res = await fetch("import.meta.env.VITE_API_BASE_URL/api/courses", {
+            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/courses`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: data,
