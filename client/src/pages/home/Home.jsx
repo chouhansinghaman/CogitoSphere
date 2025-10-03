@@ -37,11 +37,25 @@ const IconAward = () => (
   </svg>
 );
 
+// Small client-safe confetti hook: only render if window exists
+const useWindowSize = () => {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setSize({ width: window.innerWidth, height: window.innerHeight });
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return size;
+};
+
 // --- StudyStreak Component ---
 const StudyStreak = () => {
   const { user, setUser } = useAuth();
   const [key, setKey] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const { width, height } = useWindowSize();
 
   const isToday = (someDate) => {
     if (!someDate) return false;
@@ -84,7 +98,9 @@ const StudyStreak = () => {
 
   return (
     <div className="relative w-full bg-gradient-to-r from-orange-400 to-yellow-300 rounded-xl p-3 flex items-center justify-between text-black shadow-md mb-4 overflow-hidden">
-      {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} recycle={false} numberOfPieces={200} />}
+      {showConfetti && typeof window !== 'undefined' && width > 0 && height > 0 && (
+        <Confetti width={width} height={height} recycle={false} numberOfPieces={200} />
+      )}
       <div className="flex flex-col">
         <span className="text-lg font-semibold">Streak</span>
         <span key={key} className="text-2xl font-bold animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -357,11 +373,12 @@ const PerformanceSnapshot = ({ submissions, isLoading }) => {
   }, [submissions]);
 
   if (isLoading) {
+    // Simple tailwind skeletons (no external Skeleton component)
     return (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Skeleton className="h-24" />
-        <Skeleton className="h-24" />
-        <Skeleton className="h-24" />
+        <div className="h-24 bg-gray-200 rounded-2xl animate-pulse" />
+        <div className="h-24 bg-gray-200 rounded-2xl animate-pulse" />
+        <div className="h-24 bg-gray-200 rounded-2xl animate-pulse" />
       </div>
     );
   }
@@ -394,9 +411,9 @@ const RecentPerformance = ({ submissions, isLoading }) => {
 
   if (isLoading) return (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-      <Skeleton className="h-6 w-1/3" />
-      <Skeleton className="h-16 w-full" />
-      <Skeleton className="h-16 w-full" />
+      <div className="h-6 w-1/3 bg-gray-200 rounded-md animate-pulse" />
+      <div className="h-16 w-full bg-gray-200 rounded-md animate-pulse" />
+      <div className="h-16 w-full bg-gray-200 rounded-md animate-pulse" />
     </div>
   );
 
@@ -466,10 +483,10 @@ const ExploreCourses = () => {
   if (isLoading) {
     return (
       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <Skeleton className="h-6 w-1/3 mb-4" />
+        <div className="h-6 w-1/3 mb-4 bg-gray-200 rounded-md animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-48 w-full" />
+          <div className="h-48 w-full bg-gray-200 rounded-lg animate-pulse" />
+          <div className="h-48 w-full bg-gray-200 rounded-lg animate-pulse" />
         </div>
       </div>
     );
