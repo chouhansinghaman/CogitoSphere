@@ -88,7 +88,7 @@ export default function Login() {
         <div className="w-full max-w-sm">
           <h1 className="text-4xl font-bold mb-2">Welcome back!</h1>
           <p className="text-gray-500 mb-8">
-            Simplify your workflow and boost your productivity with ScholarSphere.
+            Simplify your workflow and boost your productivity with CogitoSphere.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -194,7 +194,7 @@ export default function Login() {
         </div>
         <p className="mt-6 text-lg max-w-xs">
           Make your work easier and organized with{" "}
-          <span className="font-bold">ScholarSphere</span>
+          <span className="font-bold">CogitoSphere</span>
         </p>
       </div>
     </div>

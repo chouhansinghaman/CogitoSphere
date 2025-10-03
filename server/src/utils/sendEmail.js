@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (to, subject, html) => {
   try {
     await transporter.sendMail({
-      from: `"ScholarSphere" <${process.env.EMAIL_USER}>`,
+      from: `"CogitoSphere" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,

@@ -1,6 +1,6 @@
-# 🎓 Scholarsphere: College Q&A and Practice Platform (In Development)
+# 🎓 CogitoSphere: College Q&A and Practice Platform (In Development)
 
-A collaborative learning platform for students to solve, share, and discuss subject-specific questions. With a focus on community-driven education, Scholarsphere offers quizzes, notes, and AI-enhanced dashboards to help students learn smarter, not harder.
+A collaborative learning platform for students to solve, share, and discuss subject-specific questions. With a focus on community-driven education, CogitoSphere offers quizzes, notes, and AI-enhanced dashboards to help students learn smarter, not harder.
 
 ---
 

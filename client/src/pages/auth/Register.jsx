@@ -87,10 +87,10 @@ export default function Register() {
       {/* Left Panel */}
       <div className="hidden md:flex flex-col items-center justify-center bg-black text-white relative">
         <div className="absolute top-6 left-6 w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
-          <img src={Logo} alt="ScholarSphere Logo" className="w-full h-full rounded-full object-cover" />
+          <img src={Logo} alt="CogitoSphere Logo" className="w-full h-full rounded-full object-cover" />
         </div>
         <div className="w-[80%] h-100 bg-gray-800 rounded-lg flex items-center justify-center">
-          <img src={Illustration} alt="ScholarSphere Illustration" className="w-full h-full object-cover" />
+          <img src={Illustration} alt="CogitoSphere Illustration" className="w-full h-full object-cover" />
         </div>
       </div>
 

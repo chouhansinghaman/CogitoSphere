@@ -9,7 +9,7 @@ const App = () => {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
-          <span className="text-2xl font-bold text-purple-800">Scholarsphere</span>
+          <span className="text-2xl font-bold text-purple-800">CogitoSphere</span>
         </div>
         <nav className="hidden lg:flex items-center space-x-6">
           <a href="#" className="hover:text-purple-600 transition-colors">About</a>
@@ -180,7 +180,7 @@ const App = () => {
       <footer className="bg-gray-900 text-gray-300 py-16 px-6 lg:px-24">
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-white font-bold mb-4">Scholarsphere</h3>
+            <h3 className="text-white font-bold mb-4">CogitoSphere</h3>
             <p className="text-sm">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
             </p>
@@ -201,7 +201,7 @@ const App = () => {
           <div>
             <h4 className="text-white font-bold mb-4">Contact</h4>
             <p className="text-sm">
-              Email: info@scholarsphere.com <br />
+              Email: info@CogitoSphere.com <br />
               Phone: +1 234 567 8900
             </p>
           </div>
@@ -214,7 +214,7 @@ const App = () => {
           </div>
         </div>
         <div className="text-center text-sm text-gray-500 mt-8">
-          &copy; 2024 Scholarsphere. All rights reserved.
+          &copy; 2024 CogitoSphere. All rights reserved.
         </div>
       </footer>
     </div>

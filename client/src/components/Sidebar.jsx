@@ -88,7 +88,7 @@ export default function Sidebar() {
             <div className="w-10 h-10">
               <img
                 src={Logo}
-                alt="ScholarSphere Logo"
+                alt="CogitoSphere Logo"
                 className="w-full h-full rounded-full object-cover"
               />
             </div>

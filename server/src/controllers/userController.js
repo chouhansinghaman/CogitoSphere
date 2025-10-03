@@ -108,7 +108,7 @@ export const updateUserAvatar = async (req, res) => {
       const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
       // Upload to Cloudinary
       const result = await cloudinary.uploader.upload(dataURI, {
-        folder: "scholarsphere_avatars", // A folder to keep images organized
+        folder: "CogitoSphere_avatars", // A folder to keep images organized
       });
       // Update user in DB with the secure URL from Cloudinary
       const user = await User.findById(req.user._id);
