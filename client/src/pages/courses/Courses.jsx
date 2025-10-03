@@ -6,17 +6,19 @@ import { FiPlus, FiEdit, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
 
 // --- ICONS ---
 const SearchIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8"></circle>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
 );
 
 // --- COURSE CARD ---
 const CourseCard = ({ course, isAdmin, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const slug = course.title.replace(/\s+/g, "-").toLowerCase();
+  const description = course.description || "A brief overview of the course content, learning objectives, and what students can expect to achieve upon completion.";
 
   const handleCardClick = () => navigate(`/courses/${slug}`, { state: { course } });
-
-  const description = course.description || "A brief overview of the course content, learning objectives, and what students can expect to achieve upon completion.";
 
   return (
     <div
@@ -95,33 +97,16 @@ const Courses = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL; // ✅ FIXED
-    // --- DATA FETCHING ---
-    useEffect(() => {
-        const fetchCourses = async () => {
-            setLoading(true);
-            try {
-                const res = await fetch("import.meta.env.VITE_API_BASE_URL/courses");
-                if (!res.ok) throw new Error("Failed to fetch courses");
-                const data = await res.json();
-                setCourses(data);
-                const uniqueCategories = ["All Categories", ...new Set(data.map(course => course.category))];
-                setCategories(uniqueCategories);
-            } catch (error) {
-                toast.error(error.message || "Could not fetch courses.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchCourses();
-    }, []);
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // --- FETCH COURSES ---
+  // --- DATA FETCHING ---
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_URL}/courses`);
+        // Handles whether API_URL ends with /api or not
+        const url = API_URL.endsWith("/api") ? `${API_URL}/courses` : `${API_URL}/api/courses`;
+        const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch courses");
         const data = await res.json();
         setCourses(data);
@@ -146,7 +131,6 @@ const Courses = () => {
 
   const handleCreate = () => navigate('/create-course');
   const handleEdit = (courseId) => navigate(`/edit-course/${courseId}`);
-
   const handleDeleteClick = (courseId) => {
     setCourseToDelete(courseId);
     setIsModalOpen(true);
@@ -155,7 +139,8 @@ const Courses = () => {
   const confirmDelete = async () => {
     if (!courseToDelete) return;
     try {
-      const res = await fetch(`${API_URL}/courses/${courseToDelete}`, {
+      const url = API_URL.endsWith("/api") ? `${API_URL}/courses/${courseToDelete}` : `${API_URL}/api/courses/${courseToDelete}`;
+      const res = await fetch(url, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -176,7 +161,13 @@ const Courses = () => {
         <h1 className="text-3xl font-bold text-black">Courses</h1>
         <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="relative flex-1 md:flex-initial">
-            <input type="text" placeholder="Search courses..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-gray-100 text-gray-800 border border-gray-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input
+              type="text"
+              placeholder="Search courses..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-gray-100 text-gray-800 border border-gray-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"><SearchIcon /></div>
           </div>
           {isAdmin && (
