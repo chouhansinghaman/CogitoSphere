@@ -1,7 +1,7 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import { PrivateRoute, AdminRoute } from "./components/PrivateRoute";
+import { PrivateRoute, AdminRoute } from "./routes/Guards.jsx";
 
 // --- Pages ---
 import Home from "./pages/Home";
