@@ -466,7 +466,7 @@ const ExploreCourses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/courses`);
+        const res = await fetch(`${API_URL}/courses`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Could not fetch courses');
         setCourses(data.courses || []);
@@ -534,7 +534,7 @@ const Home = () => {
     const fetchSubmissions = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`${API_URL}/api/submissions/my`, {
+        const res = await fetch(`${API_URL}/submissions/my`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
