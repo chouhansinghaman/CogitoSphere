@@ -9,8 +9,6 @@ import {
   deletePostApi 
 } from "../../services/api.community.js"; // ✅ fixed path
 
-import Loader from '../../components/Loader.jsx';
-
 // ========================
 // Post Form Modal
 // ========================
@@ -251,7 +249,7 @@ export default function CommunityPage() {
 
       <main className="flex-1 space-y-4">
         {loading ? (
-          <Loader />
+          <p className="text-center text-gray-500 py-10">Loading posts...</p>
         ) : posts.length > 0 ? (
           posts.map(p => (
             <PostCard key={p._id} post={p} currentUser={user} onDelete={handleDeletePost} onAddReply={handleAddReply} />
