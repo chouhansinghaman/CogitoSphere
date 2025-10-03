@@ -464,21 +464,26 @@ const ExploreCourses = () => {
   );
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const res = await fetch(`${API_URL}/courses`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Could not fetch courses');
-        setCourses(data.courses || []);
-      } catch (error) {
-        toast.error(error.message);
-        setCourses([]);
-      } finally {
-        setIsLoading(false);
+  const fetchCourses = async () => {
+    setIsLoading(true);
+    try {
+      const url = API_URL.endsWith("/api") ? `${API_URL}/courses` : `${API_URL}/api/courses`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Could not fetch courses");
       }
-    };
-    fetchCourses();
-  }, [API_URL]);
+      const data = await res.json();
+      setCourses(Array.isArray(data) ? data : data.courses || []);
+    } catch (error) {
+      toast.error(error.message);
+      setCourses([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  fetchCourses();
+}, [API_URL]);
 
   if (isLoading) {
     return (
