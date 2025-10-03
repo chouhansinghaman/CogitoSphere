@@ -4,8 +4,8 @@ import axios from "axios";
 
 const AuthContext = createContext();
 
-// Set Axios default base URL
-axios.defaults.baseURL = "import.meta.env.VITE_API_BASE_URL"; // <-- backend port
+// ✅ Set Axios default base URL from env (do NOT wrap in quotes)
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL; // <-- backend URL from .env
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token") || null);
@@ -23,7 +23,8 @@ export const AuthProvider = ({ children }) => {
 
       setLoading(true);
       try {
-        const res = await axios.get("/api/user/profile", {
+        // ✅ Since VITE_API_BASE_URL already has /api, remove /api from path
+        const res = await axios.get("/user/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(res.data);
@@ -61,36 +62,35 @@ export const AuthProvider = ({ children }) => {
       throw new Error("Authentication error. Please log in again.");
     }
     try {
-      // Make a PUT request to your backend endpoint
+      // ✅ Remove extra /api
       const res = await axios.put(
-        "/api/auth/change-password",
-        { currentPassword, newPassword }, // Request body
+        "/auth/change-password",
+        { currentPassword, newPassword },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Auth header
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      // Return the success message from the backend
       return res.data.message || "Password updated successfully!";
     } catch (err) {
-      // Re-throw the specific error message from the backend API
       throw new Error(
-        err.response?.data?.message || "An error occurred while updating the password."
+        err.response?.data?.message ||
+          "An error occurred while updating the password."
       );
     }
   };
 
   return (
-    <AuthContext.Provider 
-      value={{ 
-        token, 
-        user, 
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
         setUser,
-        login, 
-        logout, 
-        loading, 
-        updateUserPassword // <-- Expose the new function
+        login,
+        logout,
+        loading,
+        updateUserPassword,
       }}
     >
       {children}
