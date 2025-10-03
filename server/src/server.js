@@ -1,6 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { connectDB } from "./config/db.js";
 
 // Routes
@@ -23,10 +25,10 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  process.env.FRONTEND_URL // e.g. your Vercel frontend URL
+  process.env.FRONTEND_URL
 ].filter(Boolean);
 
-// CORS middleware (must be before routes)
+// CORS middleware
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
@@ -37,7 +39,7 @@ app.use(cors({
 // Parse JSON
 app.use(express.json());
 
-// Routes with /api prefix
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/submissions", submissionRoutes);
@@ -48,8 +50,20 @@ app.use("/api/user", userRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-// Test route
-app.get("/", (req, res) => res.send("🎓 Scholarsphere Backend is running..."));
+// --------------------------
+// Serve React build (frontend)
+// --------------------------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientBuildPath = path.join(__dirname, "../../client/dist");
+
+// Serve static files from React
+app.use(express.static(clientBuildPath));
+
+// Wildcard route: serve index.html for any non-API route
+app.get("*", (req, res) => {
+  res.sendFile(path.join(clientBuildPath, "index.html"));
+});
 
 // Listen
 const PORT = process.env.PORT || 5001;
