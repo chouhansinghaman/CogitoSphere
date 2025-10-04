@@ -25,8 +25,8 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  process.env.VITE_FRONTEND_URL
-].filter(Boolean);
+  "https://cogitosphere.onrender.com" // Explicitly setting the origin
+];
 
 // CORS middleware
 app.use(cors({
