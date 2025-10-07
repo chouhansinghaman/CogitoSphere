@@ -332,7 +332,9 @@ const ProfileCard = ({ user }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeTab") || "goals");
 
-  useEffect(() => { localStorage.setItem("activeTab", activeTab); }, [activeTab]);
+  if (!user) return null;
+
+  React.useEffect(() => { localStorage.setItem("activeTab", activeTab); }, [activeTab]);
 
   return (
     <div className="w-full md:w-[380px] bg-black/90 backdrop-blur-xl text-white rounded-3xl p-6 flex flex-col items-center relative shadow-xl">
@@ -528,32 +530,24 @@ const Home = () => {
   const { user, token } = useAuth();
   const [submissions, setSubmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const API_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
+    if (!token || !user) return;
 
     const fetchSubmissions = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`${API_URL}/submissions/my`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Could not fetch submissions');
-        setSubmissions(data.submissions || []);
-      } catch (error) {
-        toast.error(error.message);
+        const res = await API.get("/submissions/my");
+        setSubmissions(res.data.submissions || []);
+      } catch (err) {
+        toast.error(err.message);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSubmissions();
-  }, [token, API_URL]);
+  }, [token, user]);
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-10 font-sans">
