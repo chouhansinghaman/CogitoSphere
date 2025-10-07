@@ -1,44 +1,44 @@
+// App.jsx
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, Link, useLocation } from 'react-router-dom';
 
-// -----------------------------
-// Mock API Utility
-// -----------------------------
+// -------------------- API MOCK --------------------
 const API = {
   async request(url, method, data = null) {
     const token = localStorage.getItem("authToken");
-    console.log(`[API] ${method} ${url}. Token present: ${!!token}`);
 
     if (url === '/user/profile') {
       if (!token || token.startsWith('expired')) {
         return Promise.reject({ response: { data: { message: "Token expired or invalid." } } });
       }
-      const userId = token.split('.')[1];
-      return { data: { id: userId, email: `${userId}@example.com`, name: `User ${userId}` } };
+      const payload = token.split('.')[1];
+      return { data: { id: payload, email: `${payload}@example.com`, name: `User ${payload}`, username: `user${payload}` } };
     }
 
     if (url === '/auth/login') {
       if (data.email === 'test@example.com' && data.password === 'password123') {
         const mockToken = `header.user123.signature`;
-        return { data: { token: mockToken, user: { id: 'user123', email: 'test@example.com', name: 'Test User' } } };
+        return { data: { token: mockToken, user: { id: 'user123', name: 'Test User', username: 'testuser', email: 'test@example.com' } } };
       }
       return Promise.reject({ response: { data: { message: "Invalid credentials." } } });
-    }
-
-    if (url === '/auth/logout') {
-      return { data: { message: 'Logged out successfully.' } };
     }
 
     return Promise.resolve({ data: {} });
   }
 };
 
-// -----------------------------
-// 1. Auth Context
-// -----------------------------
+// -------------------- AUTH CONTEXT --------------------
 const AuthContext = createContext();
 const AUTH_TOKEN_KEY = "authToken";
 const AUTH_USER_KEY = "authUser";
+
+const parseJwt = (token) => {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return null;
+  }
+};
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem(AUTH_TOKEN_KEY) || null);
@@ -59,12 +59,23 @@ export const AuthProvider = ({ children }) => {
 
       setLoading(true);
       try {
-        const res = await API.request("/user/profile", "GET");
-        setUser(res.data);
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.data));
-        console.log("Token validated successfully.");
+        const decoded = parseJwt(token);
+
+        setUser({
+          id: decoded?.id || 'unknown',
+          username: decoded?.username || `user${decoded?.id || 'unknown'}`,
+          name: decoded?.name || `User ${decoded?.id || 'unknown'}`,
+          email: decoded?.email || ''
+        });
+
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify({
+          id: decoded?.id || 'unknown',
+          username: decoded?.username || `user${decoded?.id || 'unknown'}`,
+          name: decoded?.name || `User ${decoded?.id || 'unknown'}`,
+          email: decoded?.email || ''
+        }));
       } catch (err) {
-        console.error("Token validation failed:", err);
+        console.error("Token invalid:", err);
         logout();
       } finally {
         setLoading(false);
@@ -95,29 +106,44 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => useContext(AuthContext);
 
-// -----------------------------
-// 2. Protected Route
-// -----------------------------
-const ProtectedRoute = ({ element }) => {
+// -------------------- PROTECTED ROUTE --------------------
+const ProtectedRoute = ({ element: Element }) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate('/login', { replace: true, state: { from: location } });
-    }
-  }, [isAuthenticated, loading, navigate, location]);
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-xl font-semibold">Loading Session...</div>;
+  }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen text-xl font-semibold">Loading Session...</div>;
-  if (!isAuthenticated) return null; // Navigation will redirect
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
-  return element;
+  return Element;
 };
 
-// -----------------------------
-// 3. Login Component
-// -----------------------------
+// -------------------- NAVIGATION --------------------
+const Nav = () => {
+  const { isAuthenticated, user, loading } = useAuth();
+  if (loading) return null;
+
+  return (
+    <nav className="p-4 bg-gray-100 shadow-md">
+      <div className="flex justify-between items-center max-w-7xl mx-auto">
+        <Link to="/" className="text-2xl font-black text-black">CogitoSphere</Link>
+        <div className="space-x-4">
+          {isAuthenticated ? (
+            <span className="text-gray-700">Hello, {user?.name}</span>
+          ) : (
+            <Link to="/login" className="text-black hover:text-gray-700">Login</Link>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+// -------------------- LOGIN PAGE --------------------
 const Login = () => {
   const [email, setEmail] = useState('test@example.com');
   const [password, setPassword] = useState('password123');
@@ -135,8 +161,8 @@ const Login = () => {
     try {
       const res = await API.request('/auth/login', 'POST', { email, password });
       login(res.data.token, res.data.user);
-    } catch (err) {
-      console.error('Login Failed:', err.response?.data?.message || 'Check console.');
+    } catch (error) {
+      alert(error.response?.data?.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
@@ -156,59 +182,42 @@ const Login = () => {
   );
 };
 
-// -----------------------------
-// 4. Home Component
-// -----------------------------
+// -------------------- HOME PAGE --------------------
 const Home = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   return (
     <div className="p-8 text-center">
       <h1 className="text-4xl font-bold mb-4">Welcome Home, {user.name}!</h1>
-      <p className="text-gray-600 mb-8">Your session is persistent until you log out.</p>
+      <p className="text-gray-600 mb-8">You are successfully authenticated.</p>
 
       <div className="bg-gray-50 p-6 rounded-xl border max-w-lg mx-auto">
         <h3 className="text-xl font-semibold mb-3">Session Details</h3>
         <p className="text-left"><span className="font-medium">User ID:</span> {user.id}</p>
         <p className="text-left"><span className="font-medium">Email:</span> {user.email}</p>
-        <p className="text-left text-sm mt-3 text-red-600">* Refresh the page. You remain logged in.</p>
+        <p className="text-left"><span className="font-medium">Username:</span> {user.username}</p>
       </div>
 
-      <button onClick={handleLogout} className="mt-8 px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">
+      <button onClick={() => { logout(); navigate('/login'); }}
+        className="mt-8 px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
+      >
         Logout
       </button>
     </div>
   );
 };
 
-// -----------------------------
-// 5. Nav Component
-// -----------------------------
-const Nav = () => {
-  const { isAuthenticated, user, loading } = useAuth();
-  if (loading) return null;
-
-  return (
-    <nav className="p-4 bg-gray-100 shadow-md">
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <Link to="/" className="text-2xl font-black text-black">CogitoSphere</Link>
-        <div className="space-x-4">
-          {isAuthenticated ? <span className="text-gray-700">Hello, {user?.name || 'User'}</span> : <Link to="/login" className="text-black hover:text-gray-700">Login</Link>}
-        </div>
-      </div>
-    </nav>
-  );
+// -------------------- NAVIGATE MOCK --------------------
+const Navigate = ({ to, replace }) => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate(to, { replace });
+  }, [navigate, to, replace]);
+  return null;
 };
 
-// -----------------------------
-// 6. Main App Component
-// -----------------------------
+// -------------------- APP --------------------
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
