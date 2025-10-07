@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, Link, useLocation 
 const API = {
   // Mock function for API calls, simulates axios interceptors
   async request(url, method, data = null) {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("authToken");
     
     // Simulate API request structure
     console.log(`[API] Sending ${method} to ${url}. Token present: ${!!token}`);
