@@ -1,44 +1,23 @@
 // App.jsx
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, Link, useLocation, Navigate } from 'react-router-dom';
+import axios from 'axios';
 
-// -------------------- API MOCK --------------------
-const API = {
-  async request(url, method, data = null) {
-    const token = localStorage.getItem("authToken");
+// -------------------- API SETUP --------------------
+const API = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL, // e.g., "https://your-backend.onrender.com/api"
+});
 
-    if (url === '/user/profile') {
-      if (!token || token.startsWith('expired')) {
-        return Promise.reject({ response: { data: { message: "Token expired or invalid." } } });
-      }
-      const payload = token.split('.')[1];
-      return { data: { id: payload, email: `${payload}@example.com`, name: `User ${payload}`, username: `user${payload}` } };
-    }
-
-    if (url === '/auth/login') {
-      if (data.email === 'test@example.com' && data.password === 'password123') {
-        const mockToken = `header.user123.signature`;
-        return { data: { token: mockToken, user: { id: 'user123', name: 'Test User', username: 'testuser', email: 'test@example.com' } } };
-      }
-      return Promise.reject({ response: { data: { message: "Invalid credentials." } } });
-    }
-
-    return Promise.resolve({ data: {} });
-  }
-};
+API.interceptors.request.use(config => {
+  const token = localStorage.getItem("authToken");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 // -------------------- AUTH CONTEXT --------------------
 const AuthContext = createContext();
 const AUTH_TOKEN_KEY = "authToken";
 const AUTH_USER_KEY = "authUser";
-
-const parseJwt = (token) => {
-  try {
-    return JSON.parse(atob(token.split('.')[1]));
-  } catch (e) {
-    return null;
-  }
-};
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem(AUTH_TOKEN_KEY) || null);
@@ -48,6 +27,7 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Fetch user profile from backend
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!token) {
@@ -59,23 +39,11 @@ export const AuthProvider = ({ children }) => {
 
       setLoading(true);
       try {
-        const decoded = parseJwt(token);
-
-        setUser({
-          id: decoded?.id || 'unknown',
-          username: decoded?.username || `user${decoded?.id || 'unknown'}`,
-          name: decoded?.name || `User ${decoded?.id || 'unknown'}`,
-          email: decoded?.email || ''
-        });
-
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify({
-          id: decoded?.id || 'unknown',
-          username: decoded?.username || `user${decoded?.id || 'unknown'}`,
-          name: decoded?.name || `User ${decoded?.id || 'unknown'}`,
-          email: decoded?.email || ''
-        }));
+        const res = await API.get("/users/profile");
+        setUser(res.data);
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.data));
       } catch (err) {
-        console.error("Token invalid:", err);
+        console.error("Profile fetch failed:", err);
         logout();
       } finally {
         setLoading(false);
@@ -99,7 +67,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const value = useMemo(() => ({ token, user, login, logout, loading, isAuthenticated: !!user }), [token, user, loading]);
+  const value = useMemo(() => ({
+    token,
+    user,
+    login,
+    logout,
+    loading,
+    isAuthenticated: !!user
+  }), [token, user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
@@ -145,8 +120,8 @@ const Nav = () => {
 
 // -------------------- LOGIN PAGE --------------------
 const Login = () => {
-  const [email, setEmail] = useState('test@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
@@ -159,8 +134,9 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const res = await API.request('/auth/login', 'POST', { email, password });
-      login(res.data.token, res.data.user);
+      const res = await API.post("/auth/login", { email, password });
+      const { token, ...userData } = res.data;
+      login(token, userData);
     } catch (error) {
       alert(error.response?.data?.message || "Login failed");
     } finally {
