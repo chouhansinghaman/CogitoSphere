@@ -53,7 +53,7 @@ app.use(express.json());
 // ✅ ROUTES
 // ---------------------
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes); // 👈 FIXED: plural path matches frontend API.get("/users/profile")
+app.use("/api/user", userRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/quizzes", quizRoutes);
