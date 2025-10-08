@@ -1,6 +1,6 @@
 // App.jsx
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Link, useLocation, Navigate } from 'react-router-dom';
 
 // -------------------- API MOCK --------------------
 const API = {
@@ -206,15 +206,6 @@ const Home = () => {
       </button>
     </div>
   );
-};
-
-// -------------------- NAVIGATE MOCK --------------------
-const Navigate = ({ to, replace }) => {
-  const navigate = useNavigate();
-  useEffect(() => {
-    navigate(to, { replace });
-  }, [navigate, to, replace]);
-  return null;
 };
 
 // -------------------- APP --------------------
