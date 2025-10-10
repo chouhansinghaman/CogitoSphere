@@ -24,20 +24,25 @@ const app = express();
 // ---------------------
 // ✅ CORS CONFIG
 // ---------------------
+import cors from "cors";
+
 const allowedOrigins = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  process.env.FRONTEND_URL, // your frontend on Render
+  "http://localhost:5173",          // local dev
+  "http://127.0.0.1:5173",         // local dev
+  process.env.FRONTEND_URL,        // production frontend
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
+      // allow requests from Postman, curl, or server-to-server calls
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        console.warn("Blocked by CORS:", origin);
+        return callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
@@ -45,6 +50,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// **Handle OPTIONS preflight for all routes**
+app.options("*", cors()); // very important for POST/PUT with headers
 
 // Parse JSON
 app.use(express.json());
