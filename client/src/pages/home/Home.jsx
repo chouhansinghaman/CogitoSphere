@@ -531,9 +531,16 @@ const Home = () => {
   const [submissions, setSubmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // ✅ SOLUTION: Render nothing until the user and token are available
+  // This prevents any child components from attempting to use hooks
+  // with undefined data.
+  if (!user || !token) {
+    return <div>Loading...</div>; // Or a spinner component
+  }
+  
+  // The rest of the component's logic is now guaranteed to run with valid user and token.
   useEffect(() => {
-    if (!token || !user) return;
-
+    // This logic is now safe to run.
     const fetchSubmissions = async () => {
       setIsLoading(true);
       try {
