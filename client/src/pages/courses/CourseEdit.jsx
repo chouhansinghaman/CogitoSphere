@@ -27,7 +27,7 @@ const CourseEdit = () => {
     const fetchCourse = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_URL}courses/${courseId}`);
+        const res = await fetch(`${API_URL}/courses/${courseId}`);
         if (!res.ok) throw new Error('Course not found.');
         const data = await res.json();
         setCourse(data);
@@ -67,7 +67,7 @@ const CourseEdit = () => {
       // Only append file if new file is selected
       if (file && file instanceof File) formPayload.append('pdfFile', file);
 
-      const res = await fetch(`${API_URL}courses/${courseId}`, {
+      const res = await fetch(`${API_URL}/courses/${courseId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
