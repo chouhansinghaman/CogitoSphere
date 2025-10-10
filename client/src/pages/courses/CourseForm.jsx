@@ -60,7 +60,7 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
             }
         };
     }, []);
-    
+
     const fakeImageUpload = (file) => {
         return new Promise((resolve) => {
             setTimeout(() => {
@@ -154,10 +154,10 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
                         onChange={handleContentChange}
                         modules={modules}
                         formats={formats}
-                        // ✨ REMOVED: The inline style is no longer needed
+                    // ✨ REMOVED: The inline style is no longer needed
                     />
                 </div>
-                 <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-2">
                     ✨ Your toolbar will now stick to the top as you write!
                 </p>
             </div>
@@ -165,13 +165,49 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
             {/* PDF Upload */}
             <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">Course PDF Material (Optional)</label>
-                {!pdfFile ? (
-                    <input type="file" onChange={handleFileChange} accept=".pdf" ref={fileInputRef} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                ) : (
+
+                {pdfFile ? (
                     <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
-                        <p className="text-sm text-gray-700 truncate">{pdfFile.name}</p>
-                        <button type="button" onClick={handleRemovePdf} className="ml-4 text-2xl font-bold text-red-500 hover:text-red-700">&times;</button>
+                        {pdfFile.url ? (
+                            <a
+                                href={pdfFile.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-600 underline truncate"
+                            >
+                                {pdfFile.name}
+                            </a>
+                        ) : (
+                            <p className="text-sm text-gray-700 truncate">{pdfFile.name}</p>
+                        )}
+                        <div className="flex gap-2">
+                            {/* Remove PDF button */}
+                            <button
+                                type="button"
+                                onClick={handleRemovePdf}
+                                className="text-2xl font-bold text-red-500 hover:text-red-700"
+                                title="Remove PDF"
+                            >
+                                &times;
+                            </button>
+                            {/* Replace PDF button */}
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                            >
+                                Replace
+                            </button>
+                        </div>
                     </div>
+                ) : (
+                    <input
+                        type="file"
+                        onChange={handleFileChange}
+                        accept=".pdf"
+                        ref={fileInputRef}
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
                 )}
             </div>
 
