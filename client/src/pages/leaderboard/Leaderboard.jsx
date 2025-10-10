@@ -12,7 +12,7 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/leaderboard`);
+      const res = await fetch(`${API_URL}/leaderboard`);
       if (!res.ok) throw new Error("Failed to fetch leaderboard");
       const data = await res.json();
       setLeaders(data || []);
@@ -31,7 +31,7 @@ const Leaderboard = () => {
     if (!window.confirm("Are you sure you want to remove this student's data?")) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/leaderboard/user/${studentId}`, {
+      const res = await fetch(`${API_URL}/leaderboard/user/${studentId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
