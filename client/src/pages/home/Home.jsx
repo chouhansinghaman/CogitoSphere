@@ -60,7 +60,7 @@ const useSubmissions = () => {
     const fetchSubmissions = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/submissions/me`, {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/submissions/my`, {
           headers: { "Authorization": `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Failed to fetch submissions");
