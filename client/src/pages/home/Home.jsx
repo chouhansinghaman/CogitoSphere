@@ -50,6 +50,34 @@ const useWindowSize = () => {
   return size;
 };
 
+//Function to fetch submissions
+const useSubmissions = () => {
+  const { token } = useAuth();
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/submissions`, {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch submissions");
+        const data = await res.json();
+        setSubmissions(data.submissions || data);
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (token) fetchSubmissions();
+  }, [token]);
+
+  return { submissions, loading };
+};
+
 // --- StudyStreak Component ---
 const StudyStreak = () => {
   const { user, setUser } = useAuth();
@@ -558,8 +586,9 @@ const ExploreCourses = () => {
 // --- Home Component ---
 const Home = () => {
   const { user, token } = useAuth();
+  const { submissions, loading } = useSubmissions();
 
-  if (!user || !token) return <div>Loading...</div>; // Safe guard
+  if (!user || !token) return <div>Loading...</div>;
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-10 font-sans">
@@ -572,8 +601,8 @@ const Home = () => {
         </h1>
 
         <div className="mt-5 space-y-6">
-          <PerformanceSnapshot submissions={[]} isLoading={true} />
-          <RecentPerformance submissions={[]} isLoading={true} />
+          <PerformanceSnapshot submissions={submissions} isLoading={loading} />
+          <RecentPerformance submissions={submissions} isLoading={loading} />
           <ExploreCourses />
         </div>
       </div>
