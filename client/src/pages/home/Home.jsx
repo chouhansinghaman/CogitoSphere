@@ -71,26 +71,26 @@ const StudyStreak = () => {
   }, [user?.lastCheckIn]);
 
   useEffect(() => {
-  if (showConfetti) {
-    const timer = setTimeout(() => setShowConfetti(false), 5000);
-    return () => clearTimeout(timer);
-  }
-}, [showConfetti]);
+    if (showConfetti) {
+      const timer = setTimeout(() => setShowConfetti(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showConfetti]);
 
   const handleCheckIn = async () => {
-  if (checkedInToday) return;
-  const toastId = toast.loading("Checking in...");
-  try {
-    const { data } = await checkInApi(); // your API call
-    setUser(prev => ({ ...prev, studyStreak: data.studyStreak, lastCheckIn: data.lastCheckIn }));
-    setCheckedInToday(true);
-    setShowConfetti(true); // trigger confetti
-    setKey(prev => prev + 1); // force number animation refresh
-    toast.success("Study session logged! Keep it up!", { id: toastId });
-  } catch (error) {
-    toast.error(error.response?.data?.message || "Check-in failed.", { id: toastId });
-  }
-};
+    if (checkedInToday) return;
+    const toastId = toast.loading("Checking in...");
+    try {
+      const { data } = await checkInApi(); // your API call
+      setUser(prev => ({ ...prev, studyStreak: data.studyStreak, lastCheckIn: data.lastCheckIn }));
+      setCheckedInToday(true);
+      setShowConfetti(true); // trigger confetti
+      setKey(prev => prev + 1); // force number animation refresh
+      toast.success("Study session logged! Keep it up!", { id: toastId });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Check-in failed.", { id: toastId });
+    }
+  };
 
   return (
     <div className="relative w-full bg-gradient-to-r from-orange-400 to-yellow-300 rounded-xl p-3 flex items-center justify-between text-black shadow-md mb-4 overflow-hidden">
@@ -106,9 +106,8 @@ const StudyStreak = () => {
       <button
         onClick={handleCheckIn}
         disabled={checkedInToday}
-        className={`px-3 py-1 rounded-md font-semibold transition-all text-sm ${
-          checkedInToday ? "bg-white/30 text-black/50 cursor-not-allowed" : "bg-white text-black hover:bg-white/80"
-        }`}
+        className={`px-3 py-1 rounded-md font-semibold transition-all text-sm ${checkedInToday ? "bg-white/30 text-black/50 cursor-not-allowed" : "bg-white text-black hover:bg-white/80"
+          }`}
       >
         {checkedInToday ? "Checked In" : "Check In"}
       </button>
@@ -176,7 +175,7 @@ const LearningGoals = () => {
   const [input, setInput] = useState("");
 
   // LearningGoals
-useEffect(() => localStorage.setItem("learningGoals", JSON.stringify(goals)), [goals]);
+  useEffect(() => localStorage.setItem("learningGoals", JSON.stringify(goals)), [goals]);
 
   const handleAddGoal = (e) => {
     e.preventDefault();
@@ -219,8 +218,8 @@ const ResourceHub = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newResource, setNewResource] = useState({ title: "", url: "", category: "" });
-// ResourceHub
-useEffect(() => localStorage.setItem("resourceHub", JSON.stringify(resources)), [resources]);
+  // ResourceHub
+  useEffect(() => localStorage.setItem("resourceHub", JSON.stringify(resources)), [resources]);
 
   useEffect(() => { document.body.style.overflow = isModalOpen ? "hidden" : "auto"; }, [isModalOpen]);
 
@@ -454,36 +453,53 @@ const ExploreCourses = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_URL = import.meta.env.VITE_API_BASE_URL; // Ensure this is your backend URL, e.g., http://localhost:5000/api
 
   const ArrowRightIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="transition-transform group-hover:translate-x-1"
+    >
       <line x1="5" y1="12" x2="19" y2="12"></line>
       <polyline points="12 5 19 12 12 19"></polyline>
     </svg>
   );
 
   useEffect(() => {
-  const fetchCourses = async () => {
-    setIsLoading(true);
-    try {
-      const url = API_URL.endsWith("/api") ? `${API_URL}/courses` : `${API_URL}/api/courses`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || "Could not fetch courses");
+    const fetchCourses = async () => {
+      setIsLoading(true);
+      try {
+        const url = `${API_URL}/courses`;
+        console.log("Fetching courses from:", url); // Debug log
+        const res = await fetch(url);
+
+        // Parse JSON safely
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.message || "Could not fetch courses");
+        }
+
+        setCourses(Array.isArray(data) ? data : data.courses || []);
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+        toast.error(error.message || "Failed to fetch courses");
+        setCourses([]);
+      } finally {
+        setIsLoading(false);
       }
-      const data = await res.json();
-      setCourses(Array.isArray(data) ? data : data.courses || []);
-    } catch (error) {
-      toast.error(error.message);
-      setCourses([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  fetchCourses();
-}, [API_URL]);
+    };
+
+    fetchCourses();
+  }, [API_URL]);
 
   if (isLoading) {
     return (
@@ -502,22 +518,38 @@ const ExploreCourses = () => {
       <h3 className="font-bold text-xl mb-4">Explore Courses</h3>
       {courses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {courses.map(course => (
-            <div key={course._id} onClick={() => navigate(`/courses/${course._id}`, { state: { course } })} className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col group cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-indigo-400 hover:-translate-y-1">
+          {courses.map((course) => (
+            <div
+              key={course._id}
+              onClick={() =>
+                navigate(`/courses/${course._id}`, { state: { course } })
+              }
+              className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col group cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-indigo-400 hover:-translate-y-1"
+            >
               <div className="flex flex-col flex-grow">
-                <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold self-start px-3 py-1 rounded-full">{course.category}</span>
-                <h4 className="font-bold text-lg text-gray-900 mt-3">{course.title}</h4>
-                <p className="text-gray-600 text-sm mt-2 flex-grow line-clamp-3">{course.description}</p>
+                <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold self-start px-3 py-1 rounded-full">
+                  {course.category || "General"}
+                </span>
+                <h4 className="font-bold text-lg text-gray-900 mt-3">
+                  {course.title || "Untitled Course"}
+                </h4>
+                <p className="text-gray-600 text-sm mt-2 flex-grow line-clamp-3">
+                  {course.description || "No description available."}
+                </p>
               </div>
               <div className="mt-4 flex items-center justify-end text-indigo-600">
-                <span className="font-semibold text-sm mr-2 group-hover:underline">Start Learning</span>
+                <span className="font-semibold text-sm mr-2 group-hover:underline">
+                  Start Learning
+                </span>
                 <ArrowRightIcon />
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-center py-4">No courses available at the moment. Check back later!</p>
+        <p className="text-gray-500 text-center py-4">
+          No courses available at the moment. Check back later!
+        </p>
       )}
     </div>
   );
