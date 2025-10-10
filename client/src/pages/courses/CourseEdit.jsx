@@ -9,7 +9,7 @@ const CourseEdit = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
 
-  const [course, setCourse] = useState(null); // course data from server
+  const [course, setCourse] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -20,23 +20,30 @@ const CourseEdit = () => {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
+
   // Fetch course data
   useEffect(() => {
     const fetchCourse = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/courses/${courseId}`);
+        const res = await fetch(`${API_URL}/api/courses/${courseId}`);
         if (!res.ok) throw new Error('Course not found.');
         const data = await res.json();
         setCourse(data);
 
-        // Populate formData with fetched data
+        // Populate formData
         setFormData({
           title: data.title || '',
           category: data.category || '',
           description: data.description || '',
           content: data.content || '',
         });
+
+        // Pre-fill existing PDF if available
+        if (data.pdfUrl) {
+          setPdfFile({ name: data.pdfName || 'Existing PDF', url: data.pdfUrl });
+        }
       } catch (error) {
         toast.error(error.message);
         navigate('/courses');
@@ -45,7 +52,7 @@ const CourseEdit = () => {
       }
     };
     fetchCourse();
-  }, [courseId, navigate]);
+  }, [courseId, navigate, API_URL]);
 
   // Save handler
   const handleSave = async (updatedData, file) => {
@@ -56,11 +63,15 @@ const CourseEdit = () => {
       formPayload.append('category', updatedData.category);
       formPayload.append('description', updatedData.description);
       formPayload.append('content', updatedData.content);
-      if (file) formPayload.append('pdfFile', file);
 
-      const res = await fetch(`import.meta.env.VITE_API_BASE_URL/api/courses/${courseId}`, {
+      // Only append file if new file is selected
+      if (file && file instanceof File) formPayload.append('pdfFile', file);
+
+      const res = await fetch(`${API_URL}/api/courses/${courseId}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formPayload,
       });
 
