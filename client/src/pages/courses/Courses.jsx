@@ -108,7 +108,7 @@ const Courses = () => {
       setLoading(true);
       try {
         // Handles whether API_URL ends with /api or not
-        const url = API_URL.endsWith("/api") ? `${API_URL}/courses` : `${API_URL}/api/courses`;
+        const url = API_URL.endsWith("/api") ? `${API_URL}/courses` : `${API_URL}/courses`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch courses");
         const data = await res.json();
@@ -142,7 +142,7 @@ const Courses = () => {
   const confirmDelete = async () => {
     if (!courseToDelete) return;
     try {
-      const url = API_URL.endsWith("/api") ? `${API_URL}/courses/${courseToDelete}` : `${API_URL}/api/courses/${courseToDelete}`;
+      const url = API_URL.endsWith("/api") ? `${API_URL}/courses/${courseToDelete}` : `${API_URL}/courses/${courseToDelete}`;
       const res = await fetch(url, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
