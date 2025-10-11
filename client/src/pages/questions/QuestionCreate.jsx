@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { createQuestionApi } from "../../services/api.questions";
+import { FiArrowLeft } from 'react-icons/fi';
 
 const QuestionCreate = () => {
   const { quizId } = useParams(); // grab quiz id from URL if any
@@ -44,9 +45,10 @@ const QuestionCreate = () => {
         <h1 className="text-2xl font-bold">Create New Question</h1>
         <button
           onClick={() => navigate(-1)}
-          className="text-gray-600 hover:text-black transition-colors"
+          className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm sm:text-base hover:bg-gray-200 active:bg-gray-300 transition-colors"
         >
-          &larr; Back
+          <FiArrowLeft size={18} />
+          Back
         </button>
       </div>
 

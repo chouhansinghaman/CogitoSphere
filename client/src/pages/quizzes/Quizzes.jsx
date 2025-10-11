@@ -47,7 +47,8 @@ const QuizCard = ({ quiz, isAdmin, onEdit, onDelete, onAddQuestion }) => {
       {/* --- Admin Edit/Delete Controls --- */}
       {isAdmin && (
         <div
-          className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-3 right-3 flex items-center gap-2 
+               opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -66,6 +67,7 @@ const QuizCard = ({ quiz, isAdmin, onEdit, onDelete, onAddQuestion }) => {
           </button>
         </div>
       )}
+
     </div>
   );
 };
@@ -111,7 +113,7 @@ export default function Quizzes() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col font-sans">
+    <div className="w-full h-full flex flex-col font-sans p-0 md:p-6">
 
       <header className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
         <h1 className="text-3xl font-bold text-black">Quizzes</h1>

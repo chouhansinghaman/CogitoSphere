@@ -69,7 +69,7 @@ export default function App() {
               element={<AdminRoute><CourseCreate /></AdminRoute>}
             />
             <Route
-              path="/edit-course/:courseId"
+              path="/edit-course/:id"
               element={<AdminRoute><CourseEdit /></AdminRoute>}
             />
             <Route

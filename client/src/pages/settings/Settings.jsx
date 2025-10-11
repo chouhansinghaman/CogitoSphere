@@ -166,7 +166,7 @@ const SecuritySection = () => {
       toast.error("Please fill in all password fields.");
       return;
     }
-    if (newPassword.length < 8) {
+    if (newPassword.length < 6) {
       toast.error("New password must be at least 8 characters long.");
       return;
     }
@@ -351,7 +351,7 @@ const ProfileSection = () => {
     if (!name.trim()) return toast.error("Name cannot be empty");
     setIsSavingName(true);
     try {
-      const res = await fetch(`${API_BASE}/user/update`, {
+      const res = await fetch(`${API_BASE}/users/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name }),
@@ -374,7 +374,7 @@ const ProfileSection = () => {
     const toastId = toast.loading("Updating avatar...");
     try {
       const payload = { name: user.name, avatar: newAvatar };
-      const res = await fetch(`${API_BASE}/user/update`, {
+      const res = await fetch(`${API_BASE}/users/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),

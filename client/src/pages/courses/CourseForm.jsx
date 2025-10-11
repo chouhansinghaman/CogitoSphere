@@ -25,56 +25,28 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
     };
 
     const handleFileChange = (e) => {
-        setPdfFile(e.target.files[0]);
+        const file = e.target.files[0];
+        if (file) {
+            setPdfFile(file); // Set to the new file object
+        }
     };
 
     const handleRemovePdf = () => {
-        setPdfFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
+        setPdfFile(null); // Set to null to indicate removal
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(formData, pdfFile);
+        onSave(formData, pdfFile); // Pass formData and the pdfFile state
     };
-
-    const imageHandler = useCallback(() => {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        input.click();
-
-        input.onchange = async () => {
-            const file = input.files[0];
-            if (/^image\//.test(file.type)) {
-                console.log('Uploading image:', file.name);
-                const imageUrl = await fakeImageUpload(file);
-                console.log('Received URL:', imageUrl);
-
-                const quill = quillRef.current.getEditor();
-                const range = quill.getSelection(true);
-                quill.insertEmbed(range.index, 'image', imageUrl);
-                quill.setSelection(range.index + 1);
-            } else {
-                console.warn('You can only upload images.');
-            }
-        };
-    }, []);
-
-    const fakeImageUpload = (file) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(`https://via.placeholder.com/400x300.png?text=Uploaded:${file.name}`);
-            }, 1500);
-        });
-    };
-
+    
+    // Modules and formats for ReactQuill
     const modules = {
         toolbar: {
             container: `#${TOOLBAR_ID}`,
-            handlers: {
-                image: imageHandler,
-            },
         },
     };
 
@@ -89,7 +61,6 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
             onSubmit={handleSubmit}
             className="space-y-6 bg-white p-8 rounded-2xl border border-gray-200"
         >
-            {/* ✨ NEW: Style tag for sticky toolbar and scrollable editor */}
             <style>
                 {`
                 .editor-container {
@@ -99,8 +70,8 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
                     position: sticky;
                     top: 0;
                     z-index: 10;
-                    background-color: #f9fafb; /* Tailwind's gray-50 */
-                    border-bottom: 1px solid #e5e7eb; /* Tailwind's gray-200 */
+                    background-color: #f9fafb;
+                    border-bottom: 1px solid #e5e7eb;
                 }
                 .editor-container .ql-container {
                     height: 350px;
@@ -111,7 +82,6 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
                 `}
             </style>
 
-            {/* Title, Category, and Description fields remain the same... */}
             <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">Course Title</label>
                 <input name="title" type="text" value={formData?.title || ''} onChange={handleInputChange} placeholder="e.g., Knowledge Management Systems" className="w-full bg-gray-50 text-gray-800 border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
@@ -125,15 +95,11 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
                 <textarea name="description" value={formData?.description || ''} onChange={handleInputChange} rows="3" placeholder="A brief summary of the course..." className="w-full bg-gray-50 text-gray-800 border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500" required ></textarea>
             </div>
 
-            {/* ReactQuill Editor */}
             <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">
                     Course Content & Notes (Rich Text Editor)
                 </label>
-
-                {/* ✨ NEW: Wrapper div for editor and toolbar */}
                 <div className="editor-container border border-gray-300 rounded-lg">
-                    {/* Custom Toolbar (now inside the wrapper) */}
                     <div id={TOOLBAR_ID}>
                         <select className="ql-header"><option value="1" /><option value="2" /><option value="3" /><option selected /></select>
                         <select className="ql-font"><option selected>sans-serif</option><option value="serif">Serif</option><option value="monospace">Monospace</option><option value="Oswald">Oswald</option><option value="Lexend">Lexend</option></select>
@@ -146,7 +112,6 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
                         <button className="ql-indent" value="-1" /><button className="ql-indent" value="+1" />
                         <select className="ql-align" /><button className="ql-link" /><button className="ql-image" /><button className="ql-video" />
                     </div>
-
                     <ReactQuill
                         ref={quillRef}
                         theme="snow"
@@ -154,34 +119,18 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
                         onChange={handleContentChange}
                         modules={modules}
                         formats={formats}
-                    // ✨ REMOVED: The inline style is no longer needed
                     />
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                    ✨ Your toolbar will now stick to the top as you write!
-                </p>
             </div>
 
-            {/* PDF Upload */}
             <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">Course PDF Material (Optional)</label>
-
-                {pdfFile ? (
+                {pdfFile?.url ? (
                     <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
-                        {pdfFile.url ? (
-                            <a
-                                href={pdfFile.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-600 underline truncate"
-                            >
-                                {pdfFile.name}
-                            </a>
-                        ) : (
-                            <p className="text-sm text-gray-700 truncate">{pdfFile.name}</p>
-                        )}
+                        <a href={pdfFile.url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline truncate">
+                            {pdfFile.name}
+                        </a>
                         <div className="flex gap-2">
-                            {/* Remove PDF button */}
                             <button
                                 type="button"
                                 onClick={handleRemovePdf}
@@ -190,7 +139,6 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
                             >
                                 &times;
                             </button>
-                            {/* Replace PDF button */}
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
@@ -211,7 +159,6 @@ const CourseForm = ({ formData, setFormData, pdfFile, setPdfFile, onSave, isSubm
                 )}
             </div>
 
-            {/* Submit Button */}
             <div className="flex justify-end gap-4">
                 <button type="submit" disabled={isSubmitting} className="px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     {isSubmitting ? 'Saving...' : 'Save Course'}

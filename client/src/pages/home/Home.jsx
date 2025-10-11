@@ -230,9 +230,14 @@ const LearningGoals = () => {
           ))
         }
       </div>
-      <form onSubmit={handleAddGoal} className="flex gap-2">
+      <form onSubmit={handleAddGoal} className="flex flex-col sm:flex-row gap-2">
         <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Add a new goal..." className="flex-grow bg-zinc-700 text-white rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <button type="submit" className="bg-indigo-500 text-white font-semibold px-3 py-1 rounded-lg hover:bg-indigo-600 transition-colors text-sm">Add</button>
+        <button
+          type="submit"
+          className="w-full h-9 sm:w-auto bg-indigo-500 text-white font-semibold px-4 py-1 rounded-lg hover:bg-indigo-600 transition-colors text-sm"
+        >
+          Add
+        </button>
       </form>
     </div>
   );
