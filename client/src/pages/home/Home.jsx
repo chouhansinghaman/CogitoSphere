@@ -78,6 +78,49 @@ const useSubmissions = () => {
   return { submissions, loading };
 };
 
+// --- A2HS prompt ---
+const AddToHomeScreenPrompt = () => {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowPopup(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log("User choice:", outcome); // "accepted" or "dismissed"
+    setDeferredPrompt(null);
+    setShowPopup(false);
+  };
+
+  if (!showPopup) return null;
+
+  return (
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black text-white p-4 rounded-xl shadow-lg flex items-center gap-4 z-50">
+      <span>Add our app to your home screen for quick access!</span>
+      <button
+        onClick={handleInstallClick}
+        className="bg-white text-black px-3 py-1 rounded hover:bg-gray-200 transition"
+      >
+        Install
+      </button>
+      <button onClick={() => setShowPopup(false)} className="text-gray-400">
+        ✕
+      </button>
+    </div>
+  );
+};
+
 // --- StudyStreak Component ---
 const StudyStreak = () => {
   const { user, setUser } = useAuth();
@@ -593,6 +636,9 @@ const Home = () => {
   const { user, token } = useAuth();
   const { submissions, loading } = useSubmissions();
 
+  // Detect mobile
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
   if (!user || !token) return <div>Loading...</div>;
 
   return (
@@ -611,9 +657,14 @@ const Home = () => {
           <ExploreCourses />
         </div>
       </div>
+
       <ProfileCard user={user} />
+
+      {/* Render the A2HS prompt only on mobile */}
+      {isMobile && <AddToHomeScreenPrompt />}
     </div>
   );
 };
+
 
 export default Home;
