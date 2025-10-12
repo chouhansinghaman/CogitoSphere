@@ -1,7 +1,7 @@
 {
   "name": "CogitoSphere",
   "short_name": "CogitoSphere",
-  "start_url": "/login",
+  "start_url": "/",
   "icons": [
     {
       "src": "/logo192.png",

@@ -37,8 +37,8 @@ export default function App() {
         <Toaster position="top-right" />
         <Routes>
           {/* --- Public Routes --- */}
-          {/* The root path now renders your new main page */}
-          <Route path="/" element={<Login />} />
+          {/* The root path now renders the smart redirector */}
+          <Route path="/" element={<RedirectHome />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot" element={<ForgotPassword />} />
