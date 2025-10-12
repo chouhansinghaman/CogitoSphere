@@ -708,9 +708,6 @@ const Home = () => {
   const { user, token } = useAuth();
   const { submissions, loading } = useSubmissions();
 
-  // Detect mobile
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-
   if (!user || !token) return <div>Loading...</div>;
 
   return (
@@ -732,11 +729,10 @@ const Home = () => {
 
       <ProfileCard user={user} />
 
-      {/* Render the A2HS prompt only on mobile */}
-      {isMobile && <AddToHomeScreenPrompt />}
+      {/* Render the A2HS prompt unconditionally and let it manage its own visibility */}
+      <AddToHomeScreenPrompt />
     </div>
   );
 };
-
 
 export default Home;
