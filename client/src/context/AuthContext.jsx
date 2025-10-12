@@ -3,12 +3,10 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, Link, useLocation,
 import axios from 'axios';
 
 // -------------------- API SETUP --------------------
-// NOTE: VITE_API_BASE_URL should include the /api prefix, e.g., "http://localhost:5001/api"
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-// Axios Interceptor for Authorization Header
 API.interceptors.request.use(config => {
   const token = localStorage.getItem("authToken");
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -28,7 +26,6 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Fetch user profile from backend
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!token) {
@@ -38,9 +35,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      setLoading(true);
       try {
-        // Using API instance for authenticated request
         const res = await API.get("/users/profile");
         setUser(res.data);
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.data));
@@ -69,15 +64,12 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // 🐛 NEW: Function to handle password update
   const updateUserPassword = async (currentPassword, newPassword) => {
     try {
-      // Use the API instance to make an authenticated PUT request
       const res = await API.put("/auth/change-password", { currentPassword, newPassword });
-      return res.data.message; // Return the success message from the backend
+      return res.data.message;
     } catch (error) {
       console.error("Password update error:", error);
-      // Throw a new error with a user-friendly message
       throw new Error(error.response?.data?.message || "Failed to update password.");
     }
   };
@@ -89,7 +81,6 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading,
     isAuthenticated: !!user,
-    // ✅ FIX: Added setUser and updateUserPassword to the context value
     setUser,
     updateUserPassword,
   }), [token, user, loading]);
@@ -105,7 +96,7 @@ const ProtectedRoute = ({ element: Element }) => {
   const location = useLocation();
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen text-xl font-semibold">Loading Session...</div>;
+    return <div className="flex items-center justify-center min-h-screen text-xl font-semibold">Loading session...</div>;
   }
 
   if (!isAuthenticated) {
@@ -115,7 +106,7 @@ const ProtectedRoute = ({ element: Element }) => {
   return Element;
 };
 
-// -------------------- NAVIGATION --------------------
+// -------------------- NAV --------------------
 const Nav = () => {
   const { isAuthenticated, user, loading } = useAuth();
   if (loading) return null;
@@ -152,10 +143,10 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // Assuming API base URL is set up correctly in App.jsx's API instance
       const res = await API.post("/auth/login", { email, password });
       const { token, ...userData } = res.data;
       login(token, userData);
+      navigate('/home');
     } catch (error) {
       alert(error.response?.data?.message || "Login failed");
     } finally {
@@ -189,10 +180,8 @@ const Home = () => {
 
       <div className="bg-gray-50 p-6 rounded-xl border max-w-lg mx-auto">
         <h3 className="text-xl font-semibold mb-3">Session Details</h3>
-        <p className="text-left"><span className="font-medium">User ID:</span> {user.id}</p>
         <p className="text-left"><span className="font-medium">Email:</span> {user.email}</p>
         <p className="text-left"><span className="font-medium">Username:</span> {user.username}</p>
-        <p className="text-left mt-4"><Link to="/settings" className="text-blue-600 hover:underline font-medium">Go to Settings</Link></p>
       </div>
 
       <button onClick={() => { logout(); navigate('/login'); }}
@@ -204,17 +193,15 @@ const Home = () => {
   );
 };
 
-// -------------------- SETTINGS PAGE (Placeholder for completeness) --------------------
-// NOTE: You need to replace this placeholder with the actual Settings component logic
+// -------------------- SETTINGS (Placeholder) --------------------
 const SettingsPlaceholder = () => {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-4">Account Settings</h1>
-      <p className="text-gray-600">The actual settings content goes here. Ensure you import the Settings component you are trying to fix into App.jsx.</p>
+      <p className="text-gray-600">This is a placeholder. Import your actual Settings component here later.</p>
     </div>
   );
 };
-
 
 // -------------------- APP --------------------
 export default function App() {
@@ -225,10 +212,11 @@ export default function App() {
           <Nav />
           <div className="max-w-4xl mx-auto p-4">
             <Routes>
-              <Route path="/" element={<p className='text-center mt-10 text-xl'>Go to /login or /home or /settings</p>} />
+              {/* ✅ Smart Root Route: Redirects based on Auth */}
+              <Route path="/" element={<SmartRedirect />} />
+
               <Route path="/login" element={<Login />} />
               <Route path="/home" element={<ProtectedRoute element={<Home />} />} />
-              {/* Added settings route for testing */}
               <Route path="/settings" element={<ProtectedRoute element={<SettingsPlaceholder />} />} />
               <Route path="*" element={<div className="text-center mt-20 text-red-500 text-2xl font-bold">404 - Not Found</div>} />
             </Routes>
@@ -238,3 +226,10 @@ export default function App() {
     </div>
   );
 }
+
+// -------------------- SMART REDIRECT --------------------
+const SmartRedirect = () => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <div className="flex items-center justify-center min-h-screen text-xl font-semibold">Loading session...</div>;
+  return <Navigate to={isAuthenticated ? "/home" : "/login"} replace />;
+};

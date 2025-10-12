@@ -1,6 +1,7 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "name": "CogitoSphere",
+  "short_name": "CogitoSphere",
+  "start_url": "/login",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
