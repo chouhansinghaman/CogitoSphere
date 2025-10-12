@@ -43,7 +43,7 @@ export default function Loader() {
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         stroke="white"
-        strokeWidth="5" {/* Increased stroke width for bolder lines */}
+        strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
