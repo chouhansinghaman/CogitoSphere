@@ -81,41 +81,113 @@ const useSubmissions = () => {
 // --- A2HS prompt ---
 const AddToHomeScreenPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showIosPrompt, setShowIosPrompt] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    const isIos = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      return /iphone|ipad|ipod/.test(userAgent);
+    };
+
+    const isInStandaloneMode = () =>
+      "standalone" in window.navigator && window.navigator.standalone;
+
+    // Show iOS instructions if not installed
+    if (isIos() && !isInStandaloneMode()) {
+      setShowIosPrompt(true);
+      setVisible(true);
+    }
+
+    // Capture beforeinstallprompt event for Android/Chrome
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowPopup(true);
+      setVisible(true);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
   }, []);
 
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log("User choice:", outcome); // "accepted" or "dismissed"
-    setDeferredPrompt(null);
-    setShowPopup(false);
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        console.log(choiceResult.outcome);
+        setDeferredPrompt(null);
+        setVisible(false);
+      });
+    }
   };
 
-  if (!showPopup) return null;
+  const handleClose = () => {
+    setVisible(false);
+  };
+
+  if (!visible) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black text-white p-4 rounded-xl shadow-lg flex items-center gap-4 z-50">
-      <span>Add our app to your home screen for quick access!</span>
+    <div
+      style={{
+        position: "fixed",
+        top: "20px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        background: "#0a84ff",
+        color: "#fff",
+        padding: "15px 20px",
+        borderRadius: "10px",
+        boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        zIndex: 9999,
+        maxWidth: "90%",
+      }}
+    >
+      {deferredPrompt ? (
+        <>
+          <span>Add this app to your home screen!</span>
+          <button
+            onClick={handleInstallClick}
+            style={{
+              background: "#fff",
+              color: "#0a84ff",
+              border: "none",
+              padding: "8px 12px",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            Add
+          </button>
+        </>
+      ) : (
+        <>
+          <span>
+            To install this app on iPhone/iPad: tap{" "}
+            <strong>Share</strong> → <strong>Add to Home Screen</strong>.
+          </span>
+        </>
+      )}
+
       <button
-        onClick={handleInstallClick}
-        className="bg-white text-black px-3 py-1 rounded hover:bg-gray-200 transition"
+        onClick={handleClose}
+        style={{
+          background: "transparent",
+          border: "none",
+          color: "#fff",
+          fontSize: "18px",
+          cursor: "pointer",
+          marginLeft: "auto",
+        }}
       >
-        Install
-      </button>
-      <button onClick={() => setShowPopup(false)} className="text-gray-400">
-        ✕
+        &times;
       </button>
     </div>
   );
