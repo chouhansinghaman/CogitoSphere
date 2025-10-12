@@ -29,6 +29,7 @@ import QuestionCreate from "./pages/questions/QuestionCreate.jsx";
 // --- Import Route Guards & Layout ---
 import { PrivateRoute, AdminRoute } from "./routes/Guards.jsx";
 import PrivateLayout from "./routes/PrivateLayout.jsx";
+import RedirectHome from "./components/RedirectHome.jsx";
 
 export default function App() {
   return (
