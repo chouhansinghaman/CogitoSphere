@@ -79,29 +79,13 @@ const useSubmissions = () => {
 };
 
 // --- A2HS prompt ---
-const AddToHomeScreenPrompt = () => {
+const AddToHomeScreenToast = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showIosPrompt, setShowIosPrompt] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const isIos = () => {
-      const userAgent = window.navigator.userAgent.toLowerCase();
-      return /iphone|ipad|ipod/.test(userAgent);
-    };
-
-    const isInStandaloneMode = () =>
-      "standalone" in window.navigator && window.navigator.standalone;
-
-    // Show iOS instructions if not installed
-    if (isIos() && !isInStandaloneMode()) {
-      setShowIosPrompt(true);
-      setVisible(true);
-    }
-
-    // Capture beforeinstallprompt event for Android/Chrome
     const handler = (e) => {
-      e.preventDefault();
+      e.preventDefault(); // Prevent Chrome from auto-showing prompt
       setDeferredPrompt(e);
       setVisible(true);
     };
@@ -117,80 +101,90 @@ const AddToHomeScreenPrompt = () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((choiceResult) => {
-        console.log(choiceResult.outcome);
+        console.log(choiceResult.outcome); // 'accepted' or 'dismissed'
         setDeferredPrompt(null);
         setVisible(false);
       });
     }
   };
 
-  const handleClose = () => {
-    setVisible(false);
-  };
+  const handleClose = () => setVisible(false);
 
   if (!visible) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: "20px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        background: "#0a84ff",
-        color: "#fff",
-        padding: "15px 20px",
-        borderRadius: "10px",
-        boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        zIndex: 9999,
-        maxWidth: "90%",
-      }}
-    >
-      {deferredPrompt ? (
-        <>
-          <span>Add this app to your home screen!</span>
-          <button
-            onClick={handleInstallClick}
-            style={{
-              background: "#fff",
-              color: "#0a84ff",
-              border: "none",
-              padding: "8px 12px",
-              borderRadius: "5px",
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-          >
-            Add
-          </button>
-        </>
-      ) : (
-        <>
-          <span>
-            To install this app on iPhone/iPad: tap{" "}
-            <strong>Share</strong> → <strong>Add to Home Screen</strong>.
-          </span>
-        </>
+    <div style={styles.toast}>
+      <div style={styles.content}>
+        <div style={styles.icon}>📱💻</div>
+        <div style={styles.text}>
+          {deferredPrompt ? (
+            <span>Install this app on your device for quick access!</span>
+          ) : (
+            <span>
+              On iPhone/iPad: tap <strong>Share</strong> → <strong>Add to Home Screen</strong>.
+            </span>
+          )}
+        </div>
+      </div>
+      {deferredPrompt && (
+        <button style={styles.installBtn} onClick={handleInstallClick}>
+          Install
+        </button>
       )}
-
-      <button
-        onClick={handleClose}
-        style={{
-          background: "transparent",
-          border: "none",
-          color: "#fff",
-          fontSize: "18px",
-          cursor: "pointer",
-          marginLeft: "auto",
-        }}
-      >
+      <button style={styles.closeBtn} onClick={handleClose}>
         &times;
       </button>
     </div>
   );
+};
+
+const styles = {
+  toast: {
+    position: "fixed",
+    bottom: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    background: "#0a84ff",
+    color: "#fff",
+    borderRadius: "12px",
+    boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
+    padding: "12px 20px",
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    maxWidth: "90%",
+    zIndex: 9999,
+    animation: "slideUp 0.4s ease",
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+  },
+  content: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    flex: 1,
+  },
+  icon: {
+    fontSize: "24px",
+  },
+  text: {
+    fontSize: "14px",
+  },
+  installBtn: {
+    background: "#fff",
+    color: "#0a84ff",
+    border: "none",
+    padding: "6px 14px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+  closeBtn: {
+    background: "transparent",
+    border: "none",
+    color: "#fff",
+    fontSize: "18px",
+    cursor: "pointer",
+  },
 };
 
 // --- StudyStreak Component ---
