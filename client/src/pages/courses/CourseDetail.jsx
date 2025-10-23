@@ -8,7 +8,7 @@ import 'react-quill/dist/quill.snow.css';
 // Using a basic SVG for portability if Lucide is not assumed
 const SettingsIcon = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.44a2 2 0 0 1-2 2H4a2 2 0 0 0-2 2v.44a2 2 0 0 1-2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 1 2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 1 2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 1 2-2v-.44a2 2 0 0 0 2-2h.44a2 2 0 0 1 2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 1 2-2v-.44a2 2 0 0 0 2-2h.44a2 2 0 0 1 2-2v-.44a2 2 0 0 0 2-2h.44a2 2 0 0 1 2-2v-.44a2 2 0 0 0-2-2h-.44a2 2 0 0 1-2-2v-.44a2 2 0 0 0-2-2z"></path>
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.44a2 2 0 0 1-2 2H4a2 2 0 0 0-2 2v.44a2 2 0 0 1-2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 1 2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 1 2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 1 2-2v-.44a2 2 0 0 0 2-2h.44a2 2 0 0 1 2 2v.44a2 2 0 0 0 2 2h.44a2 2 0 0 1 2-2v-.44a2 2 0 0 0 2-2h.44a2 2 0 0 1 2-2v-.44a2 2 0 0 0 2-2h-.44a2 2 0 0 1-2-2v-.44a2 2 0 0 0-2-2h-.44a2 2 0 0 1-2-2v-.44a2 2 0 0 0-2-2z"></path>
         <circle cx="12" cy="12" r="3" />
     </svg>
 );
@@ -21,7 +21,9 @@ export default function CourseDetail() {
     // Assuming a simple toast setup without actual API key validation
     const toast = { error: (msg) => console.error("Error:", msg) }; 
 
-    const [course, setCourse] = useState(location.state?.course || null);
+    // FIX APPLIED HERE: Replaced optional chaining (location.state?.course) 
+    // with logical AND (location.state && location.state.course) 
+    const [course, setCourse] = useState(location.state && location.state.course || null);
     const [loading, setLoading] = useState(!course);
     // New state to manage the print/mobile layout toggle
     const [isPrintLayout, setIsPrintLayout] = useState(true); 
@@ -104,6 +106,77 @@ function Counter() {
         ? "mx-auto max-w-xl shadow-lg border-gray-200 border-x my-2 md:my-0" 
         : "max-w-full";
         
+    // Base padding for content wrapper. Mobile default is no padding, Print layout adds padding.
+    const contentPadding = isPrintLayout ? "p-8 md:p-12" : "p-4 md:p-8";
+
+    return (
+        // Main container: No padding on mobile (p-0), standard padding on medium and up (md:p-6)
+        <div className="w-full min-h-screen flex flex-col font-sans relative p-0 sm:p-0 md:p-6 bg-gray-50 md:bg-white">
+            
+            {/* Header/Utility Bar for Mobile */}
+            <div className="flex justify-between items-center w-full md:hidden bg-white shadow-md z-30 sticky top-0 px-4 py-3">
+                <button
+                    onClick={() => navigate("/courses")}
+                    className="flex items-center text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                    <span className="text-xl mr-2">←</span> 
+                    <span className="text-sm font-medium">Back to Courses</span>
+                </button>
+                
+                {/* Print Layout Toggle Button (visible only on mobile) */}
+                <button
+                    onClick={() => setIsPrintLayout(!isPrintLayout)}
+                    className={`p-2 rounded-full transition-colors ${
+                        isPrintLayout ? "bg-indigo-500 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                    aria-label="Toggle Print Layout"
+                >
+                    <SettingsIcon className="w-5 h-5" />
+                </button>
+            </div>
+
+
+            {/* Content Area */}
+            {/* On medium/desktop screens, the layout is always standard */}
+            <div className={`
+                bg-white w-full flex-grow relative rounded-none md:rounded-2xl border-0 md:border md:border-gray-200 shadow-none md:shadow-sm 
+                transition-all duration-300
+                ${layoutClasses}
+            `}>
+                
+                {/* Back button for Desktop (Original positioning) */}
+                <button
+                    onClick={() => navigate("/courses")}
+                    className="hidden md:block absolute top-6 left-6 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors shadow-sm z-20"
+                >
+                    ← Back
+                </button>
+
+                {/* Inner Content Wrapper: applies conditional padding */}
+                <div className={`w-full ${contentPadding} pt-4 md:pt-16`}>
+                    
+                    {/* Course Metadata */}
+                    <div className="mb-6">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2 leading-tight">{course.title}</h1>
+                        <p className="text-sm text-indigo-600 font-medium mb-1">{course.category}</p>
+                        <p className="text-gray-500 text-base leading-snug">{course.description}</p>
+                    </div>
+
+                    <hr className="my-6 border-gray-200" />
+
+                    {/* Course Content (React-Quill Output) */}
+                    <div className="ql-snow bg-white">
+                        <div
+                            className="ql-editor text-gray-800"
+                            style={{ fontFamily: "'Lexend', sans-serif", minHeight: "300px", padding: 0 }}
+                            dangerouslySetInnerHTML={{ __html: course.content }}
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
     // Base padding for content wrapper. Mobile default is no padding, Print layout adds padding.
     const contentPadding = isPrintLayout ? "p-8 md:p-12" : "p-4 md:p-8";
 
