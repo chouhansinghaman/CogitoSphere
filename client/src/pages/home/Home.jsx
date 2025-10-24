@@ -722,9 +722,6 @@ const Home = () => {
       </div>
 
       <ProfileCard user={user} />
-
-      {/* Render the A2HS prompt unconditionally and let it manage its own visibility */}
-      <AddToHomeScreenPrompt />
     </div>
   );
 };
