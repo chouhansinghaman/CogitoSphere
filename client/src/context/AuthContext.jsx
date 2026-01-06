@@ -19,7 +19,7 @@ import axios from "axios";
 /* =====================================================
    🔧 DEV MODE CONFIG
 ===================================================== */
-const DEV_MODE = true; // 🔴 set false to enable real auth later
+const DEV_MODE = false; // 🔴 set false to enable real auth later
 
 const DEV_USER = {
   id: 1,
