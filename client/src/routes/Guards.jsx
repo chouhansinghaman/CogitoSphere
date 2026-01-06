@@ -1,27 +1,28 @@
-import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 
-export const PrivateRoute = ({ children }) => {
-  const { token } = useAuth();
+/* Logged-in users only */
+export function PrivateRoute() {
+  const { user, loading } = useAuth();
 
-  // If auth context didn't load yet, show nothing instead of crashing
-  if (token === undefined) return null;
+  if (loading) return null; // or spinner
 
-  return token ? children : <Navigate to="/login" replace />;
-};
-
-export const AdminRoute = ({ children }) => {
-  const { token, user } = useAuth();
-
-  if (token === undefined) return null; // context not ready
-
-  if (!token) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.role !== "admin") {
-    return <Navigate to="/" replace />;
+  return <Outlet />;
+}
+
+/* Admin-only */
+export function AdminRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/home" replace />;
   }
 
-  return children;
-};
+  return <Outlet />;
+}

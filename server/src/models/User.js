@@ -36,6 +36,24 @@ const userSchema = new mongoose.Schema(
     lastCheckIn: { // <-- ADD THIS
       type: Date,
     },
+    builderProfile: {
+      bio: {
+        type: String,
+        maxLength: 200
+      },
+      skills: [{ type: String }], // e.g., ["React", "Java", "Python"]
+      interests: [{ type: String }], // e.g., ["Fintech", "AI", "Education"]
+      lookingForTeam: {
+        type: Boolean,
+        default: false
+      },
+      portfolioLink: { type: String },
+      preferredRole: {
+        type: String,
+        enum: ["Frontend", "Backend", "Fullstack", "Designer", "Other"],
+        default: "Other"
+      }
+    },
     role: {
       type: String,
       default: "student",

@@ -1,6 +1,11 @@
-// src/routes/PrivateLayout.jsx
-import Sidebar from "../components/Sidebar.jsx";
+import { Outlet } from "react-router-dom";
 
-export default function PrivateLayout() {
-  return <Sidebar />; // Sidebar already contains <Outlet />
+/* TEMP: allow everyone */
+export function PrivateRoute() {
+  return <Outlet />;
+}
+
+/* TEMP: allow everyone */
+export function AdminRoute() {
+  return <Outlet />;
 }

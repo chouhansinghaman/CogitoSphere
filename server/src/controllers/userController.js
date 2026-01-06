@@ -25,12 +25,11 @@ const isYesterday = (someDate) => {
     return date.setHours(0,0,0,0) === yesterday.setHours(0,0,0,0);
 };
 
-
 // --- UPDATED: Get User Profile ---
 export const getUserProfile = async (req, res) => {
   if (!req.user) return res.status(401).json({ message: "Not authorized" });
 
-  // Now returns the new fields as well
+  // Now returns builderProfile and other new fields
   res.json({
     _id: req.user._id,
     username: req.user.username,
@@ -40,13 +39,52 @@ export const getUserProfile = async (req, res) => {
     avatar: req.user.avatar,
     studyStreak: req.user.studyStreak,
     lastCheckIn: req.user.lastCheckIn,
+    builderProfile: req.user.builderProfile, //
   });
 };
 
-// --- EXISTING FUNCTIONS (No changes needed) ---
-export const deleteUser = async (req, res) => {
+// --- NEW: Unified Update Function ---
+// This handles Name, Avatar, and Build Space profile updates
+export const updateUser = async (req, res) => {
   if (!req.user) return res.status(401).json({ message: "Not authorized" });
 
+  const { name, avatar, builderProfile } = req.body;
+
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update Basic Info
+    if (name) user.name = name;
+    if (avatar) user.avatar = avatar;
+
+    // Update Build Space Profile
+    if (builderProfile) {
+      user.builderProfile = {
+        ...user.builderProfile, // Keep existing fields
+        ...builderProfile       // Overwrite with new ones
+      };
+    }
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        avatar: updatedUser.avatar,
+        builderProfile: updatedUser.builderProfile,
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update profile", error: err.message });
+  }
+};
+
+// --- EXISTING FUNCTIONS ---
+export const deleteUser = async (req, res) => {
+  if (!req.user) return res.status(401).json({ message: "Not authorized" });
   try {
     await User.findByIdAndDelete(req.user._id);
     res.status(200).json({ message: "User deleted successfully" });
@@ -55,46 +93,29 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-export const updateUserName = async (req, res) => {
-  if (!req.user) return res.status(401).json({ message: "Not authorized" });
-
-  const { name } = req.body;
-  if (!name) return res.status(400).json({ message: "Name is required" });
-
-  try {
-    req.user.name = name;
-    await req.user.save();
-    res.status(200).json({ message: "Name updated successfully", name });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to update name", error: err.message });
-  }
-};
-
 export const makeUserAdmin = async (req, res) => {
-    // Note: This logic might need adjustment based on your full user flow,
-    // but the core functionality is here.
-    if (!req.user) return res.status(401).json({ message: "Not authorized" });
-    try {
-        const user = await User.findById(req.user._id);
-        if (user) {
-            user.role = 'admin';
-            const updatedUser = await user.save();
-            res.status(200).json({
-                message: "User successfully upgraded to admin.",
-                user: {
-                    _id: updatedUser._id,
-                    name: updatedUser.name,
-                    username: updatedUser.username,
-                    email: updatedUser.email,
-                    role: updatedUser.role,
-                }
-            });
-        } else {
-            res.status(404).json({ message: 'User not found' });
+  if (!req.user) return res.status(401).json({ message: "Not authorized" });
+  try {
+    const user = await User.findById(req.user._id);
+    if (user) {
+      user.role = 'admin';
+      const updatedUser = await user.save();
+      res.status(200).json({
+        message: "User successfully upgraded to admin.",
+        user: {
+          _id: updatedUser._id,
+          name: updatedUser.name,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          role: updatedUser.role,
         }
-    } catch (error) {
-        res.status(500).json({ message: "Server error during admin upgrade", error: error.message });
+      });
+    } else {
+      res.status(404).json({ message: 'User not found' });
     }
+  } catch (error) {
+    res.status(500).json({ message: "Server error during admin upgrade", error: error.message });
+  }
 };
 
 // --- NEW: Update User Avatar ---
