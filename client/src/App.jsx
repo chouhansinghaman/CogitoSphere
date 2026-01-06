@@ -30,6 +30,7 @@ import QuestionCreate from "./pages/questions/QuestionCreate.jsx";
 /* Guards */
 import { PrivateRoute, AdminRoute } from "./routes/Guards.jsx";
 import RedirectHome from "./components/RedirectHome.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 
 export default function App() {
   return (
@@ -65,6 +66,9 @@ export default function App() {
 
               {/* Admin only */}
               <Route element={<AdminRoute />}>
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/create-course" element={<CourseCreate />} />
+                <Route path="/edit-course/:id" element={<CourseEdit />} />
                 <Route path="/create-course" element={<CourseCreate />} />
                 <Route path="/edit-course/:id" element={<CourseEdit />} />
                 <Route path="/quizzes/create" element={<QuizCreate />} />

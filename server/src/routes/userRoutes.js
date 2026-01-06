@@ -3,13 +3,15 @@
 import express from "express";
 import {
   getUserProfile,
-  updateUser,          // <-- USE updateUser instead of updateUserName
+  updateUser,         
   deleteUser,
   makeUserAdmin,
-  updateUserAvatar,    // <-- NEW
-  handleCheckIn,       // <-- NEW
+  updateUserAvatar,  
+  handleCheckIn,
+  getAllUsers,
 } from "../controllers/userController.js";
 
+import { adminOnly } from "../middleware/adminMiddleware.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { uploadSingleImage } from "../middleware/uploadMiddleware.js"; // <-- NEW
 
@@ -26,5 +28,8 @@ router.post("/make-admin", protect, makeUserAdmin);
 // New Routes
 router.put("/avatar", protect, uploadSingleImage, updateUserAvatar);
 router.post("/check-in", protect, handleCheckIn);
+
+// Get All Users Route
+router.get('/', protect, adminOnly, getAllUsers);
 
 export default router;

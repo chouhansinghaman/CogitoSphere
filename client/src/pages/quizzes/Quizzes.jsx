@@ -86,7 +86,7 @@ export default function Quizzes() {
       setLoading(true);
       try {
         const { data } = await getQuizzesApi();
-        setQuizzes(data || []);
+        setQuizzes(Array.isArray(data) ? data : data?.quizzes || []);
       } catch (error) {
         toast.error(error.message || "Could not fetch quizzes.");
       } finally {

@@ -1,6 +1,8 @@
 import express from 'express';
 import {
-  getAllNotifications,
+  getUserNotifications,
+  getUnreadCount,
+  markAsRead,
   createNotification,
   updateNotification,
   deleteNotification,
@@ -10,10 +12,24 @@ import { adminOnly } from '../middleware/adminMiddleware.js';
 
 const router = express.Router();
 
-router.route('/').get(protect, getAllNotifications);
+// --- Student Routes (Private) ---
+// Get my inbox (System + Project Alerts)
+router.route('/').get(protect, getUserNotifications);
 
-// Admin-only routes (now using 'adminOnly')
+// Get the number of unread alerts (For the Bell Icon)
+router.get('/unread-count', protect, getUnreadCount);
+
+// Mark a specific notification as read
+router.put('/:id/read', protect, markAsRead);
+
+
+// --- Admin Routes (Protected + AdminOnly) ---
+// Create a broadcast message
 router.route('/').post(protect, adminOnly, createNotification);
-router.route('/:id').put(protect, adminOnly, updateNotification).delete(protect, adminOnly, deleteNotification);
+
+// Edit or Delete an existing notification
+router.route('/:id')
+    .put(protect, adminOnly, updateNotification)
+    .delete(protect, adminOnly, deleteNotification);
 
 export default router;

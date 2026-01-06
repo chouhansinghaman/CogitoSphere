@@ -1,20 +1,67 @@
 import Notification from '../models/Notification.js';
 
-// @desc    Get all notifications
+// @desc    Get MY notifications (Personal + System)
 // @route   GET /api/notifications
 // @access  Private
-const getAllNotifications = async (req, res) => {
+const getUserNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({})
-      .populate('createdBy', 'name username') // Populate creator's info
-      .sort({ createdAt: -1 }); // Show newest first
+    const notifications = await Notification.find({
+        $or: [
+            { recipient: req.user._id }, // Messages specifically for me (Project Joins)
+            { type: 'system' }           // Announcements for everyone
+        ]
+    })
+      .populate('createdBy', 'name username') // Show who sent it
+      .populate('relatedId', 'title')         // Show project title if it exists
+      .sort({ createdAt: -1 });               // Newest first
+
     res.status(200).json(notifications);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    console.error(error);
+    res.status(500).json({ message: 'Server Error fetching notifications' });
   }
 };
 
-// @desc    Create a notification
+// @desc    Get Unread Count (For the Bell Icon red dot)
+// @route   GET /api/notifications/unread-count
+// @access  Private
+const getUnreadCount = async (req, res) => {
+    try {
+        const count = await Notification.countDocuments({
+            recipient: req.user._id,
+            isRead: false
+        });
+        res.status(200).json({ count });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching count' });
+    }
+};
+
+// @desc    Mark notification as read
+// @route   PUT /api/notifications/:id/read
+// @access  Private
+const markAsRead = async (req, res) => {
+    try {
+        const notification = await Notification.findById(req.params.id);
+
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        // Only the recipient can mark it as read
+        if (notification.recipient && notification.recipient.toString() !== req.user._id.toString()) {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+
+        notification.isRead = true;
+        await notification.save();
+        res.status(200).json({ message: 'Marked as read' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Create a notification (Admin Broadcast)
 // @route   POST /api/notifications
 // @access  Admin
 const createNotification = async (req, res) => {
@@ -28,7 +75,9 @@ const createNotification = async (req, res) => {
     const notification = new Notification({
       title,
       message,
-      createdBy: req.user._id, // Comes from the 'protect' middleware
+      createdBy: req.user._id,
+      type: 'system', // Admin creates system-wide alerts by default
+      recipient: null // Null means "for everyone"
     });
 
     const createdNotification = await notification.save();
@@ -78,7 +127,9 @@ const deleteNotification = async (req, res) => {
 };
 
 export {
-  getAllNotifications,
+  getUserNotifications,
+  getUnreadCount,
+  markAsRead,
   createNotification,
   updateNotification,
   deleteNotification,

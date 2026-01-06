@@ -5,8 +5,9 @@ import { useAuth } from "../../context/AuthContext";
 import { updateUserAvatarApi, checkInApi } from "../../services/api.user.js";
 import Confetti from 'react-confetti';
 import CountUp from 'react-countup';
+import { FiPlus, FiCode, FiCheckCircle, FiEdit } from 'react-icons/fi';
 
-// --- Icons ---
+// --- Icons (Restored All) ---
 const TrashIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 hover:text-red-500 transition-colors">
     <polyline points="3 6 5 6 21 6"></polyline>
@@ -37,7 +38,6 @@ const IconAward = () => (
   </svg>
 );
 
-// Small client-safe confetti hook: only render if window exists
 const useWindowSize = () => {
   const [size, setSize] = useState({ width: 0, height: 0 });
   useEffect(() => {
@@ -50,7 +50,39 @@ const useWindowSize = () => {
   return size;
 };
 
-//Function to fetch submissions
+// --- NEW COMPONENT: Build Hub Status ---
+const BuildHubStatus = ({ user }) => {
+  const navigate = useNavigate();
+  const isAvailable = user?.builderProfile?.lookingForTeam;
+
+  return (
+    <div className="bg-zinc-900 text-white p-6 rounded-[2rem] shadow-2xl flex flex-col sm:flex-row items-center justify-between mb-8 border border-zinc-800 transition-all hover:border-indigo-500/50 group">
+      <div className="flex items-center gap-4 mb-4 sm:mb-0">
+        <div className={`p-4 rounded-2xl ${isAvailable ? 'bg-green-500/10 text-green-500' : 'bg-indigo-500/10 text-indigo-500'}`}>
+          {isAvailable ? <FiCheckCircle size={28} /> : <FiCode size={28} />}
+        </div>
+        <div>
+          <h4 className="text-xl font-bold tracking-tight">
+            {isAvailable ? "You are in the Pool" : "Ready to Build?"}
+          </h4>
+          <p className="text-sm text-zinc-400 mt-0.5">
+            {isAvailable
+              ? "The matching engine is currently finding teams for you."
+              : "Sync your builder profile to start collaborating on projects."}
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={() => navigate(isAvailable ? "/community" : "/settings")}
+        className="w-full sm:w-auto bg-white text-black px-8 py-3 rounded-2xl font-black text-xs tracking-widest hover:bg-indigo-400 hover:text-white transition-all shadow-lg"
+      >
+        {isAvailable ? "BROWSE HUB" : "SYNC PROFILE"}
+      </button>
+    </div>
+  );
+};
+
+// --- Data Hooks ---
 const useSubmissions = () => {
   const { token } = useAuth();
   const [submissions, setSubmissions] = useState([]);
@@ -78,116 +110,8 @@ const useSubmissions = () => {
   return { submissions, loading };
 };
 
-// --- A2HS prompt ---
-const AddToHomeScreenToast = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [visible, setVisible] = useState(false);
+// --- Original Components (Restored) ---
 
-  useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault(); // Prevent Chrome from auto-showing prompt
-      setDeferredPrompt(e);
-      setVisible(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
-    };
-  }, []);
-
-  const handleInstallClick = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        console.log(choiceResult.outcome); // 'accepted' or 'dismissed'
-        setDeferredPrompt(null);
-        setVisible(false);
-      });
-    }
-  };
-
-  const handleClose = () => setVisible(false);
-
-  if (!visible) return null;
-
-  return (
-    <div style={styles.toast}>
-      <div style={styles.content}>
-        <div style={styles.icon}>📱💻</div>
-        <div style={styles.text}>
-          {deferredPrompt ? (
-            <span>Install this app on your device for quick access!</span>
-          ) : (
-            <span>
-              On iPhone/iPad: tap <strong>Share</strong> → <strong>Add to Home Screen</strong>.
-            </span>
-          )}
-        </div>
-      </div>
-      {deferredPrompt && (
-        <button style={styles.installBtn} onClick={handleInstallClick}>
-          Install
-        </button>
-      )}
-      <button style={styles.closeBtn} onClick={handleClose}>
-        &times;
-      </button>
-    </div>
-  );
-};
-
-const styles = {
-  toast: {
-    position: "fixed",
-    bottom: "20px",
-    left: "50%",
-    transform: "translateX(-50%)",
-    background: "#0a84ff",
-    color: "#fff",
-    borderRadius: "12px",
-    boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
-    padding: "12px 20px",
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    maxWidth: "90%",
-    zIndex: 9999,
-    animation: "slideUp 0.4s ease",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-  },
-  content: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    flex: 1,
-  },
-  icon: {
-    fontSize: "24px",
-  },
-  text: {
-    fontSize: "14px",
-  },
-  installBtn: {
-    background: "#fff",
-    color: "#0a84ff",
-    border: "none",
-    padding: "6px 14px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  closeBtn: {
-    background: "transparent",
-    border: "none",
-    color: "#fff",
-    fontSize: "18px",
-    cursor: "pointer",
-  },
-};
-
-// --- StudyStreak Component ---
 const StudyStreak = () => {
   const { user, setUser } = useAuth();
   const [key, setKey] = useState(0);
@@ -218,11 +142,11 @@ const StudyStreak = () => {
     if (checkedInToday) return;
     const toastId = toast.loading("Checking in...");
     try {
-      const { data } = await checkInApi(); // your API call
+      const { data } = await checkInApi();
       setUser(prev => ({ ...prev, studyStreak: data.studyStreak, lastCheckIn: data.lastCheckIn }));
       setCheckedInToday(true);
-      setShowConfetti(true); // trigger confetti
-      setKey(prev => prev + 1); // force number animation refresh
+      setShowConfetti(true);
+      setKey(prev => prev + 1);
       toast.success("Study session logged! Keep it up!", { id: toastId });
     } catch (error) {
       toast.error(error.response?.data?.message || "Check-in failed.", { id: toastId });
@@ -243,8 +167,7 @@ const StudyStreak = () => {
       <button
         onClick={handleCheckIn}
         disabled={checkedInToday}
-        className={`px-3 py-1 rounded-md font-semibold transition-all text-sm ${checkedInToday ? "bg-white/30 text-black/50 cursor-not-allowed" : "bg-white text-black hover:bg-white/80"
-          }`}
+        className={`px-3 py-1 rounded-md font-semibold transition-all text-sm ${checkedInToday ? "bg-white/30 text-black/50 cursor-not-allowed" : "bg-white text-black hover:bg-white/80"}`}
       >
         {checkedInToday ? "Checked In" : "Check In"}
       </button>
@@ -252,7 +175,6 @@ const StudyStreak = () => {
   );
 };
 
-// --- Clock Component ---
 const Clock = () => {
   const [date, setDate] = useState(new Date());
   const [is24HourFormat, setIs24HourFormat] = useState(false);
@@ -285,33 +207,20 @@ const Clock = () => {
         </div>
         <p className="text-gray-400 text-xs mt-3 mb-2">Select your clock style</p>
         <div className="flex bg-gray-700 rounded-full p-0.5">
-          <button
-            onClick={() => setIs24HourFormat(false)}
-            className={`text-xs px-2 py-0.5 rounded-full transition-colors ${!is24HourFormat ? "bg-white text-gray-800" : "text-gray-400 hover:text-white"}`}
-          >
-            12H
-          </button>
-          <button
-            onClick={() => setIs24HourFormat(true)}
-            className={`text-xs px-2 py-0.5 rounded-full transition-colors ${is24HourFormat ? "bg-white text-gray-800" : "text-gray-400 hover:text-white"}`}
-          >
-            24H
-          </button>
+          <button onClick={() => setIs24HourFormat(false)} className={`text-xs px-2 py-0.5 rounded-full transition-colors ${!is24HourFormat ? "bg-white text-gray-800" : "text-gray-400 hover:text-white"}`}>12H</button>
+          <button onClick={() => setIs24HourFormat(true)} className={`text-xs px-2 py-0.5 rounded-full transition-colors ${is24HourFormat ? "bg-white text-gray-800" : "text-gray-400 hover:text-white"}`}>24H</button>
         </div>
       </div>
     </div>
   );
 };
 
-// --- LearningGoals Component ---
 const LearningGoals = () => {
   const [goals, setGoals] = useState(() => {
     const saved = localStorage.getItem("learningGoals");
     return saved ? JSON.parse(saved) : [{ id: 1, text: "Add your first goal!", completed: false }];
   });
   const [input, setInput] = useState("");
-
-  // LearningGoals
   useEffect(() => localStorage.setItem("learningGoals", JSON.stringify(goals)), [goals]);
 
   const handleAddGoal = (e) => {
@@ -341,18 +250,12 @@ const LearningGoals = () => {
       </div>
       <form onSubmit={handleAddGoal} className="flex flex-col sm:flex-row gap-2">
         <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Add a new goal..." className="flex-grow bg-zinc-700 text-white rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <button
-          type="submit"
-          className="w-full h-9 sm:w-auto bg-indigo-500 text-white font-semibold px-4 py-1 rounded-lg hover:bg-indigo-600 transition-colors text-sm"
-        >
-          Add
-        </button>
+        <button type="submit" className="w-full h-9 sm:w-auto bg-indigo-500 text-white font-semibold px-4 py-1 rounded-lg hover:bg-indigo-600 transition-colors text-sm">Add</button>
       </form>
     </div>
   );
 };
 
-// --- ResourceHub Component ---
 const ResourceHub = () => {
   const [resources, setResources] = useState(() => {
     const saved = localStorage.getItem("resourceHub");
@@ -360,9 +263,7 @@ const ResourceHub = () => {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newResource, setNewResource] = useState({ title: "", url: "", category: "" });
-  // ResourceHub
   useEffect(() => localStorage.setItem("resourceHub", JSON.stringify(resources)), [resources]);
-
   useEffect(() => { document.body.style.overflow = isModalOpen ? "hidden" : "auto"; }, [isModalOpen]);
 
   const getFavicon = (url) => `https://www.google.com/s2/favicons?sz=64&domain_url=${url}`;
@@ -398,7 +299,6 @@ const ResourceHub = () => {
           ))
         }
       </div>
-
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-zinc-900 text-white rounded-2xl p-6 w-full max-w-md shadow-xl relative">
@@ -419,7 +319,6 @@ const ResourceHub = () => {
   );
 };
 
-// --- ProfileHeader Component ---
 const ProfileHeader = ({ user }) => {
   const { setUser } = useAuth();
   const fileInputRef = useRef(null);
@@ -429,11 +328,9 @@ const ProfileHeader = ({ user }) => {
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
     const formData = new FormData();
     formData.append("avatar", file);
     const toastId = toast.loading("Uploading avatar...");
-
     try {
       const { data } = await updateUserAvatarApi(formData);
       setUser(prevUser => ({ ...prevUser, avatar: data.avatar }));
@@ -448,13 +345,7 @@ const ProfileHeader = ({ user }) => {
       <div className="relative w-16 h-16 group flex-shrink-0">
         <img src={user?.avatar || "https://i.pinimg.com/736x/51/19/95/511995729851564ed88c865f42e1844b.jpg"} alt={user?.name || "User"} className="w-full h-full rounded-full object-cover" />
         <div onClick={handleAvatarClick} className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 20h9a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9"></path>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-            <path d="m16 20 2-2-4-4-2 2-4-4"></path>
-          </svg>
+          <FiEdit className="text-white" size={20} />
         </div>
         <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
       </div>
@@ -466,37 +357,58 @@ const ProfileHeader = ({ user }) => {
   );
 };
 
-// --- ProfileCard Component ---
 const ProfileCard = ({ user }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeTab") || "goals");
-
   if (!user) return null;
-
   React.useEffect(() => { localStorage.setItem("activeTab", activeTab); }, [activeTab]);
+
+  // Inside ProfileCard component
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const checkNotifications = async () => {
+      try {
+        // Assuming you have an endpoint for this, or fetch all and filter
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/notifications/unread-count`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` }
+        });
+        const data = await res.json();
+        setUnreadCount(data.count || 0);
+      } catch (e) { console.error(e); }
+    };
+    checkNotifications();
+  }, []);
 
   return (
     <div className="w-full md:w-[380px] bg-black/90 backdrop-blur-xl text-white rounded-3xl p-6 flex flex-col items-center relative shadow-xl">
-      <div className="absolute top-4 right-4 flex items-center gap-3">
-        <button onClick={() => navigate("/notifications")} className="text-lg">🔔</button>
-      </div>
+      <div className="absolute top-8 right-4 flex items-center gap-3">
+        <button
+          onClick={() => navigate("/notifications")}
+          className="relative text-2xl transition-transform hover:scale-110"
+        >
+          <span className={unreadCount > 0 ? "animate-swing inline-block origin-top" : ""}>
+            🔔
+          </span>
 
+          {/* The Red Dot */}
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
       <ProfileHeader user={user} />
       <StudyStreak />
       <Clock />
-
       <button onClick={() => navigate("/leaderboard")} className="w-full px-6 py-3 bg-yellow-400 text-black rounded-xl font-semibold hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2 mb-4">
         🏆 Leaderboard
       </button>
-
       <div className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 mt-2">
         <div className="flex border-b border-zinc-700 mb-4">
-          <button onClick={() => setActiveTab("goals")} className={`flex-1 py-2 text-sm font-semibold transition-colors ${activeTab === "goals" ? "text-white border-b-2 border-indigo-500" : "text-gray-400 hover:text-white"}`}>
-            Learning Goals
-          </button>
-          <button onClick={() => setActiveTab("resources")} className={`flex-1 py-2 text-sm font-semibold transition-colors ${activeTab === "resources" ? "text-white border-b-2 border-indigo-500" : "text-gray-400 hover:text-white"}`}>
-            Resource Hub
-          </button>
+          <button onClick={() => setActiveTab("goals")} className={`flex-1 py-2 text-sm font-semibold transition-colors ${activeTab === "goals" ? "text-white border-b-2 border-indigo-500" : "text-gray-400 hover:text-white"}`}>Learning Goals</button>
+          <button onClick={() => setActiveTab("resources")} className={`flex-1 py-2 text-sm font-semibold transition-colors ${activeTab === "resources" ? "text-white border-b-2 border-indigo-500" : "text-gray-400 hover:text-white"}`}>Resource Hub</button>
         </div>
         <div className="w-full">{activeTab === "goals" ? <LearningGoals /> : <ResourceHub />}</div>
       </div>
@@ -504,7 +416,6 @@ const ProfileCard = ({ user }) => {
   );
 };
 
-// --- PerformanceSnapshot Component ---
 const PerformanceSnapshot = ({ submissions, isLoading }) => {
   const stats = useMemo(() => {
     if (!submissions || submissions.length === 0) return { quizzesTaken: 0, averageScore: 0, highestScore: 0 };
@@ -513,16 +424,7 @@ const PerformanceSnapshot = ({ submissions, isLoading }) => {
     return { quizzesTaken: submissions.length, averageScore: Math.round(totalPercentage / submissions.length), highestScore: Math.round(highest) };
   }, [submissions]);
 
-  if (isLoading) {
-    // Simple tailwind skeletons (no external Skeleton component)
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="h-24 bg-gray-200 rounded-2xl animate-pulse" />
-        <div className="h-24 bg-gray-200 rounded-2xl animate-pulse" />
-        <div className="h-24 bg-gray-200 rounded-2xl animate-pulse" />
-      </div>
-    );
-  }
+  if (isLoading) return <div className="grid grid-cols-1 sm:grid-cols-3 gap-6"><div className="h-24 bg-gray-200 rounded-2xl animate-pulse" /><div className="h-24 bg-gray-200 rounded-2xl animate-pulse" /><div className="h-24 bg-gray-200 rounded-2xl animate-pulse" /></div>;
 
   const statItems = [
     { icon: <IconClipboardList />, label: "Quizzes Taken", value: stats.quizzesTaken, unit: "" },
@@ -545,18 +447,11 @@ const PerformanceSnapshot = ({ submissions, isLoading }) => {
   );
 };
 
-// --- RecentPerformance Component ---
 const RecentPerformance = ({ submissions, isLoading }) => {
   const navigate = useNavigate();
   const getScoreColor = (percentage) => percentage >= 80 ? "text-green-500" : percentage >= 50 ? "text-amber-500" : "text-red-500";
 
-  if (isLoading) return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-      <div className="h-6 w-1/3 bg-gray-200 rounded-md animate-pulse" />
-      <div className="h-16 w-full bg-gray-200 rounded-md animate-pulse" />
-      <div className="h-16 w-full bg-gray-200 rounded-md animate-pulse" />
-    </div>
-  );
+  if (isLoading) return <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4"><div className="h-6 w-1/3 bg-gray-200 rounded-md animate-pulse" /><div className="h-16 w-full bg-gray-200 rounded-md animate-pulse" /></div>;
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
@@ -590,29 +485,14 @@ const RecentPerformance = ({ submissions, isLoading }) => {
   );
 };
 
-// --- ExploreCourses Component ---
 const ExploreCourses = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_BASE_URL; // Ensure this is your backend URL, e.g., http://localhost:5000/api
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
 
   const ArrowRightIcon = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="transition-transform group-hover:translate-x-1"
-    >
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-      <polyline points="12 5 19 12 12 19"></polyline>
-    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
   );
 
   useEffect(() => {
@@ -620,40 +500,21 @@ const ExploreCourses = () => {
       setIsLoading(true);
       try {
         const url = `${API_URL}/courses`;
-        console.log("Fetching courses from:", url); // Debug log
         const res = await fetch(url);
-
-        // Parse JSON safely
         const data = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-          throw new Error(data.message || "Could not fetch courses");
-        }
-
+        if (!res.ok) throw new Error(data.message || "Could not fetch courses");
         setCourses(Array.isArray(data) ? data : data.courses || []);
       } catch (error) {
-        console.error("Error fetching courses:", error);
         toast.error(error.message || "Failed to fetch courses");
         setCourses([]);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchCourses();
   }, [API_URL]);
 
-  if (isLoading) {
-    return (
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div className="h-6 w-1/3 mb-4 bg-gray-200 rounded-md animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="h-48 w-full bg-gray-200 rounded-lg animate-pulse" />
-          <div className="h-48 w-full bg-gray-200 rounded-lg animate-pulse" />
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm"><div className="h-48 w-full bg-gray-200 rounded-lg animate-pulse" /></div>;
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
@@ -661,43 +522,24 @@ const ExploreCourses = () => {
       {courses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {courses.map((course) => (
-            <div
-              key={course._id}
-              onClick={() =>
-                navigate(`/courses/${course._id}`, { state: { course } })
-              }
-              className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col group cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-indigo-400 hover:-translate-y-1"
-            >
+            <div key={course._id} onClick={() => navigate(`/courses/${course._id}`, { state: { course } })} className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col group cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-indigo-400 hover:-translate-y-1">
               <div className="flex flex-col flex-grow">
-                <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold self-start px-3 py-1 rounded-full">
-                  {course.category || "General"}
-                </span>
-                <h4 className="font-bold text-lg text-gray-900 mt-3">
-                  {course.title || "Untitled Course"}
-                </h4>
-                <p className="text-gray-600 text-sm mt-2 flex-grow line-clamp-3">
-                  {course.description || "No description available."}
-                </p>
+                <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold self-start px-3 py-1 rounded-full">{course.category || "General"}</span>
+                <h4 className="font-bold text-lg text-gray-900 mt-3">{course.title || "Untitled Course"}</h4>
+                <p className="text-gray-600 text-sm mt-2 flex-grow line-clamp-3">{course.description || "No description available."}</p>
               </div>
-              <div className="mt-4 flex items-center justify-end text-indigo-600">
-                <span className="font-semibold text-sm mr-2 group-hover:underline">
-                  Start Learning
-                </span>
-                <ArrowRightIcon />
-              </div>
+              <div className="mt-4 flex items-center justify-end text-indigo-600"><span className="font-semibold text-sm mr-2 group-hover:underline">Start Learning</span><ArrowRightIcon /></div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-center py-4">
-          No courses available at the moment. Check back later!
-        </p>
+        <p className="text-gray-500 text-center py-4">No courses available at the moment. Check back later!</p>
       )}
     </div>
   );
 };
 
-// --- Home Component ---
+// --- HOME COMPONENT ---
 const Home = () => {
   const { user, token } = useAuth();
   const { submissions, loading } = useSubmissions();
@@ -707,14 +549,18 @@ const Home = () => {
   return (
     <div className="w-full flex flex-col md:flex-row gap-10 font-sans">
       <div className="flex-1 flex flex-col">
+        {/* --- UPDATED SLOGAN --- */}
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-black mb-2 leading-tight tracking-tight">
-          Invest in your <br />
+          Create the <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
-            education
+            next big thing
           </span>
         </h1>
 
         <div className="mt-5 space-y-6">
+          {/* --- NEW STATUS CARD --- */}
+          <BuildHubStatus user={user} />
+
           <PerformanceSnapshot submissions={submissions} isLoading={loading} />
           <RecentPerformance submissions={submissions} isLoading={loading} />
           <ExploreCourses />

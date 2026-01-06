@@ -15,6 +15,7 @@ import postRoutes from "./routes/postRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import ideaRoutes from "./src/routes/ideaRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -68,6 +69,7 @@ app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/ideas", ideaRoutes);
 
 // --------------------------
 // ✅ Serve React build

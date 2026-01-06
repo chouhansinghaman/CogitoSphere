@@ -5,3 +5,6 @@ export const createPostApi = (payload) => API.post("/posts", payload);
 export const answerPostApi = (id, payload) => API.post(`/posts/${id}/answer`, payload);
 export const votePostApi = (id, payload) => API.put(`/posts/${id}/vote`, payload);
 export const deletePostApi = (id) => API.delete(`/posts/${id}`);
+export const getIdeasApi = () => API.get("/ideas");
+export const createIdeaApi = (payload) => API.post("/ideas", payload);
+export const joinIdeaApi = (id) => API.post(`/ideas/${id}/join`);

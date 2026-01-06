@@ -1,20 +1,32 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { FiHome, FiBookOpen, FiUsers, FiEdit, FiSettings, FiLogOut } from "react-icons/fi";
+import { FiHome, FiBookOpen, FiUsers, FiEdit, FiSettings, FiLogOut, FiShield } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Logo from "../assets/logo.png";
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth(); // Get user to check role
 
-  const menuItems = [
+  // --- MENU CONFIGURATION ---
+  const baseMenuItems = [
     { id: "Home", icon: <FiHome size={22} />, path: "/home" },
     { id: "Courses", icon: <FiBookOpen size={22} />, path: "/courses" },
     { id: "Community", icon: <FiUsers size={22} />, path: "/community" },
     { id: "Quiz", icon: <FiEdit size={22} />, path: "/quizzes" },
   ];
+
+  // Dynamically add Admin Dashboard if user is admin
+  const menuItems = useMemo(() => {
+    if (user?.role === 'admin') {
+      return [
+        ...baseMenuItems, 
+        { id: "Admin", icon: <FiShield size={22} />, path: "/admin-dashboard" }
+      ];
+    }
+    return baseMenuItems;
+  }, [user]);
 
   const bottomItems = [
     { id: "Settings", icon: <FiSettings size={22} />, path: "/settings" },
@@ -32,31 +44,30 @@ export default function Sidebar() {
 
   // Update active index based on location
   useEffect(() => {
-    // Match exact path or if current path starts with the menu path
     const index = allItems.findIndex(
       (item) =>
         location.pathname === item.path || location.pathname.startsWith(item.path + "/")
     );
     setActiveIndex(index >= 0 ? index : 0);
-  }, [location.pathname]);
-
+  }, [location.pathname, allItems]);
 
   // Center pill relative to active item
   useEffect(() => {
-    if (menuRefs.current[activeIndex]) {
+    // Ensure refs exist before calculating
+    if (menuRefs.current[activeIndex] && menuRefs.current[0]) {
       const parentTop =
         menuRefs.current[0].offsetParent?.getBoundingClientRect().top || 0;
       const childRect = menuRefs.current[activeIndex].getBoundingClientRect();
       const childTop = childRect.top || 0;
       const childHeight = childRect.height || 0;
 
-      const pillHeight = 40; // same as h-10 (10*4 = 40px)
+      const pillHeight = 40; // same as h-10
       setPillTop(childTop - parentTop + childHeight / 2 - pillHeight / 2);
     }
-  }, [activeIndex]);
+  }, [activeIndex, menuItems]); // Re-calc if menu items change
 
   return (
-    <div className="flex flex-col h-screen w-full bg-gray-100 p-4">
+    <div className="flex flex-col h-screen w-full bg-gray-100 p-4 font-sans">
       {/* MOBILE HEADER */}
       <div className="md:hidden flex items-center justify-between bg-black text-white px-4 py-3 rounded-2xl shadow-md mb-4">
         <div className="w-10 h-10">
@@ -84,11 +95,11 @@ export default function Sidebar() {
         {/* DESKTOP SIDEBAR */}
         <div className="hidden md:flex w-20 bg-black text-white flex-col justify-between py-6 items-center rounded-2xl shadow-lg relative">
           {/* Top Section */}
-          <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-6 w-full">
             <div className="w-10 h-10">
               <img
                 src={Logo}
-                alt="CogitoSphere Logo"
+                alt="Logo"
                 className="w-full h-full rounded-full object-cover"
               />
             </div>
@@ -105,9 +116,9 @@ export default function Sidebar() {
                 <NavLink
                   key={item.id}
                   to={item.path}
-                  end
+                  end={item.path === "/home"} // Only exact match for home to prevent pill sticking
                   className={({ isActive }) =>
-                    `flex items-center justify-center w-10 h-10 rounded-lg group ${isActive ? "text-white" : "text-gray-400 hover:text-white"
+                    `flex items-center justify-center w-10 h-10 rounded-lg group transition-colors ${isActive ? "text-white" : "text-gray-400 hover:text-white"
                     }`
                   }
                 >
@@ -120,13 +131,13 @@ export default function Sidebar() {
           </div>
 
           {/* Bottom menu */}
-          <div className="flex flex-col items-center gap-6 relative mt-6">
+          <div className="flex flex-col items-center gap-6 relative mt-6 w-full">
             {bottomItems.map((item, index) => (
               <NavLink
                 key={item.id}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center justify-center w-10 h-10 rounded-lg ${isActive ? "text-white" : "text-gray-400 hover:text-white"
+                  `flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActive ? "text-white" : "text-gray-400 hover:text-white"
                   }`
                 }
               >
@@ -142,7 +153,8 @@ export default function Sidebar() {
 
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center w-10 h-10 rounded-lg text-gray-400 hover:text-white transition-colors duration-300"
+              className="flex items-center justify-center w-10 h-10 rounded-lg text-gray-400 hover:text-red-500 transition-colors duration-300"
+              title="Logout"
             >
               <FiLogOut size={22} />
             </button>
@@ -165,13 +177,13 @@ export default function Sidebar() {
       </div>
 
       {/* MOBILE BOTTOM NAV */}
-      <div className="md:hidden fixed bottom-4 left-4 right-4 bg-black text-white flex justify-around py-3 rounded-2xl shadow-lg">
+      <div className="md:hidden fixed bottom-4 left-4 right-4 bg-black text-white flex justify-around py-3 rounded-2xl shadow-lg z-50">
         {menuItems.map((item) => (
           <NavLink
             key={item.id}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center justify-center w-12 h-12 rounded-2xl ${isActive ? "bg-white text-black" : "text-gray-400 hover:text-white"
+              `flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${isActive ? "bg-white text-black shadow-lg transform -translate-y-1" : "text-gray-400 hover:text-white"
               }`
             }
           >

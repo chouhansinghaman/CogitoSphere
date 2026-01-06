@@ -30,6 +30,9 @@ const ideaSchema = new mongoose.Schema(
             enum: ["Open", "In-Progress", "Completed"],
             default: "Open"
         },
+        teamLink: { type: String, 
+            default: "" 
+        },
         members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // People who joined
     },
     { timestamps: true }

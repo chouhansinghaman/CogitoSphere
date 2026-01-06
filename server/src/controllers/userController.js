@@ -170,3 +170,17 @@ export const handleCheckIn = async (req, res) => {
         res.status(500).json({ message: "Server error during check-in.", error: error.message });
     }
 };
+
+// @desc    Get all users (for Admin Dashboard)
+// @route   GET /api/users
+// @access  Admin
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select('-password') // Don't send passwords
+      .sort({ createdAt: -1 }); // Newest users first
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
