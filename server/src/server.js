@@ -15,7 +15,7 @@ import postRoutes from "./routes/postRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
-import ideaRoutes from "./src/routes/ideaRoutes.js"; // Kept as per your structure
+import ideaRoutes from "./routes/ideaRoutes.js"; 
 
 dotenv.config();
 connectDB();
