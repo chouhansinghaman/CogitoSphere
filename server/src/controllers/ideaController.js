@@ -3,24 +3,40 @@ import Notification from "../models/Notification.js";
 
 // --- Create a New Project Idea ---
 export const createIdea = async (req, res) => {
-    try {
-        const { title, description, techStack, lookingFor, category } = req.body;
-        
-        const newIdea = new Idea({
-            title,
-            description,
-            techStack,
-            lookingFor,
-            category,
-            postedBy: req.user._id, // Set by authMiddleware
-            members: [req.user._id] // The creator is the first member
-        });
+  try {
+    const { title, description, tags, teamInviteLink } = req.body;
 
-        const savedIdea = await newIdea.save();
-        res.status(201).json(savedIdea);
-    } catch (error) {
-        res.status(500).json({ message: "Failed to create idea", error: error.message });
+    if (!title || !description || !teamInviteLink) {
+      return res.status(400).json({ message: "Title, Description, and WhatsApp/Discord Link are required." });
     }
+
+    // Ensure tags is an array (even if user sends comma-separated string)
+    let processedTags = [];
+    if (typeof tags === 'string') {
+        processedTags = tags.split(',').map(tag => tag.trim());
+    } else if (Array.isArray(tags)) {
+        processedTags = tags;
+    }
+
+    const newIdea = new Idea({
+      title,
+      description,
+      tags: processedTags,
+      teamInviteLink,
+      postedBy: req.user._id, // Comes from 'protect' middleware
+      members: [req.user._id] // Creator is the first member
+    });
+
+    const savedIdea = await newIdea.save();
+    
+    // Populate creator info immediately so frontend displays it right away
+    await savedIdea.populate('postedBy', 'name avatar');
+    
+    res.status(201).json(savedIdea);
+  } catch (error) {
+    console.error("Error creating idea:", error);
+    res.status(500).json({ message: "Server error while creating idea." });
+  }
 };
 
 // --- Get All Ideas (For the Build Hub Tab) ---
