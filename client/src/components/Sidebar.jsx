@@ -12,8 +12,8 @@ export default function Sidebar() {
   // --- MENU CONFIGURATION ---
   const baseMenuItems = [
     { id: "Home", icon: <FiHome size={22} />, path: "/home" },
-    { id: "Courses", icon: <FiBookOpen size={22} />, path: "/courses" },
     { id: "Community", icon: <FiUsers size={22} />, path: "/community" },
+    { id: "Courses", icon: <FiBookOpen size={22} />, path: "/courses" },
     { id: "Quiz", icon: <FiEdit size={22} />, path: "/quizzes" },
   ];
 
@@ -21,7 +21,7 @@ export default function Sidebar() {
   const menuItems = useMemo(() => {
     if (user?.role === 'admin') {
       return [
-        ...baseMenuItems, 
+        ...baseMenuItems,
         { id: "Admin", icon: <FiShield size={22} />, path: "/admin-dashboard" }
       ];
     }
@@ -118,7 +118,9 @@ export default function Sidebar() {
                   to={item.path}
                   end={item.path === "/home"} // Only exact match for home to prevent pill sticking
                   className={({ isActive }) =>
-                    `flex items-center justify-center w-10 h-10 rounded-lg group transition-colors ${isActive ? "text-white" : "text-gray-400 hover:text-white"
+                    `flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActive
+                      ? "bg-white text-black"
+                      : "text-gray-400 hover:text-white"
                     }`
                   }
                 >
@@ -137,7 +139,9 @@ export default function Sidebar() {
                 key={item.id}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActive ? "text-white" : "text-gray-400 hover:text-white"
+                  `flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActive
+                    ? "bg-white text-black"
+                    : "text-gray-400 hover:text-white"
                   }`
                 }
               >
@@ -183,7 +187,9 @@ export default function Sidebar() {
             key={item.id}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${isActive ? "bg-white text-black shadow-lg transform -translate-y-1" : "text-gray-400 hover:text-white"
+              `flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${isActive
+                ? "bg-white text-black"
+                : "text-gray-400 hover:text-white"
               }`
             }
           >

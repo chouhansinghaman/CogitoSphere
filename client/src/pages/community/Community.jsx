@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
-// FIX: Updated path as requested
 import { SEASON_CONFIG } from "../../lib/SeasonConfig.js"; 
 import { 
   FiSend, FiTrash2, FiMessageSquare, FiPlus, FiX, 
   FiArrowRight, FiEdit2, FiLogOut, FiUsers
 } from "react-icons/fi";
 
-// --- SUB-COMPONENT: View Team Modal (Fixed Display) ---
+// --- SUB-COMPONENT: View Team Modal ---
 const TeamModal = ({ members, onClose }) => {
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={onClose}>
@@ -18,16 +17,14 @@ const TeamModal = ({ members, onClose }) => {
                     <button onClick={onClose} className="text-gray-400 hover:text-black"><FiX /></button>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {members && members.length > 0 ? (
                         members.map(m => (
-                            <div key={m._id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                                {/* Avatar with Fallback */}
+                            <div key={m._id || Math.random()} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
                                 <img 
-                                    src={m.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=" + m._id} 
-                                    className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+                                    src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m._id || "unknown"}`} 
+                                    className="w-10 h-10 rounded-full border border-gray-200 object-cover bg-gray-100"
                                     alt="avatar"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/40"; }}
                                 />
                                 <div>
                                     <span className="font-bold text-sm text-gray-900 block">{m.name || "Unknown Builder"}</span>
@@ -36,7 +33,7 @@ const TeamModal = ({ members, onClose }) => {
                             </div>
                         ))
                     ) : (
-                        <p className="text-sm text-gray-400 italic">No members yet.</p>
+                        <p className="text-sm text-gray-400 italic">No members found.</p>
                     )}
                 </div>
                 
@@ -55,8 +52,7 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
   const [commentText, setCommentText] = useState("");
   const [localComments, setLocalComments] = useState(idea.comments || []);
   
-  // Permissions
-  const isMember = idea.members.some(m => m._id === user._id);
+  const isMember = idea.members?.some(m => m._id === user._id);
   const isOwner = idea.postedBy?._id === user._id;
   const isAdmin = user.role === 'admin';
 
@@ -72,12 +68,10 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
 
   return (
     <div className="group relative w-full h-full flex flex-col">
-      {/* Background Glow */}
       <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl blur opacity-10 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
       
       <div className="relative bg-white border border-gray-100 rounded-2xl p-6 flex-1 flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
         
-        {/* EDIT / DELETE ACTIONS (Top Right) */}
         <div className="absolute top-4 right-4 flex gap-2 z-10">
             {isOwner && (
                 <button onClick={(e) => { e.stopPropagation(); onEdit(idea); }} className="p-2 text-gray-400 hover:text-blue-600 bg-white hover:bg-blue-50 border border-gray-100 rounded-lg transition-colors" title="Edit Idea">
@@ -94,13 +88,12 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
         {!showComments ? (
             <>
                 <div>
-                    {/* Header: Team Count (Clickable) */}
                     <button 
                         onClick={() => setShowTeamModal(true)}
                         className="flex items-center gap-2 mb-4 group/team hover:bg-gray-50 p-1.5 -ml-1.5 rounded-lg transition-colors"
                     >
                          <div className="flex -space-x-2">
-                            {idea.members.slice(0,3).map((m, i) => (
+                            {idea.members?.slice(0,3).map((m, i) => (
                                 <img 
                                     key={i} 
                                     src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m._id}`} 
@@ -110,7 +103,7 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
                             ))}
                         </div>
                         <span className="text-[10px] font-bold text-gray-400 uppercase group-hover/team:text-black transition-colors">
-                            {idea.members.length} Builders
+                            {idea.members?.length || 0} Builders
                         </span>
                     </button>
                     
@@ -137,8 +130,14 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
                     </div>
                     
                     <div className="flex gap-2">
-                        {/* JOIN / LEAVE BUTTONS */}
-                        {isMember ? (
+                        {isOwner ? (
+                             <button 
+                                onClick={() => setShowTeamModal(true)}
+                                className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-600 font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                             >
+                                <FiUsers /> View Team
+                             </button>
+                        ) : isMember ? (
                             <div className="flex-1 flex gap-1">
                                 <button className="flex-1 py-3 rounded-xl bg-green-50 text-green-700 font-bold text-xs uppercase cursor-default border border-green-100">
                                     Joined
@@ -159,8 +158,7 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
                                 {idea.teamInviteLink ? "Open Link" : "Join Team"} <FiArrowRight />
                             </button>
                         )}
-
-                        {/* Comment Toggle */}
+                        
                         <button 
                             onClick={() => setShowComments(true)} 
                             className="px-4 py-3 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black transition-colors flex items-center gap-2 font-bold text-xs"
@@ -171,7 +169,6 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
                 </div>
             </>
         ) : (
-            // COMMENTS VIEW
             <div className="flex-1 flex flex-col h-full">
                 <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
                     <h4 className="font-bold text-xs uppercase tracking-widest text-gray-500">Discussion</h4>
@@ -202,7 +199,7 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
   );
 };
 
-// --- SUB-COMPONENT: Create/Edit Modal ---
+// --- SUB-COMPONENT: Create/Edit Modal (Updated with Red Asterisks) ---
 const IdeaModal = ({ show, onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState({ title: "", description: "", tags: "", teamInviteLink: "" });
     const [loading, setLoading] = useState(false);
@@ -237,15 +234,21 @@ const IdeaModal = ({ show, onClose, onSave, initialData }) => {
                 
                 <form onSubmit={handleSubmit} className="space-y-4 mt-6">
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Project Title</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                            Project Title <span className="text-red-500">*</span>
+                        </label>
                         <input required type="text" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-black outline-none font-bold" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                            Description <span className="text-red-500">*</span>
+                        </label>
                         <textarea required rows="3" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-black outline-none text-sm" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tech Stack (Comma separated)</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                            Tech Stack (Comma separated) <span className="text-red-500">*</span>
+                        </label>
                         <input required type="text" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-black outline-none text-sm" value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} />
                     </div>
                     <div>
@@ -270,8 +273,6 @@ const Community = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const chatEndRef = useRef(null);
-
-  // Idea State
   const [ideas, setIdeas] = useState([]);
   const [showIdeaModal, setShowIdeaModal] = useState(false);
   const [editingIdea, setEditingIdea] = useState(null); 

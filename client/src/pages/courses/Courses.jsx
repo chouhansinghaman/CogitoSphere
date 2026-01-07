@@ -2,89 +2,109 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
-import { FiPlus, FiEdit, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
+import { 
+  FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiSearch, 
+  FiBookOpen, FiCode, FiDatabase, FiLayout, FiCpu, FiServer 
+} from 'react-icons/fi';
 
-// --- ICONS ---
-const SearchIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8"></circle>
-    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-  </svg>
-);
+// --- HELPER: Get Icon based on Category ---
+const getCategoryIcon = (category = "") => {
+    const cat = category.toLowerCase();
+    if (cat.includes("backend") || cat.includes("database")) return FiDatabase;
+    if (cat.includes("frontend") || cat.includes("design")) return FiLayout;
+    if (cat.includes("system") || cat.includes("devops")) return FiServer;
+    if (cat.includes("algorithm") || cat.includes("dsa")) return FiCpu;
+    return FiCode; 
+};
 
-// --- COURSE CARD ---
+// --- SUB-COMPONENT: Course Card (Redesigned) ---
 const CourseCard = ({ course, isAdmin, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const slug = course.title.replace(/\s+/g, "-").toLowerCase();
-  const description = course.description || "A brief overview of the course content, learning objectives, and what students can expect to achieve upon completion.";
+  const Icon = getCategoryIcon(course.category);
+  const description = course.description || "Start your journey with this module.";
 
   return (
-    <div
-      className="bg-white border border-gray-200 rounded-2xl flex flex-col justify-between h-full group transition-all duration-300 relative hover:shadow-lg hover:-translate-y-1 cursor-pointer"
-      onClick={() => navigate(`/courses/${slug}`, { state: { course } })}
+    <div 
+        className="group relative w-full h-full flex flex-col cursor-pointer"
+        onClick={() => navigate(`/courses/${slug}`, { state: { course } })}
     >
-      <div className="p-6 flex flex-col flex-grow">
-        <div className="flex-grow">
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">{course.category}</p>
-          <h3 className="text-xl font-bold text-black leading-tight mb-3">{course.title}</h3>
-          <p className="text-sm text-gray-500 leading-relaxed line-clamp-3">{description}</p>
+      {/* Glow Effect */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl blur opacity-10 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+      
+      {/* Card Content */}
+      <div className="relative bg-white border border-gray-100 rounded-2xl p-6 flex-1 flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
+        
+        {/* Admin Controls (Floating Top Right) */}
+        {isAdmin && (
+            <div className="absolute top-4 right-4 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onEdit(course._id); }} 
+                    className="p-2 bg-white border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-200 rounded-lg shadow-sm transition-all"
+                >
+                    <FiEdit2 size={14} />
+                </button>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onDelete(course._id); }} 
+                    className="p-2 bg-white border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 rounded-lg shadow-sm transition-all"
+                >
+                    <FiTrash2 size={14} />
+                </button>
+            </div>
+        )}
+
+        <div>
+            {/* Header with Icon */}
+            <div className="flex justify-between items-start mb-5">
+                <div className="p-3 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl">
+                   <Icon size={24} />
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-blue-500 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">
+                    {course.category}
+                </div>
+            </div>
+            
+            <h3 className="text-xl font-black text-gray-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
+                {course.title}
+            </h3>
+            
+            <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6 line-clamp-3">
+                {description}
+            </p>
         </div>
 
-        {/* --- CARD FOOTER --- */}
-        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-          <span className="text-sm font-medium text-gray-600 transition-colors group-hover:text-blue-500 group-hover:underline">
-            View Course →
-          </span>
+        {/* Footer */}
+        <div>
+            <div className="w-full py-3.5 rounded-xl bg-black text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 group-hover:scale-[1.02] transition-transform shadow-lg shadow-gray-200">
+                Start Module <FiBookOpen />
+            </div>
         </div>
       </div>
-
-      {/* --- Admin Edit/Delete Controls --- */}
-      {isAdmin && (
-        <div
-          className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => e.stopPropagation()} // prevent card click
-        >
-          <button
-            onClick={() => onEdit(course._id)}
-            className="p-2 bg-gray-100 hover:bg-blue-500 hover:text-white rounded-full text-gray-700 transition-colors"
-            aria-label="Edit course"
-          >
-            <FiEdit size={16} />
-          </button>
-          <button
-            onClick={() => onDelete(course._id)}
-            className="p-2 bg-gray-100 hover:bg-red-500 hover:text-white rounded-full text-gray-700 transition-colors"
-            aria-label="Delete course"
-          >
-            <FiTrash2 size={16} />
-          </button>
-        </div>
-      )}
     </div>
   );
 };
 
-// --- CONFIRMATION MODAL ---
+// --- SUB-COMPONENT: Confirmation Modal ---
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl space-y-4 text-center">
-        <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-          <FiAlertTriangle className="h-6 w-6 text-red-600" aria-hidden="true" />
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in duration-200 text-center">
+        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-50 text-red-600 mb-4">
+          <FiAlertTriangle size={24} />
         </div>
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-        <p className="text-gray-600 text-sm">{message}</p>
-        <div className="flex justify-center gap-4 pt-2">
-          <button onClick={onClose} className="px-4 py-2 w-24 rounded-lg border border-gray-300 hover:bg-gray-100">Cancel</button>
-          <button onClick={onConfirm} className="px-4 py-2 w-24 rounded-lg bg-red-600 text-white hover:bg-red-700">Delete</button>
+        <h2 className="text-xl font-black text-gray-900 mb-2">{title}</h2>
+        <p className="text-sm text-gray-500 font-medium mb-6">{message}</p>
+        <div className="flex justify-center gap-3">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-200 font-bold text-sm hover:bg-gray-50">Cancel</button>
+          <button onClick={onConfirm} className="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 shadow-lg shadow-red-200">Delete</button>
         </div>
       </div>
     </div>
   );
 };
 
-// --- COURSES PAGE ---
+// --- MAIN PAGE ---
 const Courses = () => {
   const { user, token } = useAuth();
   const navigate = useNavigate();
@@ -102,12 +122,11 @@ const Courses = () => {
 
   const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // --- DATA FETCHING ---
+  // --- FETCH DATA ---
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        // Handles whether API_URL ends with /api or not
         const url = API_URL.endsWith("/api") ? `${API_URL}/courses` : `${API_URL}/courses`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch courses");
@@ -124,7 +143,7 @@ const Courses = () => {
     fetchCourses();
   }, [API_URL]);
 
-  // --- FILTER LOGIC ---
+  // --- FILTERING ---
   useEffect(() => {
     let filtered = courses;
     if (activeCategory !== "All Categories") filtered = filtered.filter(course => course.category === activeCategory);
@@ -132,6 +151,7 @@ const Courses = () => {
     setFilteredCourses(filtered);
   }, [activeCategory, searchTerm, courses]);
 
+  // --- ACTIONS ---
   const handleCreate = () => navigate('/create-course');
   const handleEdit = (courseId) => navigate(`/edit-course/${courseId}`);
   const handleDeleteClick = (courseId) => {
@@ -151,7 +171,7 @@ const Courses = () => {
       setCourses(prev => prev.filter(c => c._id !== courseToDelete));
       toast.success("Course deleted successfully!");
     } catch (error) {
-      toast.error(error.message || "Could not delete the course.");
+      toast.error(error.message);
     } finally {
       setIsModalOpen(false);
       setCourseToDelete(null);
@@ -159,52 +179,90 @@ const Courses = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col font-sans p-0 md:p-6">
-      <header className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-        <h1 className="text-3xl font-bold text-black">Courses</h1>
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:flex-initial">
-            <input
-              type="text"
-              placeholder="Search courses..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-gray-100 text-gray-800 border border-gray-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"><SearchIcon /></div>
-          </div>
-          {isAdmin && (
-            <button onClick={handleCreate} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
-              <FiPlus size={18} />
-              <span>Create</span>
-            </button>
-          )}
+    <div className="p-6 min-h-screen font-sans">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
+        <div>
+           <h1 className="text-4xl font-black tracking-tighter text-black mb-1">Knowledge Base</h1>
+           <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Season 0 • Curriculum</p>
         </div>
-      </header>
+        
+        <div className="flex items-center gap-3 w-full md:w-auto">
+            {/* Search Bar */}
+            <div className="relative flex-1 md:w-64">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                    type="text"
+                    placeholder="Search modules..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                />
+            </div>
 
-      <section className="flex-1 overflow-y-auto">
+            {/* Admin Create Button */}
+            {isAdmin && (
+                <button 
+                    onClick={handleCreate} 
+                    className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:scale-105 transition-transform shadow-lg shadow-gray-200"
+                >
+                    <FiPlus size={16} /> <span className="hidden md:inline">Create</span>
+                </button>
+            )}
+        </div>
+      </div>
+
+      {/* CATEGORY TABS */}
+      <div className="mb-8 overflow-x-auto pb-2">
+          <div className="flex gap-2">
+            {categories.map(cat => (
+                <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap border ${
+                        activeCategory === cat 
+                        ? 'bg-black text-white border-black shadow-md' 
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                    }`}
+                >
+                    {cat}
+                </button>
+            ))}
+          </div>
+      </div>
+
+      {/* GRID SECTION */}
+      <section>
         {loading ? (
-          <div className="text-center p-10 text-gray-500">Loading courses...</div>
+          <div className="text-center py-20 text-gray-400 text-xs font-bold uppercase tracking-widest animate-pulse">Loading curriculum...</div>
         ) : filteredCourses.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredCourses.map((course) => (
-              <CourseCard key={course._id} course={course} isAdmin={isAdmin} onEdit={handleEdit} onDelete={handleDeleteClick} />
+              <CourseCard 
+                key={course._id} 
+                course={course} 
+                isAdmin={isAdmin} 
+                onEdit={handleEdit} 
+                onDelete={handleDeleteClick} 
+              />
             ))}
           </div>
         ) : (
-          <div className="text-center p-10 bg-gray-100 rounded-2xl">
-            <h3 className="text-xl font-semibold text-black">No courses found</h3>
-            <p className="text-gray-600 mt-2">Try adjusting your search filters.</p>
+          <div className="text-center py-32 bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-200">
+            <h3 className="text-gray-900 font-bold mb-1">No courses found</h3>
+            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Try a different category</p>
           </div>
         )}
       </section>
 
+      {/* MODAL */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete Course"
-        message="Are you sure you want to delete this course? This action is permanent and cannot be undone."
+        title="Delete Module"
+        message="Are you sure? This will permanently remove this course and all its data."
       />
     </div>
   );

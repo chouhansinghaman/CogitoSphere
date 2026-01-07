@@ -1,189 +1,215 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import "react-quill/dist/quill.snow.css";
-
-// ✅ Proper Settings Icon SVG (Lucide style)
-const SettingsIcon = (props) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
-      a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09
-      a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06
-      a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 5 15.4
-      1.65 1.65 0 0 0 3.5 14H3a2 2 0 0 1 0-4h.09
-      a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06
-      a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 5
-      a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09
-      a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06
-      a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82
-      1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09
-      a1.65 1.65 0 0 0-1.51 1z" />
-  </svg>
-);
+import { toast } from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
+import { 
+  FiArrowLeft, FiMaximize2, FiMinimize2, FiBookOpen, 
+  FiClock, FiSun, FiMoon, FiHash 
+} from "react-icons/fi";
+import "react-quill/dist/quill.snow.css"; 
 
 export default function CourseDetail() {
   const { id } = useParams();
+  const { token } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
-  // ✅ Mock toast (safe placeholder)
-  const toast = { error: (msg) => console.error("Error:", msg) };
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
 
   const [course, setCourse] = useState(location.state?.course || null);
   const [loading, setLoading] = useState(!course);
-  const [isPrintLayout, setIsPrintLayout] = useState(true);
+  
+  // States for View Modes
+  const [focusMode, setFocusMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false); 
+
+  // Ref for the fullscreen container
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
       if (!course) {
         setLoading(true);
         try {
-          // ✅ Mock data (replace with real API later)
-          const mockCourseData = {
-            course: {
-              id,
-              title: `The Fundamentals of React Development - ID: ${id}`,
-              category: "Programming",
-              description:
-                "Dive deep into modern React hooks, state management, and component architecture for building scalable web applications.",
-              content: `
-                <h2>Introduction to Hooks</h2>
-                <p>Hooks are functions that let you "hook into" React state and lifecycle features from function components.</p>
-                
-                <h3>The useState Hook</h3>
-                <p>This hook allows you to add state to function components. For example:</p>
-                <pre style="background: #f8f8f8; padding: 10px; border-radius: 6px; overflow-x: auto;"><code>
-import React, { useState } from 'react';
-
-function Counter() {
-  const [count, setCount] = useState(0);
-
-  return (
-    &lt;div&gt;
-      &lt;p&gt;You clicked &#123;count&#125; times&lt;/p&gt;
-      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;
-        Click me
-      &lt;/button&gt;
-    &lt;/div&gt;
-  );
-}
-                </code></pre>
-
-                <p>Using the print layout gives this long-form content a focused, book-like feel on mobile devices, making reading much easier.</p>
-
-                <h3>The useEffect Hook</h3>
-                <p>The Effect Hook lets you perform side effects in function components. Data fetching, subscriptions, and manual DOM changes are examples.</p>
-
-                <ul>
-                  <li><strong>No dependency array</strong>: Runs after every render.</li>
-                  <li><strong>Empty array <code>[]</code></strong>: Runs only once (on mount).</li>
-                  <li><strong>Array with values <code>[val1, val2]</code></strong>: Runs on mount and whenever any dependency changes.</li>
-                </ul>
-              `,
-            },
-          };
-
-          await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate delay
-          setCourse(mockCourseData.course);
+          const url = API_URL.endsWith("/api") ? `${API_URL}/courses/${id}` : `${API_URL}/courses/${id}`;
+          const res = await fetch(url, {
+             headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (!res.ok) throw new Error("Course not found");
+          
+          const data = await res.json();
+          setCourse(data);
         } catch (err) {
-          toast.error(err.message || "Failed to load course.");
+          toast.error("Failed to load module.");
           navigate("/courses");
         } finally {
           setLoading(false);
         }
       }
     };
-
     fetchCourse();
-  }, [id, navigate]); // ✅ removed `course` to prevent infinite loop
+  }, [id, course, navigate, API_URL, token]);
 
-  if (loading)
-    return <p className="text-center text-gray-500 p-10">Loading course...</p>;
+  // --- TOGGLES ---
+  const toggleFocusMode = async () => {
+    if (!focusMode) {
+        try {
+            if (containerRef.current.requestFullscreen) {
+                await containerRef.current.requestFullscreen();
+            }
+        } catch (err) {
+            console.error("Fullscreen error:", err);
+        }
+        setFocusMode(true);
+        setIsDarkMode(true); // Auto-dark for focus
+    } else {
+        if (document.fullscreenElement) {
+            await document.exitFullscreen();
+        }
+        setFocusMode(false);
+        setIsDarkMode(false);
+    }
+  };
+
+  useEffect(() => {
+      const handleFullScreenChange = () => {
+          if (!document.fullscreenElement) setFocusMode(false);
+      };
+      document.addEventListener("fullscreenchange", handleFullScreenChange);
+      return () => document.removeEventListener("fullscreenchange", handleFullScreenChange);
+  }, []);
+
+  if (loading) return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+          <div className="animate-pulse text-xs font-bold uppercase tracking-widest text-gray-400">Loading Module...</div>
+      </div>
+  );
+  
   if (!course) return null;
 
-  const layoutClasses = isPrintLayout
-    ? "mx-auto max-w-xl shadow-lg border border-gray-200 my-2 md:my-0"
-    : "max-w-full";
-
-  const contentPadding = isPrintLayout ? "p-8 md:p-12" : "p-4 md:p-8";
-
   return (
-    <div className="w-full min-h-screen flex flex-col font-sans relative p-0 sm:p-0 md:p-6 bg-gray-50 md:bg-white">
-      {/* ✅ Mobile Header */}
-      <div className="flex justify-between items-center w-full md:hidden bg-white shadow-md z-30 sticky top-0 px-4 py-3">
+    <div 
+        ref={containerRef}
+        className={`
+            font-sans transition-colors duration-500 flex flex-col w-full
+            ${focusMode 
+                ? 'fixed inset-0 z-[9999] overflow-y-auto' 
+                : 'min-h-screen relative' 
+            }
+            ${isDarkMode ? 'bg-zinc-950 text-gray-200' : 'bg-gray-50 text-gray-900'}
+        `}
+    >
+      
+      {/* --- HEADER --- */}
+      <div className={`
+        transition-all duration-300 z-50 px-6 py-4 flex justify-between items-center border-b backdrop-blur-md
+        ${focusMode 
+            ? `fixed top-0 left-0 right-0 ${isDarkMode ? 'bg-zinc-950/90 border-zinc-800' : 'bg-white/90 border-gray-200'}` 
+            : `sticky top-0 w-full ${isDarkMode ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white/80 border-gray-200'}`
+        }
+      `}>
         <button
           onClick={() => navigate("/courses")}
-          className="flex items-center text-gray-700 hover:text-gray-900 transition-colors"
+          className={`flex items-center gap-2 text-sm font-bold uppercase tracking-wide transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}
         >
-          <span className="text-xl mr-2">←</span>
-          <span className="text-sm font-medium">Back to Courses</span>
+          <FiArrowLeft /> <span className="hidden sm:inline">Back</span>
         </button>
 
-        <button
-          onClick={() => setIsPrintLayout(!isPrintLayout)}
-          className={`p-2 rounded-full transition-colors ${
-            isPrintLayout
-              ? "bg-indigo-500 text-white shadow-md"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-          aria-label="Toggle Print Layout"
-        >
-          <SettingsIcon className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-4">
+            
+            {/* ID Badge */}
+            <div className={`hidden md:flex items-center gap-2 text-[10px] font-mono font-bold uppercase px-3 py-1 rounded-full border ${isDarkMode ? 'border-zinc-800 text-zinc-500 bg-zinc-900' : 'border-gray-200 text-gray-400 bg-gray-100'}`}>
+                <FiHash size={10} /> 
+                <span>ID: {course._id.slice(-6)}</span>
+            </div>
+
+            <div className={`w-px h-4 ${isDarkMode ? 'bg-zinc-800' : 'bg-gray-300'}`}></div>
+
+            {/* Dark/Light Toggle */}
+            <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className={`p-2 rounded-full transition-all ${isDarkMode ? 'text-yellow-400 hover:bg-zinc-800' : 'text-zinc-600 hover:bg-gray-200'}`}
+                title="Toggle Theme"
+            >
+                {isDarkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+            </button>
+
+            {/* Focus Mode Toggle */}
+            <button
+                onClick={toggleFocusMode}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all ${
+                    isDarkMode 
+                    ? "bg-white text-black hover:bg-gray-200 shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
+                    : "bg-black text-white hover:scale-105 shadow-md"
+                }`}
+            >
+                {focusMode ? <><FiMinimize2 size={14}/> Exit</> : <><FiMaximize2 size={14}/> Focus</>}
+            </button>
+        </div>
       </div>
 
-      {/* ✅ Main Content */}
-      <div
-        className={`bg-white w-full flex-grow relative rounded-none md:rounded-2xl border-0 md:border md:border-gray-200 shadow-none md:shadow-sm transition-all duration-300 ${layoutClasses}`}
-      >
-        {/* Desktop Back Button */}
-        <button
-          onClick={() => navigate("/courses")}
-          className="hidden md:block absolute top-6 left-6 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors shadow-sm z-20"
-        >
-          ← Back
-        </button>
+      {/* --- CONTENT CONTAINER --- */}
+      <div className={`flex-1 w-full flex justify-center ${focusMode ? 'pt-24' : ''}`}>
+        
+        {/* FIX: Width increased to 95% (almost full width) or max-w-7xl for large screens */}
+        <div className={`relative w-full transition-all duration-500 px-4 md:px-0 max-w-[95%] md:max-w-[96%] xl:max-w-[1600px]`}>
+            
+            {/* Glow (Visible in Dark Mode) */}
+            <div className={`absolute -inset-1 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 rounded-[2rem] blur-2xl transition-opacity duration-500 ${isDarkMode ? 'opacity-15' : 'opacity-0'}`}></div>
 
-        {/* Content Wrapper */}
-        <div className={`w-full ${contentPadding} pt-4 md:pt-16`}>
-          {/* Course Header */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2 leading-tight">
-              {course.title}
-            </h1>
-            <p className="text-sm text-indigo-600 font-medium mb-1">
-              {course.category}
-            </p>
-            <p className="text-gray-500 text-base leading-snug">
-              {course.description}
-            </p>
-          </div>
+            <div className={`
+                relative w-full transition-all duration-500 min-h-[85vh]
+                ${focusMode 
+                    ? `p-6 md:p-12 rounded-none md:rounded-[2rem] ${isDarkMode ? 'bg-zinc-900' : 'bg-white shadow-2xl'}` 
+                    : `p-6 md:p-10 border-x border-b ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100 shadow-sm'}`
+                }
+            `}>
+                
+                {/* Title Section */}
+                <div className={`mb-8 pb-8 border-b ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
+                    <div className="flex gap-2 mb-6">
+                        <span className={`px-3 py-1 border rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'bg-zinc-950 text-blue-400 border-zinc-800' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                            <FiBookOpen /> {course.category}
+                        </span>
+                        <span className={`px-3 py-1 border rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${isDarkMode ? 'bg-zinc-950 text-gray-400 border-zinc-800' : 'bg-gray-50 text-gray-500 border-gray-100'}`}>
+                            <FiClock /> Reading
+                        </span>
+                    </div>
 
-          <hr className="my-6 border-gray-200" />
+                    <h1 className={`text-3xl md:text-5xl font-black mb-6 leading-tight tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {course.title}
+                    </h1>
+                    <p className={`text-lg font-medium leading-relaxed max-w-4xl ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {course.description}
+                    </p>
+                </div>
 
-          {/* Course Content */}
-          <div className="ql-snow bg-white">
-            <div
-              className="ql-editor text-gray-800"
-              style={{
-                fontFamily: "'Lexend', sans-serif",
-                minHeight: "300px",
-                padding: 0,
-              }}
-              dangerouslySetInnerHTML={{ __html: course.content }}
-            />
-          </div>
+                {/* Rich Text Content */}
+                <div className={`
+                    prose prose-lg max-w-none 
+                    prose-headings:font-black 
+                    prose-a:text-blue-500 
+                    prose-img:rounded-2xl 
+                    ${isDarkMode ? 'prose-invert prose-p:text-gray-300 prose-headings:text-gray-100 prose-strong:text-white' : 'prose-p:text-gray-800 prose-headings:text-gray-900'}
+                `}>
+                    <div
+                        className={`ql-editor !p-0 !overflow-visible 
+                        ${isDarkMode 
+                            ? '[&_p]:!text-gray-300 [&_li]:!text-gray-300 [&_h1]:!text-white [&_h2]:!text-white [&_h3]:!text-white [&_h4]:!text-white [&_strong]:!text-white [&_b]:!text-white [&_span]:!text-gray-300 [&_div]:!text-gray-300 [&_td]:!text-gray-300 [&_th]:!text-gray-300 [&_a]:!text-blue-400' 
+                            : ''
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: course.content }}
+                        style={{
+                            fontFamily: "Inter, sans-serif",
+                            fontSize: focusMode ? "1.15rem" : "1rem",
+                            lineHeight: "1.9",
+                            // FIX: Force text color based on mode to override default quill styles
+                            color: isDarkMode ? '#e5e7eb' : '#1f2937' 
+                        }}
+                    />
+                </div>
+
+            </div>
         </div>
       </div>
     </div>

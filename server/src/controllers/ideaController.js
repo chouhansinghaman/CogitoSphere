@@ -1,17 +1,15 @@
 import Idea from "../models/Idea.js";
 import Notification from "../models/Notification.js";
 
-// --- Create a New Project Idea ---
+// 1. CREATE IDEA (Fix: Populate 'members' before sending response)
 export const createIdea = async (req, res) => {
   try {
     const { title, description, tags, teamInviteLink } = req.body;
 
-    // FIX: Only check for Title and Description. Link is now optional.
     if (!title || !description) {
       return res.status(400).json({ message: "Title and Description are required." });
     }
 
-    // Process tags
     let processedTags = [];
     if (typeof tags === 'string') {
         processedTags = tags.split(',').map(tag => tag.trim());
@@ -23,31 +21,36 @@ export const createIdea = async (req, res) => {
       title,
       description,
       tags: processedTags,
-      teamInviteLink, // It's okay if this is undefined/null now
+      teamInviteLink,
       postedBy: req.user._id,
-      members: [req.user._id]
+      members: [req.user._id] // Owner is automatically added
     });
 
     const savedIdea = await newIdea.save();
+    
+    // CRITICAL FIX: Populate both 'postedBy' AND 'members'
     await savedIdea.populate('postedBy', 'name avatar');
+    await savedIdea.populate('members', 'name avatar'); 
     
     res.status(201).json(savedIdea);
   } catch (error) {
     console.error("Error creating idea:", error);
-    res.status(500).json({ message: "Server error while creating idea." });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// --- Get All Ideas (For the Build Hub Tab) ---
+// 2. GET IDEAS (Fix: Ensure 'members' are populated)
 export const getIdeas = async (req, res) => {
-    try {
-        const ideas = await Idea.find()
-            .populate("postedBy", "username avatar")
-            .sort({ createdAt: -1 });
-        res.status(200).json(ideas);
-    } catch (error) {
-        res.status(500).json({ message: "Failed to fetch ideas", error: error.message });
-    }
+  try {
+    const ideas = await Idea.find()
+      .populate("postedBy", "name avatar")
+      .populate("members", "name avatar") // <--- THIS LINE IS CRITICAL
+      .populate("comments.sender", "name avatar")
+      .sort({ createdAt: -1 });
+    res.json(ideas);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
 };
 
 // --- Join a Project Team ---
