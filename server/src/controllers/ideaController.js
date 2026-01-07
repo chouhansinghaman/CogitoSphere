@@ -107,3 +107,69 @@ export const addComment = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
+// 1. LEAVE TEAM
+export const leaveTeam = async (req, res) => {
+  try {
+    const idea = await Idea.findById(req.params.id);
+    if (!idea) return res.status(404).json({ message: "Idea not found" });
+
+    // Remove user from members array
+    idea.members = idea.members.filter(member => member.toString() !== req.user._id.toString());
+    await idea.save();
+    
+    res.json({ message: "Left the team" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// 2. DELETE IDEA (Admin or Owner)
+export const deleteIdea = async (req, res) => {
+  try {
+    const idea = await Idea.findById(req.params.id);
+    if (!idea) return res.status(404).json({ message: "Idea not found" });
+
+    // Check permissions
+    if (idea.postedBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    await idea.deleteOne();
+    res.json({ message: "Idea deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// 3. UPDATE IDEA (Owner Only)
+export const updateIdea = async (req, res) => {
+  try {
+    const { title, description, tags, teamInviteLink } = req.body;
+    const idea = await Idea.findById(req.params.id);
+
+    if (!idea) return res.status(404).json({ message: "Idea not found" });
+    if (idea.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Process tags if they are a string
+    let processedTags = idea.tags;
+    if (tags && typeof tags === 'string') {
+        processedTags = tags.split(',').map(tag => tag.trim());
+    }
+
+    idea.title = title || idea.title;
+    idea.description = description || idea.description;
+    idea.tags = processedTags;
+    idea.teamInviteLink = teamInviteLink || ""; // Allow clearing it
+
+    const updatedIdea = await idea.save();
+    await updatedIdea.populate('postedBy', 'name avatar');
+    await updatedIdea.populate('members', 'name avatar'); // Re-populate members for UI
+    
+    res.json(updatedIdea);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
