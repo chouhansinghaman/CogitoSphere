@@ -1,5 +1,5 @@
 import express from "express";
-import { createIdea, getIdeas, joinIdea } from "../controllers/ideaController.js";
+import { addComment, createIdea, getIdeas, joinIdea } from "../controllers/ideaController.js";
 import { protect } from "../middleware/authMiddleware.js"; // Reuse your existing middleware
 
 const router = express.Router();
@@ -10,5 +10,7 @@ router.route("/")
     .post(protect, createIdea);
 
 router.post("/:id/join", protect, joinIdea);
+
+router.post('/:id/comment', protect, addComment);
 
 export default router;

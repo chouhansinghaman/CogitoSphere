@@ -83,3 +83,28 @@ export const joinIdea = async (req, res) => {
         res.status(500).json({ message: "Error joining", error: error.message });
     }
 };
+
+// Add this new function
+export const addComment = async (req, res) => {
+  try {
+    const { text } = req.body;
+    const idea = await Idea.findById(req.params.id);
+
+    if (!idea) return res.status(404).json({ message: "Idea not found" });
+
+    const newComment = {
+      text,
+      sender: req.user._id
+    };
+
+    idea.comments.push(newComment);
+    await idea.save();
+
+    // Re-fetch to populate the sender details immediately for UI
+    await idea.populate('comments.sender', 'name avatar');
+
+    res.status(201).json(idea.comments); // Return just the updated comments
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};

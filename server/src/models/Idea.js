@@ -30,10 +30,21 @@ const ideaSchema = new mongoose.Schema(
             enum: ["Open", "In-Progress", "Completed"],
             default: "Open"
         },
-        teamLink: { type: String, 
-            default: "" 
+        teamLink: {
+            type: String,
+            default: ""
         },
-        members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // People who joined
+        members: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }], // People who joined
+        comments: [
+            {
+                text: { type: String, required: true },
+                sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                createdAt: { type: Date, default: Date.now }
+            }
+        ],
     },
     { timestamps: true }
 );
