@@ -3,13 +3,13 @@
 import express from "express";
 import {
   getUserProfile,
-  updateUser,
   updatePassword, // ✅ ADDED: You need this function
   deleteUser,
   makeUserAdmin,
   updateUserAvatar,
   handleCheckIn,
   getAllUsers,
+  updateUserProfile,
 } from "../controllers/userController.js";
 
 import { adminOnly } from "../middleware/adminMiddleware.js";
@@ -23,7 +23,7 @@ router.get("/profile", protect, getUserProfile);
 router.delete("/delete", protect, deleteUser);
 
 // Update Profile (Name, Bio, Build Space)
-router.put("/update", protect, updateUser);
+router.put("/update", protect, updateUserProfile);
 
 // ✅ ADDED: Password Update Route (Fixes the <DOCTYPE error)
 router.put("/update-password", protect, updatePassword);

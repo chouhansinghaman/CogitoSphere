@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import { v2 as cloudinary } from 'cloudinary';
+import generateToken from "../utils/generateToken.js"; // Ensure you have this import if you regen token
 
 // --- NEW: Cloudinary Configuration ---
 // Make sure your .env file is loaded in your main server file (e.g., server.js)
@@ -43,44 +44,65 @@ export const getUserProfile = async (req, res) => {
   });
 };
 
-// ✅ FIX 1: Return ALL fields in updateUser so they don't disappear on the frontend
-export const updateUser = async (req, res) => {
-  if (!req.user) return res.status(401).json({ message: "Not authorized" });
-
-  const { name, avatar, builderProfile } = req.body;
-
+// @desc    Update user profile
+// @route   PUT /api/users/update
+// @access  Private
+export const updateUserProfile = async (req, res) => {
   try {
+    // 1. Find the user
     const user = await User.findById(req.user._id);
-    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Update Basic Info
-    if (name) user.name = name;
-    if (avatar) user.avatar = avatar;
+    if (user) {
+      // 2. Update basic fields (Only if provided in body)
+      user.name = req.body.name || user.name;
+      user.email = req.body.email || user.email;
+      
+      // 3. Handle Bio (Safe check)
+      if (req.body.bio !== undefined) {
+        user.bio = req.body.bio;
+      }
 
-    // Update Build Space Profile
-    if (builderProfile) {
-      user.builderProfile = {
-        ...user.builderProfile,
-        ...builderProfile
-      };
-    }
+      // 4. Handle Skills (The likely cause of the crash)
+      // Check if skills exist and handle both String ("React, Node") and Array (["React", "Node"])
+      if (req.body.skills) {
+        if (typeof req.body.skills === 'string') {
+             // Split string into array, trim spaces, remove empty strings
+             user.skills = req.body.skills.split(',').map(skill => skill.trim()).filter(s => s !== "");
+        } else if (Array.isArray(req.body.skills)) {
+             user.skills = req.body.skills;
+        }
+      }
 
-    const updatedUser = await user.save();
+      // 5. Handle Social Links (Optional)
+      if (req.body.github !== undefined) user.github = req.body.github;
+      if (req.body.linkedin !== undefined) user.linkedin = req.body.linkedin;
 
-    res.status(200).json({
-      message: "Profile updated successfully",
-      user: {
+      // 6. Handle Password (Only if user typed a new one)
+      if (req.body.password) {
+        user.password = req.body.password;
+      }
+
+      // 7. Save
+      const updatedUser = await user.save();
+
+      // 8. Respond with new data
+      res.json({
         _id: updatedUser._id,
         name: updatedUser.name,
-        username: updatedUser.username, // ✅ Added
-        email: updatedUser.email,       // ✅ Added
-        role: updatedUser.role,         // ✅ Added
+        email: updatedUser.email,
+        isAdmin: updatedUser.isAdmin,
+        skills: updatedUser.skills,
+        bio: updatedUser.bio,
         avatar: updatedUser.avatar,
-        builderProfile: updatedUser.builderProfile,
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to update profile", error: err.message });
+        token: generateToken(updatedUser._id),
+      });
+
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error("❌ Update Profile Error:", error.message); // This will show in Render logs
+    res.status(500).json({ message: 'Server Error during update', error: error.message });
   }
 };
 
