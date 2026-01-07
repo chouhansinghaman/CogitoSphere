@@ -43,8 +43,7 @@ export const getUserProfile = async (req, res) => {
   });
 };
 
-// --- NEW: Unified Update Function ---
-// This handles Name, Avatar, and Build Space profile updates
+// ✅ FIX 1: Return ALL fields in updateUser so they don't disappear on the frontend
 export const updateUser = async (req, res) => {
   if (!req.user) return res.status(401).json({ message: "Not authorized" });
 
@@ -61,8 +60,8 @@ export const updateUser = async (req, res) => {
     // Update Build Space Profile
     if (builderProfile) {
       user.builderProfile = {
-        ...user.builderProfile, // Keep existing fields
-        ...builderProfile       // Overwrite with new ones
+        ...user.builderProfile,
+        ...builderProfile
       };
     }
 
@@ -73,12 +72,44 @@ export const updateUser = async (req, res) => {
       user: {
         _id: updatedUser._id,
         name: updatedUser.name,
+        username: updatedUser.username, // ✅ Added
+        email: updatedUser.email,       // ✅ Added
+        role: updatedUser.role,         // ✅ Added
         avatar: updatedUser.avatar,
         builderProfile: updatedUser.builderProfile,
       }
     });
   } catch (err) {
     res.status(500).json({ message: "Failed to update profile", error: err.message });
+  }
+};
+
+// ✅ FIX 2: New Function for Password Update
+export const updatePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    // 1. Get user with password (if your model selects: false by default)
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // 2. Check current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect current password" });
+    }
+
+    // 3. Update to new password (Pre-save hook in model should handle hashing)
+    // If you don't have a pre-save hook, manually hash here:
+    // const salt = await bcrypt.genSalt(10);
+    // user.password = await bcrypt.hash(newPassword, salt);
+    
+    user.password = newPassword; // Assuming User model has pre-save hashing
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 

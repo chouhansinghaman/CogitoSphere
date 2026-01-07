@@ -3,33 +3,37 @@
 import express from "express";
 import {
   getUserProfile,
-  updateUser,         
+  updateUser,
+  updatePassword, // ✅ ADDED: You need this function
   deleteUser,
   makeUserAdmin,
-  updateUserAvatar,  
+  updateUserAvatar,
   handleCheckIn,
   getAllUsers,
 } from "../controllers/userController.js";
 
 import { adminOnly } from "../middleware/adminMiddleware.js";
 import { protect } from "../middleware/authMiddleware.js";
-import { uploadSingleImage } from "../middleware/uploadMiddleware.js"; // <-- NEW
+import { uploadSingleImage } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
-// User Profile Routes
+// --- Profile Routes ---
 router.get("/profile", protect, getUserProfile);
 router.delete("/delete", protect, deleteUser);
-router.put("/update", protect, updateUser);  // <-- FIXED
 
-// Admin Route
-router.post("/make-admin", protect, makeUserAdmin);
+// Update Profile (Name, Bio, Build Space)
+router.put("/update", protect, updateUser);
 
-// New Routes
+// ✅ ADDED: Password Update Route (Fixes the <DOCTYPE error)
+router.put("/update-password", protect, updatePassword);
+
+// --- Feature Routes ---
 router.put("/avatar", protect, uploadSingleImage, updateUserAvatar);
 router.post("/check-in", protect, handleCheckIn);
 
-// Get All Users Route
-router.get('/', protect, adminOnly, getAllUsers);
+// --- Admin Routes ---
+router.post("/make-admin", protect, makeUserAdmin);
+router.get("/", protect, adminOnly, getAllUsers);
 
 export default router;
