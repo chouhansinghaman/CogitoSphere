@@ -1,53 +1,36 @@
-// models/Idea.js
 import mongoose from "mongoose";
 
-const ideaSchema = new mongoose.Schema(
+const ideaSchema = new mongoose.Schema({
+  title: { 
+    type: String, 
+    required: true 
+  },
+  description: { 
+    type: String, 
+    required: true 
+  },
+  tags: [{ 
+    type: String 
+  }],
+  teamInviteLink: { 
+    type: String 
+  }, 
+  postedBy: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "User", 
+    required: true 
+  },
+  members: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "User" 
+  }],
+  comments: [
     {
-        title: {
-            type: String,
-            required: true
-        }, // e.g., "AI-based Diet Planner"
-        description: {
-            type: String,
-            required: true
-        }, // The "What" and "Why"
-        techStack: [{
-            type: String
-        }], // e.g., ["React", "Node.js", "MongoDB"]
-        category: {
-            type: String,
-            required: true
-        }, // e.g., "Web App", "Game", "Fintech"
-        postedBy: {
-            type: mongoose.Schema.Types.ObjectId, ref: "User",
-            required: true
-        },
-        lookingFor: [{
-            type: String
-        }], // e.g., ["Designer", "Frontend Developer"]
-        status: {
-            type: String,
-            enum: ["Open", "In-Progress", "Completed"],
-            default: "Open"
-        },
-        teamLink: {
-            type: String,
-            default: ""
-        },
-        members: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
-        }], // People who joined
-        comments: [
-            {
-                text: { type: String, required: true },
-                sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-                createdAt: { type: Date, default: Date.now }
-            }
-        ],
-    },
-    { timestamps: true }
-);
+      text: { type: String, required: true },
+      sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ]
+}, { timestamps: true });
 
-const Idea = mongoose.model("Idea", ideaSchema);
-export default Idea;
+export default mongoose.model("Idea", ideaSchema);

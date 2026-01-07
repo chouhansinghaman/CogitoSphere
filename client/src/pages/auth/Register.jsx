@@ -6,7 +6,7 @@ import Loader from "../../components/Loader";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 import Logo from "../../assets/logo.png";
 import Illustration from "../../assets/illustration.PNG";
-import { registerApi, loginApi } from "../../services/api.auth.js"; // ✅ helpers
+import { registerApi, loginApi } from "../../services/api.auth.js";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -26,9 +26,10 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // ✅ FIX: Reduced wait time to 500ms
   const shouldDisplayLoader = useMinimumLoadingTime(
     isApiLoading || isTransitioning,
-    3000
+    500
   );
 
   const handleChange = (e) => {
@@ -51,13 +52,16 @@ export default function Register() {
     try {
       const { confirmPassword, ...apiData } = formData;
 
-      await registerApi(apiData); // ✅ register helper
+      await registerApi(apiData); // Register
 
-      const loginRes = await loginApi(formData.email, formData.password); // ✅ login helper
+      const loginRes = await loginApi(formData.email, formData.password); // Auto Login
       login(loginRes.data.token, loginRes.data.user);
 
       toast.success("Account created! Welcome!");
-      navigate("/home");
+      
+      // ✅ FIX: Force hard redirect
+      window.location.href = "/home";
+
     } catch (err) {
       if (err.response) {
         if (typeof err.response.data === "string" && err.response.data.includes("<!DOCTYPE")) {
@@ -69,17 +73,18 @@ export default function Register() {
       } else {
         toast.error("Registration failed. Please check your connection.");
       }
-    } finally {
+      // Only stop loader on error
       setIsApiLoading(false);
     }
   };
 
   const handleSwitchToLogin = () => {
     setIsTransitioning(true);
-    setTimeout(() => navigate("/login"), 3000);
+    // ✅ FIX: Faster transition
+    setTimeout(() => navigate("/login"), 500);
   };
 
-  if (user) return null; // Keep your Sidebar or redirect logic
+  if (user) return null; 
   if (shouldDisplayLoader) return <Loader />;
 
   return (

@@ -23,9 +23,10 @@ export default function Login() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // ✅ FIX: Reduced wait time to 500ms (was 3000)
   const shouldDisplayLoader = useMinimumLoadingTime(
     isApiLoading || isTransitioning,
-    3000
+    500
   );
 
   useEffect(() => {
@@ -58,25 +59,28 @@ export default function Login() {
 
     setIsApiLoading(true);
     try {
-      // ✅ Removed duplicate declaration
       const res = await loginApi(formData.email, formData.password);
       login(res.data.token, res.data.user);
       toast.success("Login successful! Welcome back.");
-      navigate("/home");
+      
+      // ✅ FIX: Force hard redirect to solve the "reload needed" issue
+      window.location.href = "/home";
+      
     } catch (err) {
       const msg =
         err.response?.data?.message ||
         err.message ||
         "Login failed. Please check your credentials.";
       toast.error(msg);
-    } finally {
+      // Stop loader only on error (on success, keep it until redirect)
       setIsApiLoading(false);
     }
   };
 
   const handleSwitchToRegister = () => {
     setIsTransitioning(true);
-    setTimeout(() => navigate("/register"), 3000);
+    // ✅ FIX: Faster transition
+    setTimeout(() => navigate("/register"), 500);
   };
 
   if (shouldDisplayLoader) return <Loader />;

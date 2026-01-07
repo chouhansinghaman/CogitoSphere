@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiEdit2 } from "react-icons/fi";
+import { FiEdit2, FiCode, FiUser, FiSearch, FiCheck } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -10,18 +10,17 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
 const avatarOptions = [
   "https://i.pinimg.com/736x/51/19/95/511995729851564ed88c865f42e1844b.jpg",
   "https://i.pinimg.com/474x/0a/5f/ca/0a5fca949be9e2f9951f860398fd7c9f.jpg",
-  "https://img.freepik.com/free-photo/aesthetic-anime-character-gaming_23-2151560679.jpg?semt=ais_hybrid&w=740&q=80",
+  "https://img.freepik.com/free-photo/aesthetic-anime-character-gaming_23-2151560679.jpg",
   "https://img.freepik.com/free-photo/lifestyle-scene-with-people-doing-regular-tasks-anime-style_23-2151002566.jpg",
-  "https://img.freepik.com/free-photo/lifestyle-scene-with-people-doing-regular-tasks-anime-style_23-2151002534.jpg?semt=ais_hybrid&w=740&q=80",
   "https://media.craiyon.com/2025-07-22/BVWL-jyLSpey53Hp-YX0UA.webp",
+  "https://img.freepik.com/free-photo/anime-style-portrait-young-business-woman_23-2151002534.jpg"
 ];
 
-// --- HELPER COMPONENTS (Your Original Style) ---
-const SectionWrapper = ({ title, children, action = null }) => (
-  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-6">
-    <div className="flex items-center justify-between mb-6">
-      <h3 className="text-xl font-bold">{title}</h3>
-      {action && <div>{action}</div>}
+const SectionWrapper = ({ title, subtitle, children }) => (
+  <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm mb-8 transition-all hover:shadow-md">
+    <div className="mb-6">
+      <h3 className="text-2xl font-black tracking-tight">{title}</h3>
+      {subtitle && <p className="text-gray-500 text-sm mt-1">{subtitle}</p>}
     </div>
     {children}
   </div>
@@ -35,21 +34,19 @@ const PasswordInput = ({ id, name, value, onChange, placeholder, showState, show
       type={show[showState] ? "text" : "password"}
       value={value}
       onChange={onChange}
-      placeholder={placeholder}
+      placeholder=" "
       required
-      className="peer h-12 w-full border border-gray-300 rounded-lg px-4 pr-10 placeholder-transparent focus:outline-none focus:border-black"
+      className="peer h-14 w-full bg-gray-50 border border-gray-200 rounded-xl px-4 pt-4 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
     />
     <label
       htmlFor={id}
-      className="absolute left-4 -top-2.5 bg-gray-50 px-1 text-sm text-gray-600 transition-all 
-                 peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 
-                 peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-black peer-focus:bg-gray-50"
+      className="absolute left-4 top-2 text-[10px] text-gray-500 font-bold uppercase tracking-wider transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:text-[10px] peer-focus:font-bold peer-focus:uppercase"
     >
       {placeholder}
     </label>
     <span
       onClick={() => setShow((prev) => ({ ...prev, [showState]: !prev[showState] }))}
-      className="absolute right-3 top-3 cursor-pointer text-xl select-none"
+      className="absolute right-4 top-4 cursor-pointer text-lg select-none text-gray-400 hover:text-black"
     >
       {show[showState] ? "🙈" : "👁️"}
     </span>
@@ -66,6 +63,7 @@ const ProfileSection = () => {
 
   const handleUpdate = async (payload) => {
     try {
+      // ✅ URL is clean: API_BASE already has /api
       const res = await fetch(`${API_BASE}/users/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -73,7 +71,10 @@ const ProfileSection = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to update");
-      setUser(data.user || { ...user, ...payload });
+
+      // ✅ Merge logic to keep username/email/role visible
+      setUser(prev => ({ ...prev, ...data.user }));
+
       toast.success("Profile updated!");
       setEditing(false);
     } catch (err) { toast.error(err.message); }
@@ -81,44 +82,73 @@ const ProfileSection = () => {
 
   return (
     <>
-      <SectionWrapper title="Personal Information">
-        <div className="flex flex-col md:flex-row gap-8 items-start">
-          <div className="relative group">
-            <img src={user?.avatar} alt="Avatar" className="w-24 h-24 rounded-2xl object-cover ring-4 ring-gray-50 shadow-md" />
-            <button onClick={() => setIsAvatarModalOpen(true)} className="absolute -bottom-2 -right-2 p-2 bg-black text-white rounded-lg shadow-lg">
-              <FiEdit2 size={14} />
+      <SectionWrapper title="Personal Information" subtitle="Manage your public identity">
+        <div className="flex flex-col md:flex-row gap-10 items-start">
+          <div className="relative group mx-auto md:mx-0">
+            <div className="w-32 h-32 rounded-full p-1 border-2 border-dashed border-gray-300 hover:border-black transition-all">
+              <img src={user?.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+            </div>
+            <button onClick={() => setIsAvatarModalOpen(true)} className="absolute bottom-0 right-0 p-3 bg-black text-white rounded-full hover:scale-110 transition-transform shadow-lg">
+              <FiEdit2 size={16} />
             </button>
           </div>
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase">Full Name</label>
+
+          <div className="flex-1 grid grid-cols-1 gap-6 w-full">
+            <div className="group">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Full Name</label>
               {editing ? (
-                <div className="flex gap-2">
-                  <input value={name} onChange={e => setName(e.target.value)} className="bg-white border rounded-lg px-3 py-1.5 outline-none focus:border-black w-full" />
-                  <button onClick={() => handleUpdate({ name })} className="text-xs bg-black text-white px-3 rounded-lg">Save</button>
+                <div className="flex gap-3">
+                  <input value={name} onChange={e => setName(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 w-full outline-none focus:border-black" autoFocus />
+                  <button onClick={() => handleUpdate({ name })} className="bg-black text-white px-6 rounded-xl text-sm font-bold">Save</button>
+                  <button onClick={() => setEditing(false)} className="text-gray-500 px-4 text-sm font-bold">Cancel</button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setEditing(true)}>
-                  <p className="text-lg font-bold">{user?.name}</p>
-                  <FiEdit2 size={12} className="text-gray-400 opacity-0 group-hover:opacity-100" />
+                <div className="flex items-center gap-3 cursor-pointer" onClick={() => setEditing(true)}>
+                  <p className="text-2xl font-bold text-gray-900">{user?.name}</p>
+                  <FiEdit2 size={14} className="text-gray-300 group-hover:text-black transition-colors" />
                 </div>
               )}
             </div>
-            <div><label className="text-xs font-semibold text-gray-500 uppercase">Username</label><p className="font-medium">@{user?.username}</p></div>
-            <div><label className="text-xs font-semibold text-gray-500 uppercase">Email Address</label><p className="font-medium">{user?.email}</p></div>
-            <div><label className="text-xs font-semibold text-gray-500 uppercase">Role</label><div className="flex mt-1"><span className="bg-black text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">{user?.role}</span></div></div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Username</label>
+                <div className="flex items-center gap-2 text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  <span className="text-gray-400">@</span>
+                  <span className="font-medium">{user?.username || "Not set"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
+                <div className="text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 font-medium">
+                  {user?.email || "Not set"}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Role</label>
+              <span className="inline-block bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">{user?.role}</span>
+            </div>
           </div>
         </div>
       </SectionWrapper>
+
       {isAvatarModalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setIsAvatarModalOpen(false)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-bold mb-4">Select Avatar</h3>
-            <div className="grid grid-cols-3 gap-3">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsAvatarModalOpen(false)}>
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all scale-100" onClick={e => e.stopPropagation()}>
+            <h3 className="text-2xl font-black mb-6 text-center">Choose your style</h3>
+            <div className="grid grid-cols-3 gap-4">
               {avatarOptions.map(url => (
-                <img key={url} src={url} className={`w-full aspect-square rounded-xl cursor-pointer border-2 ${user.avatar === url ? 'border-black' : 'border-transparent hover:border-gray-200'}`} onClick={() => { handleUpdate({ avatar: url }); setIsAvatarModalOpen(false); }} />
+                <img
+                  key={url}
+                  src={url}
+                  className={`w-full aspect-square rounded-2xl cursor-pointer object-cover transition-all duration-200 ${user.avatar === url ? 'ring-4 ring-black scale-95' : 'hover:scale-105 opacity-80 hover:opacity-100'}`}
+                  onClick={() => { handleUpdate({ avatar: url }); setIsAvatarModalOpen(false); }}
+                />
               ))}
             </div>
+            <button onClick={() => setIsAvatarModalOpen(false)} className="w-full mt-6 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50">Cancel</button>
           </div>
         </div>
       )}
@@ -130,14 +160,15 @@ const BuilderSection = () => {
   const { user, setUser, token } = useAuth();
   const [profile, setProfile] = useState({
     skills: user?.builderProfile?.skills?.join(", ") || "",
-    preferredRole: user?.builderProfile?.preferredRole || "Other",
+    preferredRole: user?.builderProfile?.preferredRole || "Fullstack",
     lookingForTeam: user?.builderProfile?.lookingForTeam || false
   });
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    const tid = toast.loading("Syncing with Build Space...");
+    const tid = toast.loading("Updating Build Space...");
     try {
+      // ✅ URL is clean: API_BASE already has /api
       const res = await fetch(`${API_BASE}/users/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -150,35 +181,87 @@ const BuilderSection = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error("Update failed");
-      setUser(data.user);
-      toast.success("Build Profile Updated!", { id: tid });
+
+      setUser(prev => ({ ...prev, ...data.user }));
+
+      toast.success("Updated!", { id: tid });
     } catch (err) { toast.error(err.message, { id: tid }); }
   };
 
   return (
-    <SectionWrapper title="Build Space Hub">
+    <SectionWrapper title="Build Space Hub" subtitle="Customize your developer card for matching">
       <form onSubmit={handleUpdate} className="space-y-6">
-        <div className="flex items-center justify-between p-4 bg-black rounded-xl text-white">
-          <div><h4 className="font-bold">Matching Status</h4><p className="text-xs text-gray-400">Join the matching pool</p></div>
-          <button type="button" onClick={() => setProfile(p => ({ ...p, lookingForTeam: !p.lookingForTeam }))} className={`px-6 py-2 rounded-xl font-bold text-xs ${profile.lookingForTeam ? 'bg-white text-black' : 'bg-white/10 text-white'}`}>{profile.lookingForTeam ? 'ACTIVE' : 'INACTIVE'}</button>
+
+        {/* Status Card */}
+        <div className={`p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${profile.lookingForTeam ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-full ${profile.lookingForTeam ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}>
+              <FiSearch size={20} />
+            </div>
+            <div>
+              <h4 className="font-bold text-lg">{profile.lookingForTeam ? "Ready to Match" : "Not Looking"}</h4>
+              <p className="text-xs text-gray-500">Visible in the pool</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setProfile(p => ({ ...p, lookingForTeam: !p.lookingForTeam }))}
+            className={`px-5 py-2 rounded-lg font-bold text-sm transition-colors ${profile.lookingForTeam ? 'bg-green-500 text-white shadow-lg shadow-green-200' : 'bg-white border border-gray-300 text-gray-600'}`}
+          >
+            {profile.lookingForTeam ? 'ACTIVE' : 'OFFLINE'}
+          </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-1"><label className="text-xs font-semibold text-gray-500 uppercase">Role</label><select value={profile.preferredRole} onChange={e => setProfile({...profile, preferredRole: e.target.value})} className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 outline-none focus:border-black">{["Frontend", "Backend", "Fullstack", "Designer", "Other"].map(r => <option key={r} value={r}>{r}</option>)}</select></div>
-          <div className="space-y-1"><label className="text-xs font-semibold text-gray-500 uppercase">Skills</label><input value={profile.skills} onChange={e => setProfile({...profile, skills: e.target.value})} placeholder="React, Java..." className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 outline-none focus:border-black" /></div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <FiUser /> Preferred Role
+            </label>
+            <div className="relative">
+              <select
+                value={profile.preferredRole}
+                onChange={e => setProfile({ ...profile, preferredRole: e.target.value })}
+                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 appearance-none outline-none focus:border-black focus:ring-1 focus:ring-black cursor-pointer font-medium"
+              >
+                {["Frontend Developer", "Backend Developer", "Fullstack Developer", "UI/UX Designer", "Product Manager", "Other"].map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <div className="absolute right-4 top-4 pointer-events-none text-gray-400">▼</div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <FiCode /> Skills & Tech
+            </label>
+            <input
+              value={profile.skills}
+              onChange={e => setProfile({ ...profile, skills: e.target.value })}
+              placeholder="e.g. React, Node.js, Figma..."
+              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-black focus:ring-1 focus:ring-black font-medium"
+            />
+            <div className="flex flex-wrap gap-2 mt-2">
+              {profile.skills.split(",").filter(s => s.trim()).map((tag, i) => (
+                <span key={i} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-bold uppercase">{tag}</span>
+              ))}
+            </div>
+          </div>
         </div>
-        <button type="submit" className="w-full py-3 bg-black text-white rounded-xl font-bold">Update Build Space Profile</button>
+
+        <div className="pt-4">
+          <button type="submit" className="w-full py-4 bg-black text-white rounded-xl font-bold text-lg hover:bg-gray-800 transition-colors shadow-lg flex items-center justify-center gap-2">
+            <FiCheck /> Save Build Profile
+          </button>
+        </div>
       </form>
     </SectionWrapper>
   );
 };
 
 const SecuritySection = () => {
-  const { updateUserPassword } = useAuth();
+  const { token } = useAuth();
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [show, setShow] = useState({ current: false, new: false, confirm: false });
   const [isUpdating, setIsUpdating] = useState(false);
-  const [showForgotModal, setShowForgotModal] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -188,28 +271,45 @@ const SecuritySection = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (passwords.newPassword !== passwords.confirmPassword) return toast.error("Passwords do not match");
+    if (passwords.newPassword.length < 6) return toast.error("Password too short");
+
     setIsUpdating(true);
     try {
-      await updateUserPassword(passwords.currentPassword, passwords.newPassword);
-      toast.success("Password updated!");
+      // ✅ URL is clean: API_BASE already has /api
+      const res = await fetch(`${API_BASE}/users/update-password`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          currentPassword: passwords.currentPassword,
+          newPassword: passwords.newPassword
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to update password");
+
+      toast.success("Password updated successfully!");
       setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    } catch (err) { toast.error(err.message); }
-    finally { setIsUpdating(false); }
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
-    <SectionWrapper title="Change Password">
-      <form onSubmit={handleUpdate} className="max-w-md space-y-6">
+    <SectionWrapper title="Security" subtitle="Update your password and security settings">
+      <form onSubmit={handleUpdate} className="max-w-lg space-y-6">
         <PasswordInput id="current" name="currentPassword" value={passwords.currentPassword} onChange={handleInputChange} placeholder="Current Password" showState="current" show={show} setShow={setShow} />
         <PasswordInput id="new" name="newPassword" value={passwords.newPassword} onChange={handleInputChange} placeholder="New Password" showState="new" show={show} setShow={setShow} />
         <PasswordInput id="confirm" name="confirmPassword" value={passwords.confirmPassword} onChange={handleInputChange} placeholder="Confirm New Password" showState="confirm" show={show} setShow={setShow} />
-        <div className="flex justify-between items-center"><button type="button" onClick={() => setShowForgotModal(true)} className="text-xs text-gray-500 hover:underline">Forgot Password?</button><button className="px-6 py-2 bg-black text-white rounded-lg font-bold">{isUpdating ? "Saving..." : "Update Password"}</button></div>
-      </form>
-      {showForgotModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm"><h2 className="text-xl font-bold mb-4">Reset Password</h2><input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} className="w-full border p-2 rounded-lg mb-4" placeholder="Email" /><div className="flex gap-2"><button onClick={() => setShowForgotModal(false)} className="flex-1 py-2 border rounded-lg">Cancel</button><button className="flex-1 py-2 bg-black text-white rounded-lg">Send</button></div></div>
+
+        <div className="flex justify-end pt-2">
+          <button disabled={isUpdating} className="px-8 py-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-md disabled:opacity-50">
+            {isUpdating ? "Saving..." : "Update Password"}
+          </button>
         </div>
-      )}
+      </form>
     </SectionWrapper>
   );
 };
@@ -218,22 +318,43 @@ const AdminSection = ({ setActiveTab }) => {
   const { user, setUser, token } = useAuth();
   const [adminCode, setAdminCode] = useState("");
   const [showModal, setShowModal] = useState(false);
+
   if (user?.role === 'admin') return null;
+
   const handleUpgrade = async () => {
     if (adminCode !== ADMIN_SECRET_CODE) return toast.error("Incorrect code");
     try {
-      const res = await fetch(`${API_BASE}/user/make-admin`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      // ✅ URL is clean
+      const res = await fetch(`${API_BASE}/users/make-admin`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error("Upgrade failed");
-      setUser(prev => ({ ...prev, role: 'admin' }));
-      toast.success("Now Admin!"); setShowModal(false); setActiveTab("My Profile");
+      const data = await res.json();
+      setUser(data.user);
+      toast.success("Welcome, Admin!");
+      setShowModal(false);
+      setActiveTab("My Profile");
     } catch (err) { toast.error(err.message); }
   };
+
   return (
-    <SectionWrapper title="Admin Access">
-      <div className="flex justify-between items-center"><p className="text-sm">Manage system settings.</p><button onClick={() => setShowModal(true)} className="px-4 py-2 bg-black text-white rounded-lg font-bold">Request Access</button></div>
+    <SectionWrapper title="Admin Access" subtitle="Elevate your privileges">
+      <div className="flex justify-between items-center bg-gray-50 p-6 rounded-2xl border border-gray-200">
+        <div>
+          <h4 className="font-bold">Request Admin Status</h4>
+          <p className="text-sm text-gray-500">Requires a secret verification code.</p>
+        </div>
+        <button onClick={() => setShowModal(true)} className="px-5 py-2 bg-black text-white rounded-lg font-bold text-sm">Unlock</button>
+      </div>
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 className="font-bold mb-4">Admin Code</h3><input type="password" value={adminCode} onChange={e => setAdminCode(e.target.value)} className="w-full border p-2 rounded-lg mb-4" /><div className="flex gap-2"><button onClick={() => setShowModal(false)} className="flex-1 py-2 border rounded-lg">Cancel</button><button onClick={handleUpgrade} className="flex-1 py-2 bg-black text-white rounded-lg">Submit</button></div></div>
+          <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl">
+            <h3 className="text-xl font-black mb-1">Enter Admin Code</h3>
+            <p className="text-sm text-gray-500 mb-6">Ask a system administrator for the key.</p>
+            <input type="password" value={adminCode} onChange={e => setAdminCode(e.target.value)} className="w-full border-2 border-gray-200 p-3 rounded-xl mb-4 outline-none focus:border-black font-mono text-center tracking-widest" placeholder="●●●●●●●●" />
+            <div className="flex gap-3">
+              <button onClick={() => setShowModal(false)} className="flex-1 py-3 border font-bold rounded-xl hover:bg-gray-50">Cancel</button>
+              <button onClick={handleUpgrade} className="flex-1 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800">Verify</button>
+            </div>
+          </div>
         </div>
       )}
     </SectionWrapper>
@@ -244,22 +365,42 @@ const PrivacySection = () => {
   const { token, logout } = useAuth();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+
   const handleDelete = async () => {
-    try { await fetch(`${API_BASE}/user/delete`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }); toast.success("Deleted"); logout(); navigate("/login"); } catch (err) { toast.error(err.message); }
+    try {
+      // ✅ URL is clean
+      await fetch(`${API_BASE}/users/delete`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      toast.success("Account deleted");
+      logout();
+      navigate("/login");
+    } catch (err) { toast.error(err.message); }
   };
+
   return (
-    <SectionWrapper title="Privacy">
-      <p className="text-sm text-gray-500 mb-4">Irreversible action.</p><button onClick={() => setShowModal(true)} className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold">Delete Account</button>
+    <SectionWrapper title="Danger Zone" subtitle="Irreversible account actions">
+      <div className="border border-red-100 bg-red-50 p-6 rounded-2xl flex justify-between items-center">
+        <div>
+          <h4 className="font-bold text-red-900">Delete Account</h4>
+          <p className="text-sm text-red-600">All your data will be permanently removed.</p>
+        </div>
+        <button onClick={() => setShowModal(true)} className="px-5 py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700">Delete</button>
+      </div>
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-2xl max-w-sm text-center"><h3 className="font-bold mb-4">Confirm?</h3><div className="flex gap-2"><button onClick={() => setShowModal(false)} className="flex-1 py-2 border rounded-lg">No</button><button onClick={handleDelete} className="flex-1 py-2 bg-red-600 text-white rounded-lg">Yes</button></div></div>
+          <div className="bg-white p-8 rounded-3xl max-w-sm text-center shadow-2xl">
+            <h3 className="text-2xl font-black mb-2">Are you sure?</h3>
+            <p className="text-gray-500 mb-6">This action cannot be undone.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowModal(false)} className="flex-1 py-3 border font-bold rounded-xl hover:bg-gray-50">Cancel</button>
+              <button onClick={handleDelete} className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700">Yes, Delete</button>
+            </div>
+          </div>
         </div>
       )}
     </SectionWrapper>
   );
 };
 
-// --- MAIN COMPONENT (RESTORED TOP NAV) ---
 const Settings = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("My Profile");
@@ -267,19 +408,18 @@ const Settings = () => {
   if (user?.role !== 'admin') TABS.push("Admin Access");
 
   return (
-    <div className="w-full text-gray-900 bg-transparent p-0">
-      <h1 className="text-3xl font-black mb-8 px-2">Settings</h1>
-      
-      {/* RESTORED TOP NAV BAR */}
-      <div className="mb-8 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8 overflow-x-auto">
+    <div className="w-full text-gray-900 bg-transparent p-0 font-sans">
+      <h1 className="text-4xl font-black mb-8 px-2 tracking-tight">Settings</h1>
+
+      {/* Navigation */}
+      <div className="mb-8 border-b border-gray-100">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto pb-1">
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`whitespace-nowrap pb-4 px-1 font-bold text-sm transition-all border-b-2 ${
-                activeTab === tab ? "border-black text-black" : "border-transparent text-gray-400 hover:text-black"
-              }`}
+              className={`whitespace-nowrap pb-4 px-2 font-bold text-sm transition-all border-b-2 ${activeTab === tab ? "border-black text-black scale-105" : "border-transparent text-gray-400 hover:text-black"
+                }`}
             >
               {tab}
             </button>
@@ -287,7 +427,7 @@ const Settings = () => {
         </nav>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 max-w-4xl">
         {activeTab === "My Profile" && <ProfileSection />}
         {activeTab === "Build Space" && <BuilderSection />}
         {activeTab === "Security" && <SecuritySection />}

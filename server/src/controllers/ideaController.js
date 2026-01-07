@@ -6,11 +6,12 @@ export const createIdea = async (req, res) => {
   try {
     const { title, description, tags, teamInviteLink } = req.body;
 
-    if (!title || !description || !teamInviteLink) {
-      return res.status(400).json({ message: "Title, Description, and WhatsApp/Discord Link are required." });
+    // FIX: Only check for Title and Description. Link is now optional.
+    if (!title || !description) {
+      return res.status(400).json({ message: "Title and Description are required." });
     }
 
-    // Ensure tags is an array (even if user sends comma-separated string)
+    // Process tags
     let processedTags = [];
     if (typeof tags === 'string') {
         processedTags = tags.split(',').map(tag => tag.trim());
@@ -22,14 +23,12 @@ export const createIdea = async (req, res) => {
       title,
       description,
       tags: processedTags,
-      teamInviteLink,
-      postedBy: req.user._id, // Comes from 'protect' middleware
-      members: [req.user._id] // Creator is the first member
+      teamInviteLink, // It's okay if this is undefined/null now
+      postedBy: req.user._id,
+      members: [req.user._id]
     });
 
     const savedIdea = await newIdea.save();
-    
-    // Populate creator info immediately so frontend displays it right away
     await savedIdea.populate('postedBy', 'name avatar');
     
     res.status(201).json(savedIdea);
