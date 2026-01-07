@@ -15,7 +15,7 @@ import postRoutes from "./routes/postRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
-import ideaRoutes from "./src/routes/ideaRoutes.js";
+import ideaRoutes from "./src/routes/ideaRoutes.js"; // Kept as per your structure
 
 dotenv.config();
 connectDB();
@@ -23,36 +23,46 @@ connectDB();
 const app = express();
 
 // ---------------------
-// ✅ CORS CONFIG
+// ✅ CORS CONFIG (Fixed)
 // ---------------------
 
 const allowedOrigins = [
   "http://localhost:5173",          // local dev
-  "http://127.0.0.1:5173",         // local dev
-  process.env.FRONTEND_URL,        // production frontend
+  "http://127.0.0.1:5173",          // local dev
+  process.env.FRONTEND_URL,         // production frontend
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // allow requests from Postman, curl, or server-to-server calls
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  origin: (origin, callback) => {
+    // 1. Allow requests with no origin (like Postman, curl, or mobile apps)
+    if (!origin) {
+      return callback(null, true);
+    }
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        console.warn("Blocked by CORS:", origin);
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+    // 2. Allow specific whitelisted origins (Localhost, Prod)
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
 
-// **Handle OPTIONS preflight for all routes**
-app.options("*", cors()); // very important for POST/PUT with headers
+    // 3. ✅ Allow ALL GitHub Codespaces URLs
+    // Using .endsWith is safer and cleaner than Regex for this case.
+    if (origin.endsWith(".github.dev")) {
+      return callback(null, true);
+    }
+
+    // 4. Block everything else
+    console.log("🚫 Blocked by CORS. Origin:", origin);
+    
+    // Return 'false' to deny access without crashing the server (avoids 500 Error)
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+// Apply CORS globally - this automatically handles Preflight (OPTIONS) requests
+app.use(cors(corsOptions));
 
 // Parse JSON
 app.use(express.json());
@@ -80,6 +90,7 @@ const clientBuildPath = path.join(__dirname, "../../client/dist");
 
 app.use(express.static(clientBuildPath));
 
+// Handle React routing, return all requests to React app
 app.get("*", (req, res) => {
   res.sendFile(path.join(clientBuildPath, "index.html"));
 });
