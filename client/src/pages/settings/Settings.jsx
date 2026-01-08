@@ -57,7 +57,7 @@ const PasswordInput = ({ id, name, value, onChange, placeholder, showState, show
 
 const ProfileSection = () => {
   const { user, setUser, token } = useAuth();
-  
+
   const [formData, setFormData] = useState({
     name: "",
     github: "",
@@ -76,7 +76,23 @@ const ProfileSection = () => {
     }
   }, [user]);
 
+  // Inside ProfileSection component...
+
   const handleUpdate = async (extraPayload = {}) => {
+    // 1. FRONTEND VALIDATION
+    const urlPattern = /^(https?:\/\/[^\s]+)?$/;
+
+    // Check GitHub if it's not empty
+    if (formData.github && !urlPattern.test(formData.github)) {
+      return toast.error("GitHub link must start with http:// or https://");
+    }
+
+    // Check LinkedIn if it's not empty
+    if (formData.linkedin && !urlPattern.test(formData.linkedin)) {
+      return toast.error("LinkedIn link must start with http:// or https://");
+    }
+
+    // 2. PROCEED TO SAVE
     try {
       const payload = { ...formData, ...extraPayload };
       const res = await fetch(`${API_BASE}/users/update`, {
@@ -87,14 +103,12 @@ const ProfileSection = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to update");
 
-      // FIX: Manually merge the sent payload into the user state.
-      // This ensures the UI updates even if the backend response is incomplete.
-      setUser(prev => ({ 
-        ...prev, 
-        ...data.user, 
-        ...payload // Force our local changes to apply immediately
+      setUser(prev => ({
+        ...prev,
+        ...data.user,
+        ...payload
       }));
-      
+
       toast.success("Profile updated!");
     } catch (err) { toast.error(err.message); }
   };
@@ -208,7 +222,7 @@ const BuilderSection = () => {
   const { user, setUser, token } = useAuth();
   const [profile, setProfile] = useState({
     skills: "",
-    preferredRole: "Fullstack",
+    preferredRole: "Fullstack Developer", // Default matches your enum options
     lookingForTeam: false
   });
 
@@ -217,7 +231,7 @@ const BuilderSection = () => {
     if (user?.builderProfile) {
       setProfile({
         skills: user.builderProfile.skills?.join(", ") || "",
-        preferredRole: user.builderProfile.preferredRole || "Fullstack",
+        preferredRole: user.builderProfile.preferredRole || "Fullstack Developer",
         lookingForTeam: user.builderProfile.lookingForTeam || false
       });
     }
@@ -226,12 +240,16 @@ const BuilderSection = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     const tid = toast.loading("Updating Build Space...");
-    
+
     // Prepare the data cleanly before sending
     const processedSkills = profile.skills.split(",").map(s => s.trim()).filter(s => s);
+    
+    // ✅ CRITICAL FIX: Merge with existing user.builderProfile
+    // This ensures we don't wipe out 'interests' or 'portfolioLink' if they exist
     const updatedBuilderProfile = {
-      ...profile,
-      skills: processedSkills
+      ...user?.builderProfile, // Keep existing backend data
+      ...profile,              // Overwrite with form data
+      skills: processedSkills  // Overwrite skills as array
     };
 
     try {
@@ -245,13 +263,11 @@ const BuilderSection = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Update failed");
 
-      // FIX: Force update the context with our local data.
-      // Even if the backend 'data.user' is missing the builderProfile, 
-      // this ensures the UI keeps the values you just typed.
-      setUser(prev => ({ 
-        ...prev, 
+      // Force update the context with our local data immediately
+      setUser(prev => ({
+        ...prev,
         ...data.user,
-        builderProfile: updatedBuilderProfile 
+        builderProfile: updatedBuilderProfile
       }));
 
       toast.success("Updated!", { id: tid });
@@ -293,6 +309,7 @@ const BuilderSection = () => {
                 onChange={e => setProfile({ ...profile, preferredRole: e.target.value })}
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 appearance-none outline-none focus:border-black focus:ring-1 focus:ring-black cursor-pointer font-medium"
               >
+                {/* These values must match the backend Enum exactly */}
                 {["Frontend Developer", "Backend Developer", "Fullstack Developer", "UI/UX Designer", "Product Manager", "Other"].map(r => <option key={r} value={r}>{r}</option>)}
               </select>
               <div className="absolute right-4 top-4 pointer-events-none text-gray-400">▼</div>

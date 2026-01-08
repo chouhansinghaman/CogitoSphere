@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiCopy, FiCheckCircle, FiXCircle, FiCpu, FiUser } from 'react-icons/fi';
+import { FiSearch, FiCopy, FiCheckCircle, FiXCircle, FiUser } from 'react-icons/fi';
 
 const AdminDashboard = () => {
   const { user, token } = useAuth();
@@ -180,8 +180,9 @@ const AdminDashboard = () => {
                     >
                         <FiCopy />
                     </button>
+                    {/* ✅ THIS IS THE FIXED BUTTON */}
                     <button 
-                        onClick={() => navigate(`/profile/${u._id}`)} // Assuming you make a public profile view later
+                        onClick={() => navigate(`/u/${u._id}`)} 
                         className="text-zinc-400 hover:text-black p-2 rounded-full hover:bg-zinc-100 transition-all ml-2"
                         title="View Profile"
                     >

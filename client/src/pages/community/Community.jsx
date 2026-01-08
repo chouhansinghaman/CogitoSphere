@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
+import { Link } from "react-router-dom"; // ✅ IMPORTED LINK
 import { useAuth } from "../../context/AuthContext";
 import { SEASON_CONFIG } from "../../lib/SeasonConfig.js"; 
 import { 
@@ -20,17 +21,25 @@ const TeamModal = ({ members, onClose }) => {
                 <div className="space-y-3">
                     {members && members.length > 0 ? (
                         members.map(m => (
-                            <div key={m._id || Math.random()} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                            // ✅ CHANGED: Wrapped in Link to go to profile
+                            <Link 
+                                to={`/u/${m._id}`} 
+                                key={m._id || Math.random()} 
+                                className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group"
+                                onClick={onClose} // Close modal when navigating
+                            >
                                 <img 
                                     src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m._id || "unknown"}`} 
-                                    className="w-10 h-10 rounded-full border border-gray-200 object-cover bg-gray-100"
+                                    className="w-10 h-10 rounded-full border border-gray-200 object-cover bg-gray-100 group-hover:scale-105 transition-transform"
                                     alt="avatar"
                                 />
                                 <div>
-                                    <span className="font-bold text-sm text-gray-900 block">{m.name || "Unknown Builder"}</span>
+                                    <span className="font-bold text-sm text-gray-900 block group-hover:text-blue-600 transition-colors">
+                                        {m.name || "Unknown Builder"}
+                                    </span>
                                     <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Member</span>
                                 </div>
-                            </div>
+                            </Link>
                         ))
                     ) : (
                         <p className="text-sm text-gray-400 italic">No members found.</p>
@@ -111,8 +120,9 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
                         {idea.title}
                     </h3>
                     
+                    {/* ✅ CHANGED: Link to Idea Poster */}
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                        Posted by {idea.postedBy?.name}
+                        Posted by <Link to={`/u/${idea.postedBy?._id}`} className="hover:text-black hover:underline transition-colors">{idea.postedBy?.name}</Link>
                     </p>
 
                     <p className="text-sm text-gray-500 font-medium leading-relaxed line-clamp-3">
@@ -179,7 +189,10 @@ const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, us
                     {localComments.map((c, i) => (
                         <div key={i} className="bg-gray-50 p-3 rounded-xl text-xs">
                             <div className="flex justify-between mb-1">
-                                <span className="font-bold text-gray-900">{c.sender?.name || "User"}</span>
+                                {/* ✅ CHANGED: Link to Commenter */}
+                                <Link to={`/u/${c.sender?._id}`} className="font-bold text-gray-900 hover:underline">
+                                    {c.sender?.name || "User"}
+                                </Link>
                                 <span className="text-[9px] text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
                             </div>
                             <p className="text-gray-600 leading-relaxed">{c.text}</p>
@@ -451,9 +464,16 @@ const Community = () => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-gray-50/50">
                     {messages.map((msg) => (
                         <div key={msg._id} className={`flex gap-3 ${msg.sender?._id === user._id ? 'flex-row-reverse' : ''}`}>
-                            <img src={msg.sender?.avatar || "https://via.placeholder.com/40"} className="w-8 h-8 rounded-full border border-gray-200 self-end mb-1"/>
+                            {/* ✅ CHANGED: Link to profile in chat */}
+                            <Link to={`/u/${msg.sender?._id}`}>
+                                <img src={msg.sender?.avatar || "https://via.placeholder.com/40"} className="w-8 h-8 rounded-full border border-gray-200 self-end mb-1 hover:scale-110 transition-transform cursor-pointer"/>
+                            </Link>
                             <div className={`relative max-w-[70%] group`}>
-                                <div className={`flex items-center gap-2 mb-1 ${msg.sender?._id === user._id ? 'justify-end' : ''}`}><span className="text-[10px] font-bold text-gray-400 uppercase">{msg.sender?.name}</span></div>
+                                <div className={`flex items-center gap-2 mb-1 ${msg.sender?._id === user._id ? 'justify-end' : ''}`}>
+                                    <Link to={`/u/${msg.sender?._id}`} className="text-[10px] font-bold text-gray-400 uppercase hover:text-black hover:underline cursor-pointer">
+                                        {msg.sender?.name}
+                                    </Link>
+                                </div>
                                 <div className={`p-3.5 rounded-2xl text-sm shadow-sm leading-relaxed ${msg.sender?._id === user._id ? 'bg-black text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'}`}>{msg.text}</div>
                             </div>
                         </div>

@@ -19,6 +19,7 @@ import Settings from "./pages/settings/Settings.jsx";
 import Quizzes from "./pages/quizzes/Quizzes.jsx";
 import TakeQuiz from "./pages/quizzes/TakeQuiz.jsx";
 import Leaderboard from "./pages/leaderboard/Leaderboard.jsx";
+import PublicProfile from "./pages/public/PublicProfile.jsx";
 
 /* Admin pages */
 import CourseCreate from "./pages/courses/CourseCreate.jsx";
@@ -26,11 +27,11 @@ import CourseEdit from "./pages/courses/CourseEdit.jsx";
 import QuizCreate from "./pages/quizzes/QuizCreate.jsx";
 import QuizEdit from "./pages/quizzes/QuizEdit.jsx";
 import QuestionCreate from "./pages/questions/QuestionCreate.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 
 /* Guards */
 import { PrivateRoute, AdminRoute } from "./routes/Guards.jsx";
 import RedirectHome from "./components/RedirectHome.jsx";
-import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 
 export default function App() {
   return (
@@ -63,28 +64,24 @@ export default function App() {
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/settings" element={<Settings />} />
+              
+              {/* ✅ NEW PUBLIC PROFILE ROUTE */}
+              <Route path="/u/:id" element={<PublicProfile />} />
 
               {/* Admin only */}
               <Route element={<AdminRoute />}>
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/create-course" element={<CourseCreate />} />
                 <Route path="/edit-course/:id" element={<CourseEdit />} />
-                <Route path="/create-course" element={<CourseCreate />} />
-                <Route path="/edit-course/:id" element={<CourseEdit />} />
+                
+                {/* Quiz Management */}
                 <Route path="/quizzes/create" element={<QuizCreate />} />
                 <Route path="/quizzes/edit/:quizId" element={<QuizEdit />} />
-                <Route
-                  path="/questions/create/:quizId"
-                  element={<QuestionCreate />}
-                />
-                <Route
-                  path="/questions/create"
-                  element={<QuestionCreate />}
-                />
+                <Route path="/questions/create/:quizId" element={<QuestionCreate />} />
+                <Route path="/questions/create" element={<QuestionCreate />} />
               </Route>
             </Route>
           </Route>
-
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

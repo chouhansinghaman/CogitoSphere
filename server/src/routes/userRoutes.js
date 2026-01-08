@@ -3,13 +3,14 @@
 import express from "express";
 import {
   getUserProfile,
-  updatePassword, // ✅ ADDED: You need this function
+  updatePassword,
   deleteUser,
   makeUserAdmin,
   updateUserAvatar,
   handleCheckIn,
   getAllUsers,
   updateUserProfile,
+  getPublicUserProfile,
 } from "../controllers/userController.js";
 
 import { adminOnly } from "../middleware/adminMiddleware.js";
@@ -35,5 +36,8 @@ router.post("/check-in", protect, handleCheckIn);
 // --- Admin Routes ---
 router.post("/make-admin", protect, makeUserAdmin);
 router.get("/", protect, adminOnly, getAllUsers);
+
+// --- Public Route ---
+router.get("/public/:id", protect, getPublicUserProfile);
 
 export default router;

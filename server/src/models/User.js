@@ -46,7 +46,6 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
     builderProfile: {
-      // ❌ REMOVED bio
       skills: [{ type: String }],
       interests: [{ type: String }],
       lookingForTeam: {
