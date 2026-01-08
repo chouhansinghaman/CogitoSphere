@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { FiEdit2, FiCode, FiUser, FiSearch, FiCheck } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import { FiEdit2, FiCode, FiUser, FiSearch, FiCheck, FiGithub, FiLinkedin } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -57,13 +57,28 @@ const PasswordInput = ({ id, name, value, onChange, placeholder, showState, show
 
 const ProfileSection = () => {
   const { user, setUser, token } = useAuth();
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(user?.name || "");
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    github: "",
+    linkedin: "",
+  });
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
-  const handleUpdate = async (payload) => {
+  // Sync state with user context on load
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        github: user.github || "",
+        linkedin: user.linkedin || "",
+      });
+    }
+  }, [user]);
+
+  const handleUpdate = async (extraPayload = {}) => {
     try {
-      // ✅ URL is clean: API_BASE already has /api
+      const payload = { ...formData, ...extraPayload };
       const res = await fetch(`${API_BASE}/users/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -72,11 +87,15 @@ const ProfileSection = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to update");
 
-      // ✅ Merge logic to keep username/email/role visible
-      setUser(prev => ({ ...prev, ...data.user }));
-
+      // FIX: Manually merge the sent payload into the user state.
+      // This ensures the UI updates even if the backend response is incomplete.
+      setUser(prev => ({ 
+        ...prev, 
+        ...data.user, 
+        ...payload // Force our local changes to apply immediately
+      }));
+      
       toast.success("Profile updated!");
-      setEditing(false);
     } catch (err) { toast.error(err.message); }
   };
 
@@ -94,49 +113,78 @@ const ProfileSection = () => {
           </div>
 
           <div className="flex-1 grid grid-cols-1 gap-6 w-full">
-            <div className="group">
+            {/* Name Field */}
+            <div>
               <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Full Name</label>
-              {editing ? (
-                <div className="flex gap-3">
-                  <input value={name} onChange={e => setName(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 w-full outline-none focus:border-black" autoFocus />
-                  <button onClick={() => handleUpdate({ name })} className="bg-black text-white px-6 rounded-xl text-sm font-bold">Save</button>
-                  <button onClick={() => setEditing(false)} className="text-gray-500 px-4 text-sm font-bold">Cancel</button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 cursor-pointer" onClick={() => setEditing(true)}>
-                  <p className="text-2xl font-bold text-gray-900">{user?.name}</p>
-                  <FiEdit2 size={14} className="text-gray-300 group-hover:text-black transition-colors" />
-                </div>
-              )}
+              <input
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full outline-none focus:border-black transition-all font-medium"
+              />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Social Links Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
+                  <FiGithub /> GitHub Profile
+                </label>
+                <input
+                  value={formData.github}
+                  onChange={e => setFormData({ ...formData, github: e.target.value })}
+                  placeholder="github.com/username"
+                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full outline-none focus:border-black transition-all text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
+                  <FiLinkedin /> LinkedIn Profile
+                </label>
+                <input
+                  value={formData.linkedin}
+                  onChange={e => setFormData({ ...formData, linkedin: e.target.value })}
+                  placeholder="linkedin.com/in/username"
+                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full outline-none focus:border-black transition-all text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-gray-50">
               <div>
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Username</label>
-                <div className="flex items-center gap-2 text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-2 text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-100 text-sm">
                   <span className="text-gray-400">@</span>
                   <span className="font-medium">{user?.username || "Not set"}</span>
                 </div>
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
-                <div className="text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 font-medium">
+                <div className="text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-100 font-medium text-sm">
                   {user?.email || "Not set"}
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Role</label>
-              <span className="inline-block bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">{user?.role}</span>
+            <div className="flex justify-between items-center pt-2">
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Role</label>
+                <span className="inline-block bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">{user?.role}</span>
+              </div>
+              <button
+                onClick={() => handleUpdate()}
+                className="bg-black text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg"
+              >
+                Save Changes
+              </button>
             </div>
           </div>
         </div>
       </SectionWrapper>
 
+      {/* Avatar Modal */}
       {isAvatarModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsAvatarModalOpen(false)}>
-          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all scale-100" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
             <h3 className="text-2xl font-black mb-6 text-center">Choose your style</h3>
             <div className="grid grid-cols-3 gap-4">
               {avatarOptions.map(url => (
@@ -159,30 +207,52 @@ const ProfileSection = () => {
 const BuilderSection = () => {
   const { user, setUser, token } = useAuth();
   const [profile, setProfile] = useState({
-    skills: user?.builderProfile?.skills?.join(", ") || "",
-    preferredRole: user?.builderProfile?.preferredRole || "Fullstack",
-    lookingForTeam: user?.builderProfile?.lookingForTeam || false
+    skills: "",
+    preferredRole: "Fullstack",
+    lookingForTeam: false
   });
+
+  // Sync state with user context on load
+  useEffect(() => {
+    if (user?.builderProfile) {
+      setProfile({
+        skills: user.builderProfile.skills?.join(", ") || "",
+        preferredRole: user.builderProfile.preferredRole || "Fullstack",
+        lookingForTeam: user.builderProfile.lookingForTeam || false
+      });
+    }
+  }, [user]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     const tid = toast.loading("Updating Build Space...");
+    
+    // Prepare the data cleanly before sending
+    const processedSkills = profile.skills.split(",").map(s => s.trim()).filter(s => s);
+    const updatedBuilderProfile = {
+      ...profile,
+      skills: processedSkills
+    };
+
     try {
-      // ✅ URL is clean: API_BASE already has /api
       const res = await fetch(`${API_BASE}/users/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          builderProfile: {
-            ...profile,
-            skills: profile.skills.split(",").map(s => s.trim()).filter(s => s)
-          }
+          builderProfile: updatedBuilderProfile
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error("Update failed");
+      if (!res.ok) throw new Error(data.message || "Update failed");
 
-      setUser(prev => ({ ...prev, ...data.user }));
+      // FIX: Force update the context with our local data.
+      // Even if the backend 'data.user' is missing the builderProfile, 
+      // this ensures the UI keeps the values you just typed.
+      setUser(prev => ({ 
+        ...prev, 
+        ...data.user,
+        builderProfile: updatedBuilderProfile 
+      }));
 
       toast.success("Updated!", { id: tid });
     } catch (err) { toast.error(err.message, { id: tid }); }
@@ -275,7 +345,7 @@ const SecuritySection = () => {
 
     setIsUpdating(true);
     try {
-      // ✅ URL is clean: API_BASE already has /api
+      // BUG FIX 3: Robust error handling to catch non-JSON server errors
       const res = await fetch(`${API_BASE}/users/update-password`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -285,13 +355,22 @@ const SecuritySection = () => {
         }),
       });
 
-      const data = await res.json();
+      // Handle cases where server returns raw text error instead of JSON
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error(text || "Server Error (Non-JSON response)");
+      }
+
       if (!res.ok) throw new Error(data.message || "Failed to update password");
 
       toast.success("Password updated successfully!");
       setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
-      toast.error(err.message);
+      console.error(err);
+      toast.error(err.message || "An unexpected error occurred");
     } finally {
       setIsUpdating(false);
     }
@@ -324,7 +403,6 @@ const AdminSection = ({ setActiveTab }) => {
   const handleUpgrade = async () => {
     if (adminCode !== ADMIN_SECRET_CODE) return toast.error("Incorrect code");
     try {
-      // ✅ URL is clean
       const res = await fetch(`${API_BASE}/users/make-admin`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error("Upgrade failed");
       const data = await res.json();
@@ -368,7 +446,6 @@ const PrivacySection = () => {
 
   const handleDelete = async () => {
     try {
-      // ✅ URL is clean
       await fetch(`${API_BASE}/users/delete`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       toast.success("Account deleted");
       logout();

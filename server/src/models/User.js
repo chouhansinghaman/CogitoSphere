@@ -25,24 +25,30 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
-    avatar: { // <-- ADD THIS
+    avatar: {
       type: String,
       default: "https://i.pinimg.com/736x/51/19/95/511995729851564ed88c865f42e1844b.jpg",
     },
-    studyStreak: { // <-- ADD THIS
+    // ✅ ADDED THESE so your ProfileSection works
+    github: {
+      type: String,
+      default: ""
+    },
+    linkedin: {
+      type: String,
+      default: ""
+    },
+    studyStreak: {
       type: Number,
       default: 0,
     },
-    lastCheckIn: { // <-- ADD THIS
+    lastCheckIn: {
       type: Date,
     },
     builderProfile: {
-      bio: {
-        type: String,
-        maxLength: 200
-      },
-      skills: [{ type: String }], // e.g., ["React", "Java", "Python"]
-      interests: [{ type: String }], // e.g., ["Fintech", "AI", "Education"]
+      // ❌ REMOVED bio
+      skills: [{ type: String }],
+      interests: [{ type: String }],
       lookingForTeam: {
         type: Boolean,
         default: false
@@ -50,7 +56,8 @@ const userSchema = new mongoose.Schema(
       portfolioLink: { type: String },
       preferredRole: {
         type: String,
-        enum: ["Frontend", "Backend", "Fullstack", "Designer", "Other"],
+        // Ensure these match your frontend dropdown exactly
+        enum: ["Frontend Developer", "Backend Developer", "Fullstack Developer", "UI/UX Designer", "Product Manager", "Other"],
         default: "Other"
       }
     },

@@ -44,48 +44,42 @@ export const getUserProfile = async (req, res) => {
   });
 };
 
-// @desc    Update user profile
-// @route   PUT /api/users/update
-// @access  Private
 export const updateUserProfile = async (req, res) => {
   try {
-    // 1. Find the user
+    // 🔍 DEBUG LOG: Check your Render/Terminal logs to see this!
+    console.log("📥 Receiving Update Data:", req.body);
+
     const user = await User.findById(req.user._id);
 
     if (user) {
-      // 2. Update basic fields (Only if provided in body)
-      user.name = req.body.name || user.name;
-      user.email = req.body.email || user.email;
+      // FIX: Check for 'undefined' so we can accept empty strings
+      if (req.body.name !== undefined) user.name = req.body.name;
+      if (req.body.email !== undefined) user.email = req.body.email;
+      if (req.body.bio !== undefined) user.bio = req.body.bio;
       
-      // 3. Handle Bio (Safe check)
-      if (req.body.bio !== undefined) {
-        user.bio = req.body.bio;
-      }
-
-      // 4. Handle Skills (The likely cause of the crash)
-      // Check if skills exist and handle both String ("React, Node") and Array (["React", "Node"])
-      if (req.body.skills) {
-        if (typeof req.body.skills === 'string') {
-             // Split string into array, trim spaces, remove empty strings
-             user.skills = req.body.skills.split(',').map(skill => skill.trim()).filter(s => s !== "");
-        } else if (Array.isArray(req.body.skills)) {
-             user.skills = req.body.skills;
-        }
-      }
-
-      // 5. Handle Social Links (Optional)
+      // Social Links
       if (req.body.github !== undefined) user.github = req.body.github;
       if (req.body.linkedin !== undefined) user.linkedin = req.body.linkedin;
 
-      // 6. Handle Password (Only if user typed a new one)
-      if (req.body.password) {
+      // Skills Logic (Handles Array or String)
+      if (req.body.skills !== undefined) {
+        if (typeof req.body.skills === 'string') {
+           // If user sends "React, Node", split it. If empty string, make empty array.
+           user.skills = req.body.skills ? req.body.skills.split(',').map(s => s.trim()) : [];
+        } else if (Array.isArray(req.body.skills)) {
+           user.skills = req.body.skills;
+        }
+      }
+
+      // Password (Only update if provided and not empty)
+      if (req.body.password && req.body.password.trim() !== "") {
         user.password = req.body.password;
       }
 
-      // 7. Save
       const updatedUser = await user.save();
+      
+      console.log("✅ User Updated:", updatedUser.name); // Confirm save
 
-      // 8. Respond with new data
       res.json({
         _id: updatedUser._id,
         name: updatedUser.name,
@@ -93,6 +87,8 @@ export const updateUserProfile = async (req, res) => {
         isAdmin: updatedUser.isAdmin,
         skills: updatedUser.skills,
         bio: updatedUser.bio,
+        github: updatedUser.github,    // Make sure to return these!
+        linkedin: updatedUser.linkedin,
         avatar: updatedUser.avatar,
         token: generateToken(updatedUser._id),
       });
@@ -101,8 +97,8 @@ export const updateUserProfile = async (req, res) => {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    console.error("❌ Update Profile Error:", error.message); // This will show in Render logs
-    res.status(500).json({ message: 'Server Error during update', error: error.message });
+    console.error("❌ Update Error:", error);
+    res.status(500).json({ message: 'Server Update Failed', error: error.message });
   }
 };
 
