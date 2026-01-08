@@ -1,7 +1,6 @@
 import User from "../models/User.js";
+import Idea from "../models/Idea.js";
 import { v2 as cloudinary } from 'cloudinary';
-import generateToken from "../utils/generateToken.js";
-import bcrypt from "bcryptjs"; // ✅ ADDED THIS IMPORT
 
 // --- Cloudinary Configuration ---
 cloudinary.config({
@@ -12,18 +11,18 @@ cloudinary.config({
 
 // --- Date Helper Functions ---
 const isToday = (someDate) => {
-    if (!someDate) return false;
-    const today = new Date();
-    const date = new Date(someDate);
-    return date.setHours(0,0,0,0) === today.setHours(0,0,0,0);
+  if (!someDate) return false;
+  const today = new Date();
+  const date = new Date(someDate);
+  return date.setHours(0, 0, 0, 0) === today.setHours(0, 0, 0, 0);
 };
 
 const isYesterday = (someDate) => {
-    if (!someDate) return false;
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const date = new Date(someDate);
-    return date.setHours(0,0,0,0) === yesterday.setHours(0,0,0,0);
+  if (!someDate) return false;
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const date = new Date(someDate);
+  return date.setHours(0, 0, 0, 0) === yesterday.setHours(0, 0, 0, 0);
 };
 
 // --- UPDATED: Get User Profile ---
@@ -38,9 +37,9 @@ export const getUserProfile = async (req, res) => {
     role: req.user.role,
     avatar: req.user.avatar,
     // ✅ ADDED THESE so they show up in your Settings form
-    github: req.user.github, 
+    github: req.user.github,
     linkedin: req.user.linkedin,
-    builderProfile: req.user.builderProfile, 
+    builderProfile: req.user.builderProfile,
     studyStreak: req.user.studyStreak,
     lastCheckIn: req.user.lastCheckIn,
   });
@@ -55,7 +54,7 @@ export const updateUserProfile = async (req, res) => {
       // 1. Basic Fields
       if (req.body.name !== undefined) user.name = req.body.name;
       if (req.body.email !== undefined) user.email = req.body.email;
-      
+
       // 2. Social Links (Top Level)
       if (req.body.github !== undefined) user.github = req.body.github;
       if (req.body.linkedin !== undefined) user.linkedin = req.body.linkedin;
@@ -74,20 +73,20 @@ export const updateUserProfile = async (req, res) => {
       }
 
       const updatedUser = await user.save();
-      
+
       res.json({
         message: "Profile updated successfully",
         user: {
-            _id: updatedUser._id,
-            name: updatedUser.name,
-            username: updatedUser.username,
-            email: updatedUser.email,
-            role: updatedUser.role,
-            avatar: updatedUser.avatar,
-            github: updatedUser.github,
-            linkedin: updatedUser.linkedin,
-            builderProfile: updatedUser.builderProfile,
-            studyStreak: updatedUser.studyStreak
+          _id: updatedUser._id,
+          name: updatedUser.name,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          avatar: updatedUser.avatar,
+          github: updatedUser.github,
+          linkedin: updatedUser.linkedin,
+          builderProfile: updatedUser.builderProfile,
+          studyStreak: updatedUser.studyStreak
         }
       });
 
@@ -158,58 +157,58 @@ export const makeUserAdmin = async (req, res) => {
 
 // --- Update Avatar (Cloudinary) ---
 export const updateUserAvatar = async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ message: "Please upload an image file." });
-    }
-    try {
-      // Convert buffer to Base64
-      const b64 = Buffer.from(req.file.buffer).toString("base64");
-      const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-      
-      // Upload
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: "CogitoSphere_avatars", 
-      });
+  if (!req.file) {
+    return res.status(400).json({ message: "Please upload an image file." });
+  }
+  try {
+    // Convert buffer to Base64
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+    const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
 
-      // Save URL
-      const user = await User.findById(req.user._id);
-      user.avatar = result.secure_url;
-      await user.save();
+    // Upload
+    const result = await cloudinary.uploader.upload(dataURI, {
+      folder: "CogitoSphere_avatars",
+    });
 
-      res.status(200).json({
-          message: "Avatar updated successfully",
-          avatar: user.avatar,
-          user: user // Return full user to sync context
-      });
-    } catch (err) {
-      console.error("Cloudinary Upload Error:", err);
-      res.status(500).json({ message: "Server error while updating avatar.", error: err.message });
-    }
+    // Save URL
+    const user = await User.findById(req.user._id);
+    user.avatar = result.secure_url;
+    await user.save();
+
+    res.status(200).json({
+      message: "Avatar updated successfully",
+      avatar: user.avatar,
+      user: user // Return full user to sync context
+    });
+  } catch (err) {
+    console.error("Cloudinary Upload Error:", err);
+    res.status(500).json({ message: "Server error while updating avatar.", error: err.message });
+  }
 };
 
 // --- Study Streak Check-in ---
 export const handleCheckIn = async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id);
-        if (isToday(user.lastCheckIn)) {
-            return res.status(400).json({ message: "You have already checked in today." });
-        }
-        if (isYesterday(user.lastCheckIn)) {
-            user.studyStreak += 1;
-        } else {
-            user.studyStreak = 1;
-        }
-        user.lastCheckIn = new Date();
-        await user.save();
-        
-        res.json({
-            message: "Check-in successful!",
-            studyStreak: user.studyStreak,
-            lastCheckIn: user.lastCheckIn,
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Server error during check-in.", error: error.message });
+  try {
+    const user = await User.findById(req.user._id);
+    if (isToday(user.lastCheckIn)) {
+      return res.status(400).json({ message: "You have already checked in today." });
     }
+    if (isYesterday(user.lastCheckIn)) {
+      user.studyStreak += 1;
+    } else {
+      user.studyStreak = 1;
+    }
+    user.lastCheckIn = new Date();
+    await user.save();
+
+    res.json({
+      message: "Check-in successful!",
+      studyStreak: user.studyStreak,
+      lastCheckIn: user.lastCheckIn,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error during check-in.", error: error.message });
+  }
 };
 
 // --- Get All Users (Admin) ---
@@ -229,13 +228,50 @@ export const getAllUsers = async (req, res) => {
 // @access  Protected (Only logged in members can see others)
 export const getPublicUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password -resetPasswordToken -resetPasswordExpires');
-    
+    const userId = req.params.id;
+
+    // 1. Fetch User Details (excluding sensitive data)
+    const user = await User.findById(userId).select('-password -resetPasswordToken -resetPasswordExpires');
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(user);
+    // 2. Fetch Ideas (Created by user OR Joined by user)
+    const ideas = await Idea.find({
+      $or: [
+        { postedBy: userId },                // Created by them
+        { 'members._id': userId }            // OR they are in the members list
+      ]
+    })
+      .populate('postedBy', 'name avatar')         // Get creator details
+      .sort({ createdAt: -1 });                    // Newest first
+
+    // 3. Return combined object
+    res.json({
+      ...user.toObject(), // Convert Mongoose doc to plain object
+      ideas: ideas        // Attach the found ideas
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// @desc    Delete user by ID (Admin only)
+// @route   DELETE /api/users/admin/:id
+// @access  Admin
+export const deleteUserByAdmin = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    
+    if (user) {
+      await User.findByIdAndDelete(req.params.id);
+      res.json({ message: 'User removed' });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
   }

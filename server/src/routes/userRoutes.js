@@ -11,6 +11,7 @@ import {
   getAllUsers,
   updateUserProfile,
   getPublicUserProfile,
+  deleteUserByAdmin,
 } from "../controllers/userController.js";
 
 import { adminOnly } from "../middleware/adminMiddleware.js";
@@ -36,6 +37,7 @@ router.post("/check-in", protect, handleCheckIn);
 // --- Admin Routes ---
 router.post("/make-admin", protect, makeUserAdmin);
 router.get("/", protect, adminOnly, getAllUsers);
+router.delete('/admin/:id', protect, adminOnly, deleteUserByAdmin);
 
 // --- Public Route ---
 router.get("/public/:id", protect, getPublicUserProfile);

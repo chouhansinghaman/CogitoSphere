@@ -7,8 +7,14 @@ import {
   FiArrowLeft, 
   FiAward, 
   FiCode, 
+  FiCalendar,
   FiCpu,
-  FiCalendar
+  FiCheck,
+  FiX,
+  FiZap,
+  FiUsers,
+  FiArrowUpRight,
+  FiStar
 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { toast } from "react-hot-toast";
@@ -16,7 +22,7 @@ import { toast } from "react-hot-toast";
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 const PublicProfile = () => {
-  const { id } = useParams(); // Get user ID from URL
+  const { id } = useParams();
   const navigate = useNavigate();
   const { token } = useAuth();
   
@@ -35,7 +41,7 @@ const PublicProfile = () => {
         setProfile(data);
       } catch (err) {
         toast.error("User not found");
-        navigate(-1); // Go back if error
+        navigate(-1);
       } finally {
         setLoading(false);
       }
@@ -46,140 +52,173 @@ const PublicProfile = () => {
 
   if (loading) return (
     <div className="flex justify-center items-center h-screen bg-gray-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-black"></div>
     </div>
   );
 
   if (!profile) return null;
 
-  // Formatting Helper
   const formattedDate = new Date(profile.createdAt).toLocaleDateString("en-US", {
-    month: "long",
+    day: "2-digit",
+    month: "short",
     year: "numeric",
   });
 
+  // Ideas are now fetched by the backend and attached to profile.ideas
+  const userIdeas = profile.ideas || []; 
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans flex justify-center">
-      <div className="w-full max-w-3xl">
+    <div className="font-sans flex justify-center items-start">
+      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
         
-        {/* Back Button */}
-        <button 
-          onClick={() => navigate(-1)} 
-          className="flex items-center gap-2 text-gray-500 hover:text-black mb-6 font-bold text-sm transition-colors"
-        >
-          <FiArrowLeft /> Back to Community
-        </button>
+        {/* HEADER BANNER */}
+        <div className="relative h-32 bg-gradient-to-r from-neutral-900 to-neutral-800">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="absolute top-4 left-4 flex items-center gap-2 text-white/80 hover:text-white bg-black/20 hover:bg-black/40 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm transition-all"
+          >
+            <FiArrowLeft /> Back
+          </button>
+        </div>
 
-        {/* Main Profile Card */}
-        <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+        {/* PROFILE CONTENT */}
+        <div className="px-6 pb-6">
           
-          {/* Header Banner (Optional visual flair) */}
-          <div className="h-32 bg-gradient-to-r from-gray-900 to-black w-full"></div>
-
-          <div className="px-8 pb-8">
-            {/* Avatar & Basic Info */}
-            <div className="relative -mt-16 mb-6 flex flex-col md:flex-row items-end gap-6">
+          {/* Avatar & Key Info */}
+          <div className="flex flex-col sm:flex-row items-end -mt-12 mb-6 gap-4">
+            <div className="relative shrink-0">
               <img 
                 src={profile.avatar} 
                 alt={profile.name} 
-                className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover bg-white"
+                className="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover bg-white"
               />
-              <div className="mb-2 text-center md:text-left">
-                <h1 className="text-3xl font-black tracking-tight">{profile.name}</h1>
-                <p className="text-gray-500 font-medium">@{profile.username || "unknown"}</p>
-                <span className="inline-block mt-2 bg-gray-100 text-gray-800 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                  {profile.role}
-                </span>
-              </div>
-              
-              {/* Action Buttons (Socials) */}
-              <div className="flex gap-3 ml-auto mb-3">
-                {profile.github && (
-                  <a href={profile.github} target="_blank" rel="noopener noreferrer" className="p-3 bg-gray-100 rounded-full hover:bg-black hover:text-white transition-all text-xl" title="GitHub">
-                    <FiGithub />
-                  </a>
-                )}
-                {profile.linkedin && (
-                  <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-600 hover:text-white transition-all text-xl" title="LinkedIn">
-                    <FiLinkedin />
-                  </a>
-                )}
-                <a href={`mailto:${profile.email}`} className="p-3 bg-gray-100 rounded-full hover:bg-black hover:text-white transition-all text-xl" title="Send Email">
-                  <FiMail />
-                </a>
-              </div>
+              <span className="absolute bottom-1 right-1 bg-black text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">
+                {profile.role}
+              </span>
             </div>
 
-            <hr className="border-gray-100 mb-8" />
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              {/* 1. Study Streak */}
-              <div className="p-5 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-4">
-                <div className="p-3 bg-orange-500 text-white rounded-xl">
-                  <FiAward size={24} />
-                </div>
-                <div>
-                  <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">Quiz Streak</p>
-                  <p className="text-2xl font-black">{profile.studyStreak || 0} <span className="text-sm font-medium text-gray-500">days</span></p>
-                </div>
-              </div>
-
-              {/* 2. Builder Role */}
-              <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-4">
-                <div className="p-3 bg-blue-500 text-white rounded-xl">
-                  <FiCode size={24} />
-                </div>
-                <div>
-                  <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">Builder Role</p>
-                  <p className="text-lg font-bold leading-tight">
-                    {profile.builderProfile?.preferredRole || "Exploring"}
-                  </p>
-                </div>
-              </div>
-
-              {/* 3. Member Since */}
-              <div className="p-5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center gap-4">
-                <div className="p-3 bg-gray-800 text-white rounded-xl">
-                  <FiCalendar size={24} />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Joined</p>
-                  <p className="text-lg font-bold">{formattedDate}</p>
-                </div>
-              </div>
+            <div className="flex-1 text-center sm:text-left mb-1">
+              <h1 className="text-2xl font-black text-gray-900 leading-tight">{profile.name}</h1>
+              <p className="text-gray-500 font-medium text-sm">@{profile.username || "unknown"}</p>
             </div>
 
-            {/* Build Space Info */}
-            <div className="space-y-6">
+            <div className="flex gap-2 mb-2 sm:mb-1">
+              {profile.github && <SocialButton href={profile.github} icon={<FiGithub />} label="GitHub" />}
+              {profile.linkedin && <SocialButton href={profile.linkedin} icon={<FiLinkedin />} label="LinkedIn" />}
+              <SocialButton href={`mailto:${profile.email}`} icon={<FiMail />} label="Email" />
+            </div>
+          </div>
+
+          {/* STATS GRID */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            <StatCard 
+              icon={<FiAward className="text-orange-600" size={20} />}
+              bg="bg-orange-50 border-orange-100"
+              label="Daily Login"
+              value={`${profile.studyStreak || 0} Days`}
+            />
+            <StatCard 
+              icon={<FiCode className="text-blue-600" size={20} />}
+              bg="bg-blue-50 border-blue-100"
+              label="Builder Role"
+              value={profile.builderProfile?.preferredRole || "Explorer"}
+            />
+            <StatCard 
+              icon={<FiCalendar className="text-gray-600" size={20} />}
+              bg="bg-gray-50 border-gray-100"
+              label="Member Since"
+              value={formattedDate}
+            />
+          </div>
+
+          {/* SPLIT SECTION: Status/Skills & Projects */}
+          <div className="flex flex-col md:flex-row gap-6 border-t border-gray-100 pt-6">
+            
+            {/* LEFT COL: Skills & Status */}
+            <div className="md:w-1/3 space-y-6">
+              {/* Status */}
               <div>
-                <h3 className="text-lg font-black flex items-center gap-2 mb-3">
-                  <FiCpu /> Build Space Status
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <FiCpu /> Availability
                 </h3>
-                <div className="flex gap-4">
-                  <div className={`px-4 py-2 rounded-xl font-bold text-sm border ${
-                    profile.builderProfile?.lookingForTeam 
+                <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border w-full ${
+                  profile.builderProfile?.lookingForTeam 
                     ? 'bg-green-50 border-green-200 text-green-700' 
                     : 'bg-gray-50 border-gray-200 text-gray-500'
-                  }`}>
-                    {profile.builderProfile?.lookingForTeam ? "🟢 Open to Collaborate" : "🔴 Not Looking for Team"}
-                  </div>
+                }`}>
+                  {profile.builderProfile?.lookingForTeam 
+                    ? <><FiCheck size={14} /> Open to Team</> 
+                    : <><FiX size={14} /> Not Looking</>
+                  }
                 </div>
               </div>
 
               {/* Skills */}
-              {profile.builderProfile?.skills && profile.builderProfile.skills.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">
-                    Tech Stack
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.builderProfile.skills.map((skill, index) => (
-                      <span key={index} className="bg-black text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
+              <div>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tech Stack</h3>
+                <div className="flex flex-wrap gap-2">
+                  {profile.builderProfile?.skills && profile.builderProfile.skills.length > 0 ? (
+                    profile.builderProfile.skills.map((skill, index) => (
+                      <span key={index} className="bg-gray-900 text-white px-3 py-1 rounded-md text-[11px] font-bold shadow-sm">
                         {skill}
                       </span>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 text-xs italic">No skills listed</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT COL: Projects / Ideas */}
+            <div className="md:w-2/3 border-l border-gray-100 md:pl-6 pl-0 border-l-0 md:border-l">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <FiZap className="text-yellow-500" /> Ventures & Ideas
+              </h3>
+
+              {userIdeas.length > 0 ? (
+                <div className="space-y-3">
+                  {userIdeas.map((idea) => {
+                    // Logic to check if they are Owner or Member
+                    const isOwner = idea.postedBy?._id === profile._id || idea.postedBy === profile._id;
+                    
+                    return (
+                      <div key={idea._id} className="group p-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-300 hover:shadow-sm transition-all cursor-default">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {idea.title}
+                          </h4>
+                          {/* Role Badge */}
+                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                            isOwner 
+                              ? "bg-purple-100 text-purple-700" 
+                              : "bg-blue-100 text-blue-700"
+                          }`}>
+                            {isOwner ? <FiStar size={10} fill="currentColor" /> : <FiUsers size={10} />}
+                            {isOwner ? "Owner" : "Member"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">
+                          {idea.description || "No description provided."}
+                        </p>
+                        
+                        {/* Footer: Tags or Status */}
+                        <div className="flex items-center gap-3 text-xs text-gray-400 font-medium">
+                          <span className="flex items-center gap-1">
+                            <FiUsers size={12} /> {idea.members?.length || 1} team
+                          </span>
+                           {/* Only allow navigation if it's the Community page logic, usually we navigate back to community */}
+                           <span className="ml-auto text-black flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                           Active Project
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                  <p className="text-gray-400 text-sm font-medium">No public projects yet.</p>
                 </div>
               )}
             </div>
@@ -190,5 +229,30 @@ const PublicProfile = () => {
     </div>
   );
 };
+
+// --- Sub-components ---
+const SocialButton = ({ href, icon, label }) => (
+  <a 
+    href={href} 
+    target="_blank" 
+    rel="noopener noreferrer" 
+    className="p-2.5 bg-gray-100 text-gray-600 rounded-full hover:bg-black hover:text-white transition-all text-lg"
+    title={label}
+  >
+    {icon}
+  </a>
+);
+
+const StatCard = ({ icon, bg, label, value }) => (
+  <div className={`p-4 ${bg} border rounded-xl flex items-center gap-3`}>
+    <div className="bg-white p-2 rounded-lg shadow-sm">
+      {icon}
+    </div>
+    <div className="overflow-hidden">
+      <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider truncate">{label}</p>
+      <p className="text-sm font-black text-gray-900 truncate">{value}</p>
+    </div>
+  </div>
+);
 
 export default PublicProfile;
