@@ -47,7 +47,7 @@ const NotificationCard = ({ notification, isAdmin, onDelete, onMarkRead }) => {
   );
 };
 
-// --- MODAL (Kept same, essentially) ---
+// --- MODAL ---
 const NotificationFormModal = ({ show, onClose, onSave }) => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -102,8 +102,8 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      // Calls the new getUserNotifications endpoint
-      const res = await fetch(`${API_URL}/api/notifications`, {
+      // ✅ FIX 1: Removed extra '/api'
+      const res = await fetch(`${API_URL}/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -116,7 +116,8 @@ const Notifications = () => {
 
   const handleSave = async (formData) => {
     try {
-      const res = await fetch(`${API_URL}/api/notifications`, {
+      // ✅ FIX 2: Removed extra '/api'
+      const res = await fetch(`${API_URL}/notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData),
@@ -130,7 +131,8 @@ const Notifications = () => {
 
   const handleMarkRead = async (id) => {
     try {
-        await fetch(`${API_URL}/api/notifications/${id}/read`, {
+        // ✅ FIX 3: Removed extra '/api'
+        await fetch(`${API_URL}/notifications/${id}/read`, {
             method: 'PUT',
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -142,7 +144,8 @@ const Notifications = () => {
   const handleDelete = async (id) => {
     if(!window.confirm("Delete this?")) return;
     try {
-        await fetch(`${API_URL}/api/notifications/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        // ✅ FIX 4: Removed extra '/api'
+        await fetch(`${API_URL}/notifications/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
         setNotifications(prev => prev.filter(n => n._id !== id));
         toast.success("Deleted");
     } catch(e) { toast.error("Failed"); }

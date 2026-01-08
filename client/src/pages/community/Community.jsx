@@ -408,7 +408,7 @@ const Community = () => {
   };
 
   return (
-    <div className="p-6 min-h-screen font-sans">
+    <div className="p-6 font-sans">
       <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
         <div>
            <h1 className="text-4xl font-black tracking-tighter text-black mb-1">Build Hub</h1>
