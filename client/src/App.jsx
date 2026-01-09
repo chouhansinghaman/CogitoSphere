@@ -32,6 +32,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 /* Guards */
 import { PrivateRoute, AdminRoute } from "./routes/Guards.jsx";
 import RedirectHome from "./components/RedirectHome.jsx";
+import LandingPage from "./pages/landing page/LandingPage.jsx";
 
 export default function App() {
   return (
@@ -44,28 +45,40 @@ export default function App() {
       >
         <Toaster position="top-right" />
         <Routes>
-          {/* Public */}
-          <Route path="/" element={<RedirectHome />} />
+          {/* If user is logged in, LandingPage will handle the redirect internally */}
+          <Route path="/" element={<LandingPage />} />
+
+          {/* A universal "check" path */}
+          <Route path="/check" element={<RedirectHome />} />
+
+          {/* Auth Pages */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Private */}
+          {/* Private Routes */}
           <Route element={<PrivateRoute />}>
-            {/* Sidebar layout */}
+            
+            {/* 🛑 FOCUS MODE ROUTE (No Sidebar) 🛑 */}
+            {/* Moves TakeQuiz outside the Sidebar layout but keeps it protected */}
+            <Route path="/quiz/:id" element={<TakeQuiz />} />
+
+            {/* 🟢 STANDARD LAYOUT ROUTES (With Sidebar) 🟢 */}
             <Route element={<Sidebar />}>
               <Route path="/home" element={<Home />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/courses/:slug" element={<CourseDetail />} />
+              
+              {/* Quiz Hub (Listing) stays in Sidebar */}
               <Route path="/quizzes" element={<Quizzes />} />
-              <Route path="/quiz/:id" element={<TakeQuiz />} />
+              
               <Route path="/community" element={<Community />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/settings" element={<Settings />} />
-              
-              {/* ✅ NEW PUBLIC PROFILE ROUTE */}
+
+              {/* Public Profile */}
               <Route path="/u/:id" element={<PublicProfile />} />
 
               {/* Admin only */}
@@ -73,7 +86,7 @@ export default function App() {
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/create-course" element={<CourseCreate />} />
                 <Route path="/edit-course/:id" element={<CourseEdit />} />
-                
+
                 {/* Quiz Management */}
                 <Route path="/quizzes/create" element={<QuizCreate />} />
                 <Route path="/quizzes/edit/:quizId" element={<QuizEdit />} />
@@ -84,7 +97,7 @@ export default function App() {
           </Route>
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/check" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -1,97 +1,80 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useMemo,
-} from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useNavigate,
-  Link,
-  useLocation,
-  Navigate,
-} from "react-router-dom";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
-/* =====================================================
-   🔧 DEV MODE CONFIG
-===================================================== */
-const DEV_MODE = false; // 🔴 set false to enable real auth later
+// --- 1. CONFIGURATION (Kept your Dev Mode logic) ---
+const DEV_MODE = false; // Set to true to bypass backend
 
 const DEV_USER = {
-  id: 1,
+  _id: "1",
   name: "Dev Admin",
   username: "devadmin",
   email: "dev@local.test",
   role: "admin",
+  avatar: "https://via.placeholder.com/150"
 };
 
-const DEV_TOKEN = "dev-token-no-auth";
+const AUTH_TOKEN_KEY = "authToken";
+const AUTH_USER_KEY = "authUser";
 
-/* =====================================================
-   API SETUP (kept for future use)
-===================================================== */
+// --- 2. API SETUP (Kept your Axios Interceptor) ---
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
+// This automatically adds the token to every request (Essential for your Sidebar/Dashboard data)
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-/* =====================================================
-   AUTH CONTEXT
-===================================================== */
 const AuthContext = createContext();
-
-const AUTH_TOKEN_KEY = "authToken";
-const AUTH_USER_KEY = "authUser";
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* 🔥 AUTO LOGIN (NO BACKEND) */
+  // --- 3. INITIALIZATION LOGIC (The "Brain") ---
   useEffect(() => {
+    // A. Handle Dev Mode (Instant login for testing UI)
     if (DEV_MODE) {
+      console.log("⚠️ Auth Provider: Running in DEV_MODE");
       setUser(DEV_USER);
-      setToken(DEV_TOKEN);
+      setToken("dev-token");
       setLoading(false);
       return;
     }
 
-    // ---- REAL AUTH (disabled in DEV_MODE) ----
-    const fetchUserProfile = async () => {
+    // B. Real Authentication (Checks if you are already logged in)
+    const initAuth = async () => {
       const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      
       if (!savedToken) {
-        setUser(null);
-        setLoading(false);
+        setLoading(false); // No token? Stop loading, stay logged out.
         return;
       }
 
       try {
         setToken(savedToken);
+        // Verify token with backend to ensure it's still valid
         const res = await API.get("/users/profile");
         setUser(res.data);
+        // Sync local storage just in case data changed
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.data));
       } catch (err) {
-        logout();
+        console.error("Session expired or invalid:", err);
+        logout(); // Token is bad? Log them out.
       } finally {
-        setLoading(false);
+        setLoading(false); // ✅ Fixes "Forever Loading" bug
       }
     };
 
-    fetchUserProfile();
+    initAuth();
   }, []);
 
+  // --- 4. ACTIONS (Login/Logout) ---
   const login = (jwtToken, userData) => {
-    if (DEV_MODE) return;
     localStorage.setItem(AUTH_TOKEN_KEY, jwtToken);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userData));
     setToken(jwtToken);
@@ -105,15 +88,17 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // --- 5. EXPOSE DATA ---
   const value = useMemo(
     () => ({
       token,
       user,
+      setUser, // Important for updating avatar/streak without re-login
       login,
       logout,
       loading,
       isAuthenticated: !!user,
-      setUser,
+      isAdmin: user?.role === 'admin' // Helper for your Sidebar logic
     }),
     [token, user, loading]
   );
@@ -121,136 +106,11 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => useContext(AuthContext);
-
-/* =====================================================
-   PROTECTED ROUTE
-===================================================== */
-const ProtectedRoute = ({ element }) => {
-  const { isAuthenticated, loading } = useAuth();
-  const location = useLocation();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-xl font-semibold">
-        Loading session...
-      </div>
-    );
+// --- 6. CUSTOM HOOK ---
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-
-  return element;
+  return context;
 };
-
-/* =====================================================
-   NAV
-===================================================== */
-const Nav = () => {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-
-  return (
-    <nav className="p-4 bg-gray-100 shadow-md">
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <Link to="/" className="text-2xl font-black text-black">
-          CogitoSphere
-        </Link>
-        <span className="text-gray-700">Hello, {user.name}</span>
-      </div>
-    </nav>
-  );
-};
-
-/* =====================================================
-   LOGIN (DISABLED IN DEV MODE)
-===================================================== */
-const Login = () => {
-  const { isAuthenticated } = useAuth();
-  if (isAuthenticated) return <Navigate to="/home" replace />;
-
-  return (
-    <div className="p-10 text-center text-xl">
-      Login disabled (DEV MODE)
-    </div>
-  );
-};
-
-/* =====================================================
-   HOME
-===================================================== */
-const Home = () => {
-  const { user } = useAuth();
-
-  return (
-    <div className="p-8 text-center">
-      <h1 className="text-4xl font-bold mb-4">
-        Welcome Home, {user.name}!
-      </h1>
-
-      <div className="bg-gray-50 p-6 rounded-xl border max-w-lg mx-auto">
-        <p><b>Email:</b> {user.email}</p>
-        <p><b>Username:</b> {user.username}</p>
-        <p><b>Role:</b> {user.role}</p>
-      </div>
-    </div>
-  );
-};
-
-/* =====================================================
-   SETTINGS
-===================================================== */
-const SettingsPlaceholder = () => (
-  <div className="p-8">
-    <h1 className="text-3xl font-bold mb-4">Account Settings</h1>
-    <p className="text-gray-600">Settings placeholder.</p>
-  </div>
-);
-
-/* =====================================================
-   SMART REDIRECT
-===================================================== */
-const SmartRedirect = () => {
-  const { loading } = useAuth();
-  if (loading) return null;
-  return <Navigate to="/home" replace />;
-};
-
-/* =====================================================
-   APP
-===================================================== */
-export default function App() {
-  return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <Router>
-        <AuthProvider>
-          <Nav />
-          <div className="max-w-4xl mx-auto p-4">
-            <Routes>
-              <Route path="/" element={<SmartRedirect />} />
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/home"
-                element={<ProtectedRoute element={<Home />} />}
-              />
-              <Route
-                path="/settings"
-                element={<ProtectedRoute element={<SettingsPlaceholder />} />}
-              />
-              <Route
-                path="*"
-                element={
-                  <div className="text-center mt-20 text-red-500 text-2xl font-bold">
-                    404 - Not Found
-                  </div>
-                }
-              />
-            </Routes>
-          </div>
-        </AuthProvider>
-      </Router>
-    </div>
-  );
-}

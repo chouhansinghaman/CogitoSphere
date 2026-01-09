@@ -16,13 +16,26 @@ export const getLeaderboard = async (req, res) => {
       { $limit: 20 },
     ]);
 
-    // Populate student details
-    const leaderboard = await User.populate(rankings, {
+    // 1. Populate student details into the '_id' field
+    await User.populate(rankings, {
       path: "_id",
-      select: "name username email role",
+      select: "name username email role avatar", // Added 'avatar' here
     });
 
-    res.json(leaderboard);
+    // 2. 🔴 THE FIX: Flatten the structure for the frontend
+    // If a user was deleted, 'item._id' might be null, so we filter those out.
+    const finalLeaderboard = rankings
+      .filter(item => item._id !== null) 
+      .map(item => ({
+        _id: item._id._id,        // Student ID
+        name: item._id.name,      // Pull name to top level
+        username: item._id.username,
+        avatar: item._id.avatar,
+        avgPercentage: item.avgPercentage,
+        totalQuizzes: item.totalQuizzes
+      }));
+
+    res.json(finalLeaderboard);
   } catch (err) {
     console.error("❌ Error fetching leaderboard:", err);
     res.status(500).json({ message: "Error fetching leaderboard", error: err.message });

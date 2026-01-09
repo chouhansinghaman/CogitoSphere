@@ -11,7 +11,6 @@ const quizSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // Add this new 'level' field
     level: {
       type: String,
       required: true,

@@ -5,9 +5,54 @@ import { useAuth } from "../../context/AuthContext";
 import { updateUserAvatarApi, checkInApi } from "../../services/api.user.js";
 import Confetti from 'react-confetti';
 import CountUp from 'react-countup';
-import { FiPlus, FiCode, FiCheckCircle, FiEdit, FiArrowRight } from 'react-icons/fi';
+import { motion } from "framer-motion";
+import {
+  FiPlus, FiCode, FiCheckCircle, FiEdit, FiArrowRight,
+  FiZap, FiBookOpen, FiSun, FiMoon
+} from 'react-icons/fi';
+import AlphaBadge from "../../components/AlphaBadge";
 
-// --- Icons ---
+// --- CUSTOM HOOKS ---
+const useWindowSize = () => {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setSize({ width: window.innerWidth, height: window.innerHeight });
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return size;
+};
+
+const useSubmissions = () => {
+  const { token } = useAuth();
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/submissions/my`, {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch submissions");
+        const data = await res.json();
+        setSubmissions(data.submissions || data);
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (token) fetchSubmissions();
+  }, [token]);
+
+  return { submissions, loading };
+};
+
+// --- ICONS ---
 const TrashIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 hover:text-red-500 transition-colors">
     <polyline points="3 6 5 6 21 6"></polyline>
@@ -38,16 +83,56 @@ const IconAward = () => (
   </svg>
 );
 
-const useWindowSize = () => {
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const update = () => setSize({ width: window.innerWidth, height: window.innerHeight });
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-  return size;
+// --- NEW COMPONENT: Dynamic Greeting ---
+const WelcomeSection = ({ user }) => {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-8"
+    >
+      <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-widest text-xs mb-2">
+        {hour < 18 ? <FiSun className="text-orange-500" /> : <FiMoon className="text-indigo-400" />}
+        {greeting}, {user?.name?.split(" ")[0]}
+      </div>
+      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-black leading-[0.9] tracking-tighter">
+        Ready to <br />
+        <span className="text-transparent bg-clip-text bg-gradient-to-r pr-2 from-indigo-600 via-purple-600 to-pink-600">
+          ship something?
+        </span>
+      </h1>
+    </motion.div>
+  );
+};
+
+// --- NEW COMPONENT: Quick Actions ---
+const QuickActions = () => {
+  const navigate = useNavigate();
+  const actions = [
+    { label: "Take Quiz", icon: <FiZap />, path: "/quizzes", color: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200" },
+    { label: "Explore Project", icon: <FiCode />, path: "/community", color: "bg-indigo-100 text-indigo-700 hover:bg-indigo-200" },
+    { label: "My Courses", icon: <FiBookOpen />, path: "/courses", color: "bg-pink-100 text-pink-700 hover:bg-pink-200" },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-4 mb-8">
+      {actions.map((action, idx) => (
+        <motion.button
+          key={idx}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate(action.path)}
+          className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-colors ${action.color} border border-transparent cursor-pointer`}
+        >
+          <div className="text-2xl mb-2">{action.icon}</div>
+          <span className="text-xs font-bold uppercase tracking-wide">{action.label}</span>
+        </motion.button>
+      ))}
+    </div>
+  );
 };
 
 // --- COMPONENT: Build Hub Status ---
@@ -57,9 +142,8 @@ const BuildHubStatus = ({ user }) => {
 
   return (
     <div className="relative overflow-hidden bg-zinc-900 text-white p-6 rounded-[2rem] shadow-2xl flex flex-col sm:flex-row items-center justify-between mb-8 border border-zinc-800 transition-all hover:border-indigo-500/50 group">
-      {/* Subtle Background Glow inside card */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-      
+
       <div className="flex items-center gap-4 mb-4 sm:mb-0 relative z-10">
         <div className={`p-4 rounded-2xl ${isAvailable ? 'bg-green-500/10 text-green-500' : 'bg-indigo-500/10 text-indigo-500'}`}>
           {isAvailable ? <FiCheckCircle size={28} /> : <FiCode size={28} />}
@@ -85,36 +169,7 @@ const BuildHubStatus = ({ user }) => {
   );
 };
 
-// --- Data Hooks ---
-const useSubmissions = () => {
-  const { token } = useAuth();
-  const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSubmissions = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/submissions/my`, {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Failed to fetch submissions");
-        const data = await res.json();
-        setSubmissions(data.submissions || data);
-      } catch (err) {
-        toast.error(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (token) fetchSubmissions();
-  }, [token]);
-
-  return { submissions, loading };
-};
-
-// --- COMPONENTS ---
-
+// --- COMPONENT: Study Streak ---
 const StudyStreak = () => {
   const { user, setUser } = useAuth();
   const [key, setKey] = useState(0);
@@ -158,7 +213,7 @@ const StudyStreak = () => {
 
   return (
     <div className="relative w-full bg-zinc-800/50 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between shadow-lg mb-6 overflow-hidden backdrop-blur-sm">
-      {showConfetti && typeof window !== 'undefined' && width > 0 && height > 0 && (
+      {showConfetti && width > 0 && height > 0 && (
         <Confetti width={width} height={height} recycle={false} numberOfPieces={200} />
       )}
       <div className="absolute top-0 left-0 w-full h-full bg-orange-500/5 pointer-events-none"></div>
@@ -172,11 +227,10 @@ const StudyStreak = () => {
       <button
         onClick={handleCheckIn}
         disabled={checkedInToday}
-        className={`relative z-10 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all border ${
-          checkedInToday 
-            ? "bg-zinc-700/50 border-zinc-600 text-zinc-400 cursor-not-allowed" 
-            : "bg-orange-500 text-black border-orange-400 hover:bg-orange-400 hover:scale-105"
-        }`}
+        className={`relative z-10 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all border ${checkedInToday
+          ? "bg-zinc-700/50 border-zinc-600 text-zinc-400 cursor-not-allowed"
+          : "bg-orange-500 text-black border-orange-400 hover:bg-orange-400 hover:scale-105"
+          }`}
       >
         {checkedInToday ? "Checked In" : "Check In"}
       </button>
@@ -184,6 +238,7 @@ const StudyStreak = () => {
   );
 };
 
+// --- COMPONENT: Clock ---
 const Clock = () => {
   const [date, setDate] = useState(new Date());
   const [is24HourFormat, setIs24HourFormat] = useState(false);
@@ -223,6 +278,7 @@ const Clock = () => {
   );
 };
 
+// --- COMPONENT: Learning Goals ---
 const LearningGoals = () => {
   const [goals, setGoals] = useState(() => {
     const saved = localStorage.getItem("learningGoals");
@@ -249,7 +305,7 @@ const LearningGoals = () => {
             <div key={goal.id} className={`p-2 rounded-lg flex items-center justify-between transition-all text-sm group ${goal.completed ? "bg-green-900/20 text-gray-500" : "bg-zinc-800/50 hover:bg-zinc-800 text-gray-200"}`}>
               <div onClick={() => toggleGoal(goal.id)} className="flex items-center cursor-pointer flex-grow mr-2">
                 <div className={`w-4 h-4 mr-3 rounded border flex items-center justify-center transition-colors ${goal.completed ? "bg-green-500 border-green-500" : "border-zinc-600 group-hover:border-indigo-500"}`}>
-                    {goal.completed && <FiCheckCircle size={10} className="text-white" />}
+                  {goal.completed && <FiCheckCircle size={10} className="text-white" />}
                 </div>
                 <span className={goal.completed ? "line-through" : ""}>{goal.text}</span>
               </div>
@@ -266,6 +322,7 @@ const LearningGoals = () => {
   );
 };
 
+// --- COMPONENT: Resource Hub ---
 const ResourceHub = () => {
   const [resources, setResources] = useState(() => {
     const saved = localStorage.getItem("resourceHub");
@@ -329,6 +386,7 @@ const ResourceHub = () => {
   );
 };
 
+// --- COMPONENT: Profile Header ---
 const ProfileHeader = ({ user }) => {
   const { setUser } = useAuth();
   const fileInputRef = useRef(null);
@@ -361,12 +419,14 @@ const ProfileHeader = ({ user }) => {
       </div>
       <div className="flex flex-col">
         <span className="font-bold text-lg text-white leading-tight">{user?.name || "Full Name"}</span>
-        <span className="text-sm text-gray-400 font-medium">@{user?.username || "username"}</span>
+        <div className="mt-1"><AlphaBadge /></div>
+        <span className="text-sm text-gray-400 font-medium mt-1">@{user?.username || "username"}</span>
       </div>
     </div>
   );
 };
 
+// --- COMPONENT: Profile Card ---
 const ProfileCard = ({ user }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(localStorage.getItem("activeTab") || "goals");
@@ -428,6 +488,7 @@ const ProfileCard = ({ user }) => {
   );
 };
 
+// --- COMPONENT: Performance Snapshot ---
 const PerformanceSnapshot = ({ submissions, isLoading }) => {
   const stats = useMemo(() => {
     if (!submissions || submissions.length === 0) return { quizzesTaken: 0, averageScore: 0, highestScore: 0 };
@@ -446,19 +507,26 @@ const PerformanceSnapshot = ({ submissions, isLoading }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      {statItems.map(item => (
-        <div key={item.label} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-shadow">
+      {statItems.map((item, index) => (
+        <motion.div
+          key={item.label}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+          className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-shadow"
+        >
           <div className="bg-gray-50 p-4 rounded-2xl">{item.icon}</div>
           <div>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{item.label}</p>
             <p className="text-3xl font-black text-gray-900 mt-1"><CountUp end={item.value} duration={2} separator="," />{item.unit}</p>
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
   );
 };
 
+// --- COMPONENT: Recent Performance ---
 const RecentPerformance = ({ submissions, isLoading }) => {
   const navigate = useNavigate();
   const getScoreColor = (percentage) => percentage >= 80 ? "text-green-500" : percentage >= 50 ? "text-amber-500" : "text-red-500";
@@ -466,19 +534,34 @@ const RecentPerformance = ({ submissions, isLoading }) => {
   if (isLoading) return <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4"><div className="h-6 w-1/3 bg-gray-200 rounded-md animate-pulse" /><div className="h-16 w-full bg-gray-200 rounded-md animate-pulse" /></div>;
 
   return (
-    <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
-      <h3 className="font-bold text-xl mb-6">Recent Performance</h3>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="font-bold text-xl">Recent Performance</h3>
+        <button onClick={() => navigate('/quizzes')} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wide">View All</button>
+      </div>
+
       {(!submissions || submissions.length === 0) ? (
         <div className="text-center py-8">
-          <p className="text-gray-500 mb-4">No quiz submissions yet. Ready to test your knowledge?</p>
-          <button onClick={() => navigate('/quizzes')} className="bg-black text-white font-bold px-6 py-3 rounded-xl hover:bg-zinc-800 transition-colors">Go to Quizzes</button>
+          <p className="text-gray-500 mb-4">No quiz submissions yet.</p>
+          <button onClick={() => navigate('/quizzes')} className="bg-black text-white font-bold px-6 py-3 rounded-xl hover:bg-zinc-800 transition-colors">Take a Quiz</button>
         </div>
       ) : (
         <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-          {submissions.map(sub => (
-            <div key={sub._id} className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+          {submissions.map((sub, idx) => (
+            <motion.div
+              key={sub._id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors group"
+            >
               <div>
-                <p className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{sub.quiz?.title || "Quiz"}</p>
+                <p className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">{sub.quiz?.title || "Quiz"}</p>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">{new Date(sub.createdAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short' })}</p>
               </div>
               <div className="w-1/3 text-right">
@@ -489,14 +572,15 @@ const RecentPerformance = ({ submissions, isLoading }) => {
                   <div className={`${sub.percentage >= 80 ? 'bg-green-500' : sub.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'} h-1.5 rounded-full`} style={{ width: `${sub.percentage}%` }}></div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
+// --- COMPONENT: Explore Courses ---
 const ExploreCourses = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -525,34 +609,43 @@ const ExploreCourses = () => {
   if (isLoading) return <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm"><div className="h-48 w-full bg-gray-200 rounded-lg animate-pulse" /></div>;
 
   return (
-    <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
-      <h3 className="font-bold text-xl mb-6">Explore Courses</h3>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 }}
+      className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="font-bold text-xl">Explore Courses</h3>
+        <button onClick={() => navigate('/courses')} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wide">See All</button>
+      </div>
+
       {courses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {courses.map((course) => (
+          {courses.slice(0, 4).map((course, idx) => (
             <div key={course._id} onClick={() => navigate(`/courses/${course._id}`, { state: { course } })} className="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col group cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-indigo-100 hover:-translate-y-1">
               <div className="flex flex-col flex-grow">
                 <span className="bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest self-start px-3 py-1.5 rounded-lg mb-3">{course.category || "General"}</span>
-                <h4 className="font-bold text-xl text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors">{course.title || "Untitled Course"}</h4>
+                <h4 className="font-bold text-xl text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1">{course.title || "Untitled Course"}</h4>
                 <p className="text-gray-500 text-sm mt-3 flex-grow line-clamp-2 leading-relaxed">{course.description || "No description available."}</p>
               </div>
-              
-              <div className="mt-6 pt-4 border-t border-gray-50">
-                <button className="w-full py-3 bg-gray-50 text-gray-900 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2 group-hover:shadow-md">
-                    Start Learning <FiArrowRight />
-                </button>
+              <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-400">View Details</span>
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                  <FiArrowRight />
+                </div>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-center py-4">No courses available at the moment. Check back later!</p>
+        <p className="text-gray-500 text-center py-4">No courses available at the moment.</p>
       )}
-    </div>
+    </motion.div>
   );
 };
 
-// --- HOME COMPONENT ---
+// --- MAIN HOME COMPONENT ---
 const Home = () => {
   const { user, token } = useAuth();
   const { submissions, loading } = useSubmissions();
@@ -562,25 +655,31 @@ const Home = () => {
   return (
     <div className="relative w-full flex flex-col lg:flex-row gap-8 lg:gap-12 font-sans p-2 sm:p-4">
 
+      {/* --- LEFT COLUMN (MAIN CONTENT) --- */}
       <div className="flex-1 flex flex-col z-10">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-black mb-2 leading-tight tracking-tight">
-          Create the <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
-            next big thing
-          </span>
-        </h1>
-        <p className="text-gray-500 font-medium text-lg mt-2 mb-8 max-w-lg">
-            Track your progress, build your skills, and find your dream team.
-        </p>
+
+        {/* 1. Dynamic Greeting */}
+        <WelcomeSection user={user} />
+
+        {/* 2. Quick Actions Row */}
+        <QuickActions />
 
         <div className="space-y-8">
+          {/* 3. Build Hub Status */}
           <BuildHubStatus user={user} />
+
+          {/* 4. Stats Grid */}
           <PerformanceSnapshot submissions={submissions} isLoading={loading} />
+
+          {/* 5. Recent Performance */}
           <RecentPerformance submissions={submissions} isLoading={loading} />
+
+          {/* 6. Courses */}
           <ExploreCourses />
         </div>
       </div>
 
+      {/* --- RIGHT COLUMN (SIDEBAR) --- */}
       <div className="lg:sticky lg:top-8 h-fit z-10">
         <ProfileCard user={user} />
       </div>

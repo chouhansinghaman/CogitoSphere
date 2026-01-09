@@ -10,9 +10,11 @@ const RedirectHome = () => {
   useEffect(() => {
     if (!loading) {
       if (isAuthenticated) {
+        // If logged in, go to the dashboard
         navigate('/home', { replace: true });
       } else {
-        navigate('/login', { replace: true });
+        // If NOT logged in, go to the Alpha Landing Page
+        navigate('/', { replace: true });
       }
     }
   }, [isAuthenticated, loading, navigate]);
