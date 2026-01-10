@@ -388,34 +388,10 @@ const ResourceHub = () => {
 
 // --- COMPONENT: Profile Header ---
 const ProfileHeader = ({ user }) => {
-  const { setUser } = useAuth();
-  const fileInputRef = useRef(null);
-
-  const handleAvatarClick = () => { fileInputRef.current.click(); };
-
-  const handleFileChange = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("avatar", file);
-    const toastId = toast.loading("Uploading avatar...");
-    try {
-      const { data } = await updateUserAvatarApi(formData);
-      setUser(prevUser => ({ ...prevUser, avatar: data.avatar }));
-      toast.success("Avatar updated!", { id: toastId });
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Upload failed.", { id: toastId });
-    }
-  };
-
   return (
     <div className="flex items-center gap-4 w-full mb-6">
-      <div className="relative w-16 h-16 group flex-shrink-0 cursor-pointer" onClick={handleAvatarClick}>
+      <div className="relative w-16 h-16 group flex-shrink-0">
         <img src={user?.avatar || "https://i.pinimg.com/736x/51/19/95/511995729851564ed88c865f42e1844b.jpg"} alt={user?.name || "User"} className="w-full h-full rounded-full object-cover border-2 border-zinc-700 group-hover:border-indigo-500 transition-colors" />
-        <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <FiEdit className="text-white" size={18} />
-        </div>
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
       </div>
       <div className="flex flex-col">
         <span className="font-bold text-lg text-white leading-tight">{user?.name || "Full Name"}</span>

@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { FiEdit2, FiCode, FiUser, FiSearch, FiCheck, FiGithub, FiLinkedin } from "react-icons/fi";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  FiEdit2, FiEdit3, FiCode, FiUser, FiSearch, FiCheck,
+  FiGithub, FiLinkedin, FiPlus, FiUploadCloud, FiTrash2, FiArrowLeft
+} from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -57,13 +60,18 @@ const PasswordInput = ({ id, name, value, onChange, placeholder, showState, show
 
 const ProfileSection = () => {
   const { user, setUser, token } = useAuth();
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
     github: "",
     linkedin: "",
   });
+
+  // Avatar Modal State
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // Sync state with user context on load
   useEffect(() => {
@@ -76,23 +84,12 @@ const ProfileSection = () => {
     }
   }, [user]);
 
-  // Inside ProfileSection component...
-
+  // Handle Text Updates
   const handleUpdate = async (extraPayload = {}) => {
-    // 1. FRONTEND VALIDATION
     const urlPattern = /^(https?:\/\/[^\s]+)?$/;
+    if (formData.github && !urlPattern.test(formData.github)) return toast.error("GitHub link must start with http:// or https://");
+    if (formData.linkedin && !urlPattern.test(formData.linkedin)) return toast.error("LinkedIn link must start with http:// or https://");
 
-    // Check GitHub if it's not empty
-    if (formData.github && !urlPattern.test(formData.github)) {
-      return toast.error("GitHub link must start with http:// or https://");
-    }
-
-    // Check LinkedIn if it's not empty
-    if (formData.linkedin && !urlPattern.test(formData.linkedin)) {
-      return toast.error("LinkedIn link must start with http:// or https://");
-    }
-
-    // 2. PROCEED TO SAVE
     try {
       const payload = { ...formData, ...extraPayload };
       const res = await fetch(`${API_BASE}/users/update`, {
@@ -103,14 +100,54 @@ const ProfileSection = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to update");
 
-      setUser(prev => ({
-        ...prev,
-        ...data.user,
-        ...payload
-      }));
-
+      setUser(prev => ({ ...prev, ...data.user, ...payload }));
       toast.success("Profile updated!");
     } catch (err) { toast.error(err.message); }
+  };
+
+  // Handle File Selection
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file)); // Show preview immediately
+    }
+  };
+
+  // Handle File Upload
+  const confirmUpload = async () => {
+    if (!selectedFile) return;
+    const loadingToast = toast.loading("Uploading avatar...");
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("avatar", selectedFile);
+
+      const res = await fetch(`${API_BASE}/users/avatar`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }, // Note: No Content-Type header for FormData
+        body: formDataUpload
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Upload failed");
+
+      setUser(prev => ({ ...prev, avatar: data.avatar }));
+      toast.success("Avatar updated!", { id: loadingToast });
+
+      // Reset & Close
+      setPreviewUrl(null);
+      setSelectedFile(null);
+      setIsAvatarModalOpen(false);
+    } catch (err) {
+      toast.error(err.message, { id: loadingToast });
+    }
+  };
+
+  const cancelUpload = () => {
+    setPreviewUrl(null);
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -130,11 +167,14 @@ const ProfileSection = () => {
             {/* Name Field */}
             <div>
               <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Full Name</label>
-              <input
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full outline-none focus:border-black transition-all font-medium"
-              />
+              <div className="relative">
+                <input
+                  value={formData.name}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  className="bg-gray-50 border border-gray-200 rounded-xl pl-4 pr-10 py-3 w-full outline-none focus:border-black transition-all font-medium"
+                />
+                <FiEdit3 className="absolute right-4 top-3.5 text-gray-400 pointer-events-none" size={16} />
+              </div>
             </div>
 
             {/* Social Links Grid */}
@@ -143,23 +183,29 @@ const ProfileSection = () => {
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
                   <FiGithub /> GitHub Profile
                 </label>
-                <input
-                  value={formData.github}
-                  onChange={e => setFormData({ ...formData, github: e.target.value })}
-                  placeholder="github.com/username"
-                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full outline-none focus:border-black transition-all text-sm"
-                />
+                <div className="relative">
+                  <input
+                    value={formData.github}
+                    onChange={e => setFormData({ ...formData, github: e.target.value })}
+                    placeholder="github.com/username"
+                    className="bg-gray-50 border border-gray-200 rounded-xl pl-4 pr-10 py-3 w-full outline-none focus:border-black transition-all text-sm"
+                  />
+                  <FiEdit3 className="absolute right-4 top-3.5 text-gray-400 pointer-events-none" size={14} />
+                </div>
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block flex items-center gap-1">
                   <FiLinkedin /> LinkedIn Profile
                 </label>
-                <input
-                  value={formData.linkedin}
-                  onChange={e => setFormData({ ...formData, linkedin: e.target.value })}
-                  placeholder="linkedin.com/in/username"
-                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full outline-none focus:border-black transition-all text-sm"
-                />
+                <div className="relative">
+                  <input
+                    value={formData.linkedin}
+                    onChange={e => setFormData({ ...formData, linkedin: e.target.value })}
+                    placeholder="linkedin.com/in/username"
+                    className="bg-gray-50 border border-gray-200 rounded-xl pl-4 pr-10 py-3 w-full outline-none focus:border-black transition-all text-sm"
+                  />
+                  <FiEdit3 className="absolute right-4 top-3.5 text-gray-400 pointer-events-none" size={14} />
+                </div>
               </div>
             </div>
 
@@ -195,22 +241,65 @@ const ProfileSection = () => {
         </div>
       </SectionWrapper>
 
-      {/* Avatar Modal */}
+      {/* --- UPDATED AVATAR MODAL --- */}
       {isAvatarModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsAvatarModalOpen(false)}>
-          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-2xl font-black mb-6 text-center">Choose your style</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {avatarOptions.map(url => (
-                <img
-                  key={url}
-                  src={url}
-                  className={`w-full aspect-square rounded-2xl cursor-pointer object-cover transition-all duration-200 ${user.avatar === url ? 'ring-4 ring-black scale-95' : 'hover:scale-105 opacity-80 hover:opacity-100'}`}
-                  onClick={() => { handleUpdate({ avatar: url }); setIsAvatarModalOpen(false); }}
-                />
-              ))}
+          <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl relative" onClick={e => e.stopPropagation()}>
+
+            {/* Modal Header */}
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-black">{previewUrl ? "Preview Upload" : "Choose your style"}</h3>
+              {!previewUrl && <p className="text-gray-400 text-sm mt-1">Pick a preset or upload your own</p>}
             </div>
-            <button onClick={() => setIsAvatarModalOpen(false)} className="w-full mt-6 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50">Cancel</button>
+
+            {/* PREVIEW MODE */}
+            {previewUrl ? (
+              <div className="animate-in fade-in zoom-in duration-200">
+                <div className="w-48 h-48 mx-auto rounded-full p-1 border-2 border-black border-dashed mb-6 relative group">
+                  <img src={previewUrl} className="w-full h-full rounded-full object-cover" />
+                  <button onClick={cancelUpload} className="absolute top-0 right-0 bg-red-100 text-red-500 p-2 rounded-full hover:bg-red-200 transition-colors"><FiTrash2 size={16} /></button>
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={cancelUpload} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 text-sm">Pick Different</button>
+                  <button onClick={confirmUpload} className="flex-1 py-3 bg-black text-white rounded-xl font-bold hover:scale-[1.02] transition-transform text-sm shadow-lg">Confirm Upload</button>
+                </div>
+              </div>
+            ) : (
+              /* SELECTION GRID */
+              <div className="grid grid-cols-3 gap-4">
+                {/* 1. Custom Upload Tile */}
+                <div
+                  onClick={() => fileInputRef.current.click()}
+                  className="aspect-square rounded-2xl border-2 border-dashed border-gray-300 hover:border-black hover:bg-gray-50 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all group"
+                >
+                  <div className="p-2 bg-gray-100 rounded-full group-hover:bg-black group-hover:text-white transition-colors">
+                    <FiPlus size={24} />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-black">Upload</span>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                  />
+                </div>
+
+                {/* 2. Presets */}
+                {avatarOptions.map(url => (
+                  <img
+                    key={url}
+                    src={url}
+                    className={`w-full aspect-square rounded-2xl cursor-pointer object-cover transition-all duration-200 ${user.avatar === url ? 'ring-4 ring-black scale-95' : 'hover:scale-105 opacity-80 hover:opacity-100 shadow-sm hover:shadow-md'}`}
+                    onClick={() => { handleUpdate({ avatar: url }); setIsAvatarModalOpen(false); }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {!previewUrl && (
+              <button onClick={() => setIsAvatarModalOpen(false)} className="w-full mt-6 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 text-sm">Cancel</button>
+            )}
           </div>
         </div>
       )}
@@ -243,7 +332,7 @@ const BuilderSection = () => {
 
     // Prepare the data cleanly before sending
     const processedSkills = profile.skills.split(",").map(s => s.trim()).filter(s => s);
-    
+
     // ✅ CRITICAL FIX: Merge with existing user.builderProfile
     // This ensures we don't wipe out 'interests' or 'portfolioLink' if they exist
     const updatedBuilderProfile = {
