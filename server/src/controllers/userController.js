@@ -230,7 +230,7 @@ export const getPublicUserProfile = async (req, res) => {
   try {
     const userId = req.params.id;
 
-    // 1. Fetch User Details (excluding sensitive data)
+    // 1. Fetch User Details
     const user = await User.findById(userId).select('-password -resetPasswordToken -resetPasswordExpires');
 
     if (!user) {
@@ -240,17 +240,17 @@ export const getPublicUserProfile = async (req, res) => {
     // 2. Fetch Ideas (Created by user OR Joined by user)
     const ideas = await Idea.find({
       $or: [
-        { postedBy: userId },                // Created by them
-        { 'members._id': userId }            // OR they are in the members list
+        { postedBy: userId },    // Created by them
+        { members: userId }      // ✅ FIXED: Check if userId exists in members array
       ]
     })
-      .populate('postedBy', 'name avatar')         // Get creator details
-      .sort({ createdAt: -1 });                    // Newest first
+      .populate('postedBy', 'name avatar') // Get creator details
+      .sort({ createdAt: -1 });
 
     // 3. Return combined object
     res.json({
-      ...user.toObject(), // Convert Mongoose doc to plain object
-      ideas: ideas        // Attach the found ideas
+      ...user.toObject(),
+      ideas: ideas
     });
 
   } catch (error) {

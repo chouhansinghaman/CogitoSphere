@@ -55,35 +55,34 @@ export const getIdeas = async (req, res) => {
 
 // --- Join a Project Team ---
 export const joinIdea = async (req, res) => {
-    try {
-        const idea = await Idea.findById(req.params.id);
-        if (!idea) return res.status(404).json({ message: "Idea not found" });
+  try {
+    const idea = await Idea.findById(req.params.id);
 
-        if (idea.members.includes(req.user._id)) {
-            return res.status(400).json({ message: "Already a member" });
-        }
+    if (!idea) return res.status(404).json({ message: "Project not found" });
 
-        // 1. Add Member
-        idea.members.push(req.user._id);
-        await idea.save();
-
-        // 2. CREATE NOTIFICATION (The Missing Piece)
-        // Notify the project owner that someone joined
-        if (idea.postedBy.toString() !== req.user._id.toString()) {
-            await Notification.create({
-                recipient: idea.postedBy,
-                sender: req.user._id,
-                type: "project_join", // You can filter by this type in frontend
-                message: `${req.user.username} joined your project: ${idea.title}`,
-                relatedId: idea._id,
-                isRead: false
-            });
-        }
-
-        res.status(200).json({ message: "Successfully joined", idea });
-    } catch (error) {
-        res.status(500).json({ message: "Error joining", error: error.message });
+    // 1. Check if User is the Owner
+    if (idea.postedBy.toString() === req.user._id.toString()) {
+        return res.status(400).json({ message: "You cannot join your own project." });
     }
+
+    // 2. Check if already a member
+    if (idea.members.includes(req.user._id)) {
+        return res.status(400).json({ message: "You are already in this team." });
+    }
+
+    // 3. ✅ NEW: Check Member Limit
+    if (idea.members.length >= idea.maxMembers) {
+        return res.status(400).json({ message: "This team is full." });
+    }
+
+    // Add Member
+    idea.members.push(req.user._id);
+    await idea.save();
+
+    res.status(200).json({ message: "Successfully joined the team!", idea });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
 };
 
 // Add this new function
@@ -165,7 +164,9 @@ export const updateIdea = async (req, res) => {
     idea.title = title || idea.title;
     idea.description = description || idea.description;
     idea.tags = processedTags;
-    idea.teamInviteLink = teamInviteLink || ""; // Allow clearing it
+    idea.teamInviteLink = teamInviteLink || ""; 
+
+    if (req.body.maxMembers) idea.maxMembers = req.body.maxMembers;
 
     const updatedIdea = await idea.save();
     await updatedIdea.populate('postedBy', 'name avatar');
