@@ -1,218 +1,235 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
-import { Link } from "react-router-dom"; // ✅ IMPORTED LINK
+import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { SEASON_CONFIG } from "../../lib/SeasonConfig.js"; 
 import { 
   FiSend, FiTrash2, FiMessageSquare, FiPlus, FiX, 
-  FiArrowRight, FiEdit2, FiLogOut, FiUsers
+  FiArrowRight, FiEdit2, FiLogOut, FiUsers, FiTag
 } from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
 
-// --- SUB-COMPONENT: View Team Modal ---
-const TeamModal = ({ members, onClose }) => {
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-lg flex items-center gap-2"><FiUsers /> Team Members</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-black"><FiX /></button>
-                </div>
-                
-                <div className="space-y-3">
-                    {members && members.length > 0 ? (
-                        members.map(m => (
-                            // ✅ CHANGED: Wrapped in Link to go to profile
-                            <Link 
-                                to={`/u/${m._id}`} 
-                                key={m._id || Math.random()} 
-                                className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group"
-                                onClick={onClose} // Close modal when navigating
-                            >
-                                <img 
-                                    src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m._id || "unknown"}`} 
-                                    className="w-10 h-10 rounded-full border border-gray-200 object-cover bg-gray-100 group-hover:scale-105 transition-transform"
-                                    alt="avatar"
-                                />
-                                <div>
-                                    <span className="font-bold text-sm text-gray-900 block group-hover:text-blue-600 transition-colors">
-                                        {m.name || "Unknown Builder"}
-                                    </span>
-                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Member</span>
-                                </div>
-                            </Link>
-                        ))
-                    ) : (
-                        <p className="text-sm text-gray-400 italic">No members found.</p>
-                    )}
-                </div>
-                
-                <button onClick={onClose} className="mt-6 w-full py-3 bg-black text-white font-bold rounded-xl text-xs hover:opacity-90 transition-opacity">
-                    Close
-                </button>
-            </div>
-        </div>
-    );
-};
-
-// --- SUB-COMPONENT: Project Card ---
-const ProjectCard = ({ idea, onJoin, onLeave, onDelete, onEdit, onAddComment, user }) => {
-  const [showComments, setShowComments] = useState(false);
-  const [showTeamModal, setShowTeamModal] = useState(false);
+// --- COMPONENT: Idea Details Modal (Now includes Comments/Chat) ---
+const IdeaDetailsModal = ({ idea, isOpen, onClose, onJoin, onLeave, userId, onAddComment }) => {
   const [commentText, setCommentText] = useState("");
   const [localComments, setLocalComments] = useState(idea.comments || []);
-  
-  const isMember = idea.members?.some(m => m._id === user._id);
-  const isOwner = idea.postedBy?._id === user._id;
-  const isAdmin = user.role === 'admin';
+  const chatRef = useRef(null);
 
-  const handlePostComment = async (e) => {
-    e.preventDefault();
-    if(!commentText.trim()) return;
-    const updatedComments = await onAddComment(idea._id, commentText);
-    if(updatedComments) {
-        setLocalComments(updatedComments);
-        setCommentText("");
-    }
+  if (!isOpen || !idea) return null;
+
+  const isMember = idea.members?.some(m => m._id === userId);
+  const isOwner = idea.postedBy?._id === userId;
+
+  const handleSendComment = async (e) => {
+     e.preventDefault();
+     if(!commentText.trim()) return;
+     const updatedComments = await onAddComment(idea._id, commentText);
+     if(updatedComments) {
+         setLocalComments(updatedComments);
+         setCommentText("");
+         // Scroll to bottom
+         setTimeout(() => chatRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+     }
   };
 
   return (
-    <div className="group relative w-full h-full flex flex-col">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl blur opacity-10 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-      
-      <div className="relative bg-white border border-gray-100 rounded-2xl p-6 flex-1 flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
-        
-        <div className="absolute top-4 right-4 flex gap-2 z-10">
-            {isOwner && (
-                <button onClick={(e) => { e.stopPropagation(); onEdit(idea); }} className="p-2 text-gray-400 hover:text-blue-600 bg-white hover:bg-blue-50 border border-gray-100 rounded-lg transition-colors" title="Edit Idea">
-                    <FiEdit2 size={14} />
-                </button>
-            )}
-            {(isOwner || isAdmin) && (
-                <button onClick={(e) => { e.stopPropagation(); onDelete(idea._id); }} className="p-2 text-gray-400 hover:text-red-600 bg-white hover:bg-red-50 border border-gray-100 rounded-lg transition-colors" title="Delete Idea">
-                    <FiTrash2 size={14} />
-                </button>
-            )}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <motion.div 
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]"
+      >
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 hover:rotate-90 transition-all z-10"><FiX size={24} /></button>
+
+        {/* Header */}
+        <div className="p-8 border-b border-gray-100 bg-gray-50/50">
+           <h2 className="text-3xl font-black text-gray-900 leading-tight mb-3">{idea.title}</h2>
+           <div className="flex items-center gap-3">
+              <img src={idea.postedBy?.avatar || `https://ui-avatars.com/api/?name=${idea.postedBy?.name}`} className="w-8 h-8 rounded-full border border-gray-200" alt="" />
+              <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Posted by</span>
+                  <Link to={`/u/${idea.postedBy?._id}`} className="text-sm font-bold text-gray-900 hover:underline">{idea.postedBy?.name}</Link>
+              </div>
+           </div>
         </div>
 
-        {!showComments ? (
-            <>
-                <div>
-                    <button 
-                        onClick={() => setShowTeamModal(true)}
-                        className="flex items-center gap-2 mb-4 group/team hover:bg-gray-50 p-1.5 -ml-1.5 rounded-lg transition-colors"
-                    >
-                         <div className="flex -space-x-2">
-                            {idea.members?.slice(0,3).map((m, i) => (
-                                <img 
-                                    key={i} 
-                                    src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m._id}`} 
-                                    alt={m.name} 
-                                    className="w-6 h-6 rounded-full border-2 border-white object-cover bg-gray-100" 
-                                />
-                            ))}
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase group-hover/team:text-black transition-colors">
-                            {idea.members?.length || 0} Builders
-                        </span>
-                    </button>
-                    
-                    <h3 className="text-lg font-black text-gray-900 mb-2 leading-tight pr-12">
-                        {idea.title}
-                    </h3>
-                    
-                    {/* ✅ CHANGED: Link to Idea Poster */}
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                        Posted by <Link to={`/u/${idea.postedBy?._id}`} className="hover:text-black hover:underline transition-colors">{idea.postedBy?.name}</Link>
-                    </p>
-
-                    <p className="text-sm text-gray-500 font-medium leading-relaxed line-clamp-3">
-                        {idea.description}
-                    </p>
+        {/* Body (Split into Details & Chat) */}
+        <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col md:flex-row">
+           {/* LEFT: Description & Stats */}
+           <div className="p-8 md:w-3/5">
+                <div className="mb-8">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Project Description</h3>
+                    <p className="text-gray-700 leading-relaxed text-lg whitespace-pre-wrap">{idea.description}</p>
                 </div>
 
-                <div className="mt-6">
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        {idea.tags.slice(0, 3).map((tag, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-gray-50 border border-gray-200 rounded-md text-[10px] font-bold uppercase text-gray-600">
-                                {tag}
+                {/* Team Section */}
+                <div className="bg-zinc-50 rounded-2xl p-6 border border-zinc-100 mb-8">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2"><FiUsers /> Team Members ({idea.members?.length})</h3>
+                    <div className="flex flex-wrap gap-3">
+                        {idea.members?.map((member) => (
+                            <Link to={`/u/${member._id}`} key={member._id} className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-gray-200 shadow-sm hover:border-indigo-300 transition-colors">
+                            <img src={member.avatar || "https://via.placeholder.com/30"} className="w-6 h-6 rounded-full" alt="" />
+                            <span className="text-sm font-bold text-gray-700">{member.name}</span>
+                            {member._id === idea.postedBy?._id && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold">OWNER</span>}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Skills */}
+                <div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2"><FiTag /> Tech Stack</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {idea.tags.map((tag, i) => (
+                            <span key={i} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wide rounded-lg border border-indigo-100">
+                            {tag}
                             </span>
                         ))}
                     </div>
-                    
-                    <div className="flex gap-2">
-                        {isOwner ? (
-                             <button 
-                                onClick={() => setShowTeamModal(true)}
-                                className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-600 font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-                             >
-                                <FiUsers /> View Team
-                             </button>
-                        ) : isMember ? (
-                            <div className="flex-1 flex gap-1">
-                                <button className="flex-1 py-3 rounded-xl bg-green-50 text-green-700 font-bold text-xs uppercase cursor-default border border-green-100">
-                                    Joined
-                                </button>
-                                <button 
-                                    onClick={() => onLeave(idea._id)}
-                                    className="px-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 transition-colors"
-                                    title="Leave Team"
-                                >
-                                    <FiLogOut />
-                                </button>
-                            </div>
-                        ) : (
-                            <button 
-                                onClick={() => onJoin(idea)}
-                                className="flex-1 py-3 rounded-xl bg-black text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 group-hover:scale-[1.02] transition-transform"
-                            >
-                                {idea.teamInviteLink ? "Open Link" : "Join Team"} <FiArrowRight />
-                            </button>
-                        )}
-                        
-                        <button 
-                            onClick={() => setShowComments(true)} 
-                            className="px-4 py-3 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black transition-colors flex items-center gap-2 font-bold text-xs"
-                        >
-                            <FiMessageSquare /> {localComments.length}
-                        </button>
-                    </div>
                 </div>
-            </>
-        ) : (
-            <div className="flex-1 flex flex-col h-full">
-                <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
-                    <h4 className="font-bold text-xs uppercase tracking-widest text-gray-500">Discussion</h4>
-                    <button onClick={() => setShowComments(false)} className="text-gray-400 hover:text-black p-1 hover:bg-gray-100 rounded-full"><FiX /></button>
+           </div>
+
+           {/* RIGHT: Discussion / Chat */}
+           <div className="md:w-2/5 bg-gray-50 border-l border-gray-100 flex flex-col h-full min-h-[400px]">
+                <div className="p-4 border-b border-gray-200 bg-white/50 backdrop-blur">
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2"><FiMessageSquare /> Discussion</h3>
                 </div>
-                <div className="flex-1 overflow-y-auto min-h-[150px] space-y-3 mb-4 pr-1 scrollbar-thin">
-                    {localComments.length === 0 && <div className="text-center py-4 text-xs text-gray-300 italic">No comments yet.</div>}
+                
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {localComments.length === 0 && <p className="text-center text-gray-400 text-xs italic mt-10">No comments yet. Start the conversation!</p>}
                     {localComments.map((c, i) => (
-                        <div key={i} className="bg-gray-50 p-3 rounded-xl text-xs">
-                            <div className="flex justify-between mb-1">
-                                {/* ✅ CHANGED: Link to Commenter */}
-                                <Link to={`/u/${c.sender?._id}`} className="font-bold text-gray-900 hover:underline">
-                                    {c.sender?.name || "User"}
-                                </Link>
-                                <span className="text-[9px] text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
-                            </div>
-                            <p className="text-gray-600 leading-relaxed">{c.text}</p>
+                        <div key={i} className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 text-xs">
+                             <div className="flex justify-between mb-1">
+                                <span className="font-bold text-gray-900">{c.sender?.name}</span>
+                                <span className="text-[10px] text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
+                             </div>
+                             <p className="text-gray-600 leading-relaxed">{c.text}</p>
                         </div>
                     ))}
+                    <div ref={chatRef}></div>
                 </div>
-                <form onSubmit={handlePostComment} className="mt-auto flex gap-2">
-                    <input type="text" className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:border-black outline-none" placeholder="Message..." value={commentText} onChange={e => setCommentText(e.target.value)} />
-                    <button type="submit" className="bg-black text-white p-2.5 rounded-xl hover:opacity-80"><FiSend size={12}/></button>
-                </form>
-            </div>
-        )}
-      </div>
 
-      {showTeamModal && <TeamModal members={idea.members} onClose={() => setShowTeamModal(false)} />}
+                <form onSubmit={handleSendComment} className="p-3 border-t border-gray-200 bg-white">
+                    <div className="flex gap-2">
+                        <input className="flex-1 bg-gray-100 border-transparent rounded-lg px-3 py-2 text-xs focus:bg-white focus:border-black outline-none transition-colors" placeholder="Ask a question..." value={commentText} onChange={e => setCommentText(e.target.value)} />
+                        <button type="submit" className="bg-black text-white p-2 rounded-lg hover:opacity-80"><FiSend size={14}/></button>
+                    </div>
+                </form>
+           </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-6 border-t border-gray-100 bg-white flex justify-between items-center gap-3">
+           <div className="text-xs font-bold text-gray-400 uppercase tracking-wider hidden sm:block">
+              {isMember ? "You are in this team" : "Looking for members"}
+           </div>
+           <div className="flex gap-3">
+               {isOwner ? (
+                  <button disabled className="px-6 py-3 bg-gray-100 text-gray-400 font-bold rounded-xl cursor-not-allowed text-xs uppercase tracking-wide">Owner</button>
+               ) : isMember ? (
+                  <button onClick={() => onLeave(idea._id)} className="px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-xl flex items-center gap-2 transition-colors text-xs uppercase tracking-wide"><FiLogOut /> Leave</button>
+               ) : (
+                  <button onClick={() => onJoin(idea)} className="px-8 py-3 bg-black text-white hover:bg-zinc-800 font-bold rounded-xl flex items-center gap-2 shadow-lg transition-all hover:scale-105 text-xs uppercase tracking-wide">
+                     {idea.teamInviteLink ? "Open Invite" : "Join Team"} <FiArrowRight />
+                  </button>
+               )}
+           </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
 
-// --- SUB-COMPONENT: Create/Edit Modal (Updated with Red Asterisks) ---
+// --- SUB-COMPONENT: Project Card ---
+const ProjectCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
+  const isOwner = idea.postedBy?._id === user._id;
+  const isAdmin = user.role === 'admin';
+  const isMember = idea.members?.some(m => m._id === user._id);
+  const commentCount = idea.comments?.length || 0;
+
+  return (
+    <div className="group relative w-full h-full flex flex-col">
+      {/* Gradient Glow */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-[2rem] blur opacity-10 group-hover:opacity-40 transition duration-500"></div>
+      
+      <div className="relative bg-white border border-gray-100 rounded-[2rem] p-6 flex-1 flex flex-col shadow-sm hover:shadow-xl transition-all duration-300">
+        
+        {/* HEADER: Members & Owner Actions */}
+        <div className="flex justify-between items-start mb-4">
+            {/* Members Stack (Restored) */}
+            <div className="flex -space-x-2">
+                {idea.members?.slice(0,3).map((m, i) => (
+                    <img key={i} src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m._id}`} className="w-8 h-8 rounded-full border-2 border-white bg-gray-100" />
+                ))}
+                {idea.members?.length > 3 && (
+                    <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-500">+{idea.members.length - 3}</div>
+                )}
+            </div>
+
+            {/* Edit/Delete Actions (Restored) */}
+            <div className="flex gap-2">
+                {isOwner && (
+                    <button onClick={(e) => { e.stopPropagation(); onEdit(idea); }} className="p-2 text-gray-400 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors"><FiEdit2 size={14} /></button>
+                )}
+                {(isOwner || isAdmin) && (
+                    <button onClick={(e) => { e.stopPropagation(); onDelete(idea._id); }} className="p-2 text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 rounded-lg transition-colors"><FiTrash2 size={14} /></button>
+                )}
+            </div>
+        </div>
+
+        {/* CONTENT: Title & Desc */}
+        <div className="mb-6 flex-1">
+            <h3 className="text-xl font-black text-gray-900 mb-1 leading-tight line-clamp-2 group-hover:text-indigo-600 transition-colors">{idea.title}</h3>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">
+                by <span className="text-gray-600">{idea.postedBy?.name}</span>
+            </p>
+            <p className="text-sm text-gray-500 font-medium leading-relaxed line-clamp-3">
+                {idea.description}
+            </p>
+        </div>
+
+        {/* FOOTER: Skills, Chat Icon & Button */}
+        <div className="mt-auto">
+            {/* Skills (Bottom) */}
+            <div className="flex flex-wrap gap-2 mb-5">
+                {idea.tags.slice(0, 3).map((tag, idx) => (
+                    <span key={idx} className="px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-600 tracking-wide">
+                        {tag}
+                    </span>
+                ))}
+            </div>
+            
+            <div className="flex gap-2">
+                {/* Chat Icon (Opens Modal) */}
+                <button 
+                    onClick={() => onViewDetails(idea)} 
+                    className="px-4 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black transition-colors flex items-center gap-1 font-bold text-xs"
+                    title="View Discussion"
+                >
+                    <FiMessageSquare /> {commentCount}
+                </button>
+
+                {/* View Details / Join Button */}
+                <button 
+                    onClick={() => onViewDetails(idea)}
+                    className={`flex-1 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg ${
+                        isMember 
+                        ? "bg-green-50 text-green-700 border border-green-200" 
+                        : "bg-black text-white hover:scale-[1.02]"
+                    }`}
+                >
+                    {isMember ? "Joined ✓" : "View Details"}
+                </button>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- SUB-COMPONENT: Create/Edit Modal ---
 const IdeaModal = ({ show, onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState({ title: "", description: "", tags: "", teamInviteLink: "" });
     const [loading, setLoading] = useState(false);
@@ -240,36 +257,30 @@ const IdeaModal = ({ show, onClose, onSave, initialData }) => {
     if (!show) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+            <div className="bg-white rounded-[2rem] w-full max-w-lg p-8 shadow-2xl relative animate-in fade-in zoom-in duration-200">
                 <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-black"><FiX size={24}/></button>
                 <h2 className="text-2xl font-black mb-1">{initialData ? "Edit Project" : "Post Project"}</h2>
                 
                 <form onSubmit={handleSubmit} className="space-y-4 mt-6">
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                            Project Title <span className="text-red-500">*</span>
-                        </label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Project Title <span className="text-red-500">*</span></label>
                         <input required type="text" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-black outline-none font-bold" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                            Description <span className="text-red-500">*</span>
-                        </label>
-                        <textarea required rows="3" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-black outline-none text-sm" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Description <span className="text-red-500">*</span></label>
+                        <textarea required rows="4" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-black outline-none text-sm resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                            Tech Stack (Comma separated) <span className="text-red-500">*</span>
-                        </label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tech Stack (Comma separated) <span className="text-red-500">*</span></label>
                         <input required type="text" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-black outline-none text-sm" value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} />
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Group Link (Optional)</label>
-                        <input type="url" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-black outline-none text-sm" placeholder="https://..." value={formData.teamInviteLink} onChange={e => setFormData({...formData, teamInviteLink: e.target.value})} />
+                        <input type="url" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-black outline-none text-sm" placeholder="https://discord.gg/..." value={formData.teamInviteLink} onChange={e => setFormData({...formData, teamInviteLink: e.target.value})} />
                     </div>
                     
-                    <button disabled={loading} type="submit" className="w-full bg-black text-white py-4 rounded-xl font-bold hover:scale-[1.02] transition-transform mt-4">
+                    <button disabled={loading} type="submit" className="w-full bg-black text-white py-4 rounded-xl font-bold hover:scale-[1.02] transition-transform mt-4 shadow-lg">
                         {loading ? "Saving..." : (initialData ? "Update Idea" : "Launch Idea")}
                     </button>
                 </form>
@@ -286,10 +297,14 @@ const Community = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const chatEndRef = useRef(null);
+  
   const [ideas, setIdeas] = useState([]);
+  const [loadingIdeas, setLoadingIdeas] = useState(false);
+  
+  // Modals State
   const [showIdeaModal, setShowIdeaModal] = useState(false);
   const [editingIdea, setEditingIdea] = useState(null); 
-  const [loadingIdeas, setLoadingIdeas] = useState(false);
+  const [selectedIdea, setSelectedIdea] = useState(null); 
 
   // --- 1. CHAT LOGIC ---
   const fetchMessages = async () => {
@@ -380,6 +395,7 @@ const Community = () => {
         if(res.ok) {
              if(!idea.teamInviteLink) toast.success("Joined!");
              fetchIdeas();
+             setSelectedIdea(null); // Close modal on join
         }
       } catch(e) { console.error(e); }
   };
@@ -393,6 +409,7 @@ const Community = () => {
         if(res.ok) {
              toast.success("Left team");
              fetchIdeas();
+             setSelectedIdea(null); // Close modal
         }
       } catch(e) { console.error(e); }
   };
@@ -437,10 +454,12 @@ const Community = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {ideas.map(idea => (
                         <ProjectCard 
-                            key={idea._id} idea={idea} user={user}
-                            onJoin={handleJoinTeam} onLeave={handleLeaveTeam} 
-                            onDelete={handleDeleteIdea} onEdit={(idea) => { setEditingIdea(idea); setShowIdeaModal(true); }}
-                            onAddComment={handleAddComment} 
+                            key={idea._id} 
+                            idea={idea} 
+                            user={user}
+                            onViewDetails={setSelectedIdea} 
+                            onDelete={handleDeleteIdea} 
+                            onEdit={(idea) => { setEditingIdea(idea); setShowIdeaModal(true); }}
                         />
                     ))}
                 </div>
@@ -449,6 +468,20 @@ const Community = () => {
             )}
             
             <IdeaModal show={showIdeaModal} initialData={editingIdea} onClose={() => setShowIdeaModal(false)} onSave={handleSaveIdea} />
+            
+            <AnimatePresence>
+                {selectedIdea && (
+                    <IdeaDetailsModal 
+                        idea={selectedIdea} 
+                        isOpen={!!selectedIdea} 
+                        onClose={() => setSelectedIdea(null)} 
+                        onJoin={handleJoinTeam} 
+                        onLeave={handleLeaveTeam}
+                        userId={user._id}
+                        onAddComment={handleAddComment}
+                    />
+                )}
+            </AnimatePresence>
         </div>
       )}
 
@@ -464,7 +497,6 @@ const Community = () => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-gray-50/50">
                     {messages.map((msg) => (
                         <div key={msg._id} className={`flex gap-3 ${msg.sender?._id === user._id ? 'flex-row-reverse' : ''}`}>
-                            {/* ✅ CHANGED: Link to profile in chat */}
                             <Link to={`/u/${msg.sender?._id}`}>
                                 <img src={msg.sender?.avatar || "https://via.placeholder.com/40"} className="w-8 h-8 rounded-full border border-gray-200 self-end mb-1 hover:scale-110 transition-transform cursor-pointer"/>
                             </Link>

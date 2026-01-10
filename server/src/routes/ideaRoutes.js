@@ -1,17 +1,32 @@
 import express from "express";
-import { addComment, createIdea, deleteIdea, getIdeas, joinIdea, leaveTeam, updateIdea } from "../controllers/ideaController.js";
-import { protect } from "../middleware/authMiddleware.js"; // Reuse your existing middleware
+import {
+    addComment,
+    createIdea,
+    deleteIdea,
+    getIdeas,
+    joinIdea,
+    leaveTeam,
+    updateIdea
+} from "../controllers/ideaController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// All idea routes are protected (must be logged in)
+// 1. General Routes
 router.route("/")
-    .get(protect, getIdeas)
+    .get(getIdeas)
     .post(protect, createIdea);
-router.post("/:id/join", protect, joinIdea);
+
+// 2. Team Actions (CRITICAL FIXES HERE)
+router.put("/:id/join", protect, joinIdea);
+router.put("/:id/leave", protect, leaveTeam);
+
+// 3. Comments
 router.post('/:id/comment', protect, addComment);
-router.put('/:id/leave', protect, leaveTeam);
-router.delete('/:id', protect, deleteIdea);  
-router.put('/:id', protect, updateIdea);
+
+// 4. Single Idea Management
+router.route("/:id")
+    .put(protect, updateIdea)
+    .delete(protect, deleteIdea);
 
 export default router;
