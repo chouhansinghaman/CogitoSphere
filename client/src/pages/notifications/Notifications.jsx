@@ -18,39 +18,67 @@ const renderRichText = (text) => {
   });
 };
 
-// --- SUB-COMPONENT: Full View Modal ---
+// --- SUB-COMPONENT: Full View Modal (Mobile Optimized) ---
 const FullNotificationModal = ({ notification, onClose }) => {
   if (!notification) return null;
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-white rounded-[2rem] w-full max-w-2xl p-8 shadow-2xl relative" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors">
-          <FiX size={24} />
-        </button>
+    // 1. z-[9999] ensures it sits ON TOP of all navbars
+    // 2. items-center + justify-center centers it perfectly
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200" 
+      onClick={onClose}
+    >
+      {/* - max-h-[85vh]: Ensures it fits within mobile screen without touching edges
+         - flex flex-col: Allows internal scrolling
+         - overflow-hidden: Keeps rounded corners clean
+      */}
+      <div 
+        className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl relative flex flex-col max-h-[85vh]" 
+        onClick={e => e.stopPropagation()}
+      >
         
-        <div className="mb-6">
-           <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
-             {notification.type === 'project_join' ? 'Team Alert' : 'Announcement'}
-           </span>
-           <h2 className="text-3xl font-black mt-3 leading-tight">{notification.title}</h2>
-           <p className="text-gray-400 font-bold text-xs uppercase mt-2">
-             {new Date(notification.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-           </p>
+        {/* Sticky Close Button (Always visible at top right) */}
+        <div className="absolute top-4 right-4 z-10">
+            <button 
+                onClick={onClose} 
+                className="p-3 bg-gray-100 text-gray-500 rounded-full hover:bg-black hover:text-white transition-colors shadow-sm"
+            >
+                <FiX size={20} />
+            </button>
         </div>
 
-        <div className="prose prose-lg max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap">
-          {renderRichText(notification.message)}
-        </div>
+        {/* Scrollable Content Area */}
+        <div className="overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+            
+            {/* Header Section */}
+            <div className="mb-6 pr-12"> {/* pr-12 prevents text from hitting the X button */}
+               <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                 {notification.type === 'project_join' ? 'Team Alert' : 'Announcement'}
+               </span>
+               <h2 className="text-2xl sm:text-3xl font-black mt-3 leading-tight text-gray-900">
+                 {notification.title}
+               </h2>
+               <p className="text-gray-400 font-bold text-xs uppercase mt-2">
+                 {new Date(notification.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+               </p>
+            </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
-          <button onClick={onClose} className="bg-black text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform">
-            Close
-          </button>
+            {/* Message Body */}
+            <div className="prose prose-sm sm:prose-lg max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap pb-4">
+              {renderRichText(notification.message)}
+            </div>
+
+            {/* Bottom padding to ensure last line of text isn't cut off */}
+            <div className="h-6"></div>
         </div>
+        
+        {/* Removed Bottom Close Button per request */}
       </div>
     </div>
   );
 };
+
 
 // --- SUB-COMPONENT: Notification Card ---
 const NotificationCard = ({ notification, isAdmin, onDelete, onMarkRead, onViewFull }) => {
