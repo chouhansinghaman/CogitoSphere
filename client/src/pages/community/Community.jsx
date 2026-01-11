@@ -322,19 +322,34 @@ const Community = () => {
     const [selectedIdea, setSelectedIdea] = useState(null);
 
     // --- 1. CHAT LOGIC ---
-    const fetchMessages = async () => {
-        try {
-            const res = await fetch(`${API_URL}/chat`, { headers: { Authorization: `Bearer ${token}` } });
-            if (res.ok) setMessages(await res.json());
-        } catch (error) { console.error(error); }
-    };
-    useEffect(() => {
-        if (activeTab === 'chat') {
-            fetchMessages();
-            const interval = setInterval(fetchMessages, 3000);
-            return () => clearInterval(interval);
+const messagesEndRef = useRef(null); // Ref for scrolling
+
+const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+};
+
+const fetchMessages = async () => {
+    try {
+        const res = await fetch(`${API_URL}/chat`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+            const data = await res.json();
+            setMessages(data);
         }
-    }, [activeTab]);
+    } catch (error) { console.error(error); }
+};
+
+// Scroll whenever messages change
+useEffect(() => {
+    scrollToBottom();
+}, [messages]); 
+
+useEffect(() => {
+    if (activeTab === 'chat') {
+        fetchMessages();
+        const interval = setInterval(fetchMessages, 3000);
+        return () => clearInterval(interval);
+    }
+}, [activeTab]);
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
@@ -550,7 +565,7 @@ const Community = () => {
                                     </div>
                                 </div>
                             ))}
-                            <div ref={chatEndRef} />
+                            <div ref={messagesEndRef} />
                         </div>
                         <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100 flex gap-3 items-center">
                             <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." className="flex-1 bg-gray-100 border-transparent rounded-2xl px-5 py-4 focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-gray-100 transition-all outline-none text-sm font-medium" />
