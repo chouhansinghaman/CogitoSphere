@@ -112,7 +112,7 @@ export const forgotPassword = async (req, res) => {
 
     // ✅ FIX: Fallback URL if Env Variable is missing
     // This ensures the link is never "undefined"
-    const clientURL = process.env.VITE_FRONTEND_URL || "https://cogitosphere-client.onrender.com";
+    const clientURL = process.env.VITE_FRONTEND_URL || "https://cogitosphere.onrender.com";
 
     const resetLink = `${clientURL}/reset-password?email=${encodeURIComponent(
       user.email
