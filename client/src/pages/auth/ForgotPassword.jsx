@@ -13,14 +13,20 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(true); // 1. Start Loading immediately
+
+    // 2. Clear any old errors immediately
+    toast.dismiss(); 
 
     try {
+      // 3. This will take 3-4 seconds. It's normal for SMTP.
       await forgotPasswordApi(email);
-      toast.success("If an account exists, a reset link has been sent!");
+      
+      // 4. Success!
+      toast.success("Reset link sent! Check your inbox.");
       setEmail("");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong");
+      toast.error("Failed to send. Please try again.");
     } finally {
       setLoading(false);
     }
