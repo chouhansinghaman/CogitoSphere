@@ -1,27 +1,55 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { resetPasswordApi } from "../../services/api.auth.js";
-
-// Icons
 import { IoKey, IoCheckmarkCircle } from "react-icons/io5";
 
 export default function ResetPassword() {
-  const { token } = useParams();
+  // ✅ FIX: Use searchParams to get data from the ?email=...&code=... link
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  const emailFromUrl = searchParams.get("email");
+  const codeFromUrl = searchParams.get("code");
+
+  // State
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Optional: Redirect if the link is broken (missing email/code)
+  useEffect(() => {
+    if (!emailFromUrl || !codeFromUrl) {
+      toast.error("Invalid reset link.");
+      navigate("/login");
+    }
+  }, [emailFromUrl, codeFromUrl, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await resetPasswordApi(token, newPassword);
-      toast.success("Password successfully reset!");
-      navigate("/login"); 
+      // ✅ FIX: Send data in the BODY, not the URL
+      const res = await fetch("/api/users/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          email: emailFromUrl, 
+          code: codeFromUrl, 
+          newPassword 
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Password successfully reset! Please login.");
+        navigate("/login");
+      } else {
+        toast.error(data.message || "Failed to reset password");
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong");
+      console.error(err);
+      toast.error("Server error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -44,7 +72,7 @@ export default function ResetPassword() {
             </div>
             <h1 className="text-2xl font-black tracking-tight text-white mb-2">Set New Password</h1>
             <p className="text-zinc-500 text-sm">
-                Your new password must be different from previously used passwords.
+                for {emailFromUrl || "your account"}
             </p>
         </div>
 
