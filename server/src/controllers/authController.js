@@ -1,5 +1,3 @@
-// controllers/userController.js
-
 import crypto from "crypto";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
@@ -38,7 +36,6 @@ export const registerUser = async (req, res) => {
             res.status(400).json({ message: "Invalid user data" });
         }
     } catch (err) {
-        // ✅ FIX: The server must send a JSON response on error, not call React hooks.
         console.error("❌ Registration error:", err.message);
         res.status(500).json({ message: "Server error during registration." });
     }
@@ -70,7 +67,6 @@ export const loginUser = async (req, res) => {
     }
 };
 
-// ✨ NEW: Update user password
 // @desc    Update user password
 // @route   PUT /api/users/change-password
 // @access  Private
@@ -78,16 +74,14 @@ export const updateUserPassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     try {
-        // req.user._id is attached by your authentication middleware
         const user = await User.findById(req.user._id);
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Check if the current password is correct
         if (await user.matchPassword(currentPassword)) {
-            user.password = newPassword; // Mongoose middleware will re-hash this
+            user.password = newPassword; 
             await user.save();
             res.json({ message: "Password updated successfully" });
         } else {
@@ -107,24 +101,23 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      // Security: don’t reveal if the email exists
       return res.json({ message: "If the account exists, a reset email has been sent." });
     }
 
-    // Generate 6-digit code
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Save token + expiry
     user.resetPasswordToken = resetCode;
     user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
-    // Create clickable reset link
-    const resetLink = `${process.env.VITE_FRONTEND_URL}/reset-password?email=${encodeURIComponent(
+    // ✅ FIX: Fallback URL if Env Variable is missing
+    // This ensures the link is never "undefined"
+    const clientURL = process.env.VITE_FRONTEND_URL || "https://cogitosphere-client.onrender.com";
+
+    const resetLink = `${clientURL}/reset-password?email=${encodeURIComponent(
       user.email
     )}&code=${resetCode}`;
 
-    // Email HTML
     const html = `
       <p>You requested a password reset.</p>
       <p>Click the link below to reset your password:</p>
@@ -133,10 +126,9 @@ export const forgotPassword = async (req, res) => {
       <p>This link/code expires in 15 minutes.</p>
     `;
 
-    // Send email
     await sendEmail(user.email, "Reset Your Password", html);
 
-    // Log code & preview URL for local testing (optional)
+    // Keep this log for debugging
     console.log(`Password reset code for ${user.email}: ${resetCode}`);
 
     res.json({ message: "If the account exists, a reset email has been sent." });
@@ -159,7 +151,7 @@ export const resetPassword = async (req, res) => {
 
     if (!user) return res.status(400).json({ message: "Invalid or expired code." });
 
-    user.password = newPassword; // hashed via pre-save hook
+    user.password = newPassword; 
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
@@ -171,4 +163,3 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Server error while resetting password." });
   }
 };
-

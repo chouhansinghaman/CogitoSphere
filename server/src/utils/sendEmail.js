@@ -4,10 +4,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const sendEmail = async (to, subject, html) => {
-  // --- DEBUGGING LOGS (Check your Render Logs for these lines!) ---
-  console.log("🔍 DEBUG: Sender Email is:", process.env.EMAIL_USER || "MISSING!");
-  console.log("🔍 DEBUG: API Key Status:", process.env.BREVO_API_KEY ? "Loaded (Starts with " + process.env.BREVO_API_KEY.substring(0, 5) + "...)" : "MISSING!");
-  // -------------------------------------------------------------
 
   const defaultClient = SibApiV3Sdk.ApiClient.instance;
   const apiKey = defaultClient.authentications['api-key'];
