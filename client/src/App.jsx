@@ -33,6 +33,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import { PrivateRoute, AdminRoute } from "./routes/Guards.jsx";
 import RedirectHome from "./components/RedirectHome.jsx";
 import LandingPage from "./pages/landing page/LandingPage.jsx";
+import AddProject from "./pages/project/AddProject.jsx";
 
 export default function App() {
   return (
@@ -77,6 +78,7 @@ export default function App() {
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/add-project" element={<AddProject />} />
 
               {/* Public Profile */}
               <Route path="/u/:id" element={<PublicProfile />} />

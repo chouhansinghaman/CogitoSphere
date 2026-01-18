@@ -16,6 +16,7 @@ import userRoutes from "./routes/userRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import ideaRoutes from "./routes/ideaRoutes.js"; 
+import projectRoutes from "./routes/projectRoutes.js"; 
 
 dotenv.config();
 connectDB();
@@ -80,6 +81,7 @@ app.use('/api/chat', chatRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/ideas", ideaRoutes);
+app.use("/api/projects", projectRoutes);
 
 // --------------------------
 // ✅ Serve React build

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   FiEdit2, FiEdit3, FiCode, FiUser, FiSearch, FiCheck,
-  FiGithub, FiLinkedin, FiPlus, FiUploadCloud, FiTrash2, FiArrowLeft
+  FiGithub, FiLinkedin, FiPlus, FiTrash2,
 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
