@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
-import { updateUserAvatarApi, checkInApi } from "../../services/api.user.js";
+import { checkInApi } from "../../services/api.user.js";
 import Confetti from 'react-confetti';
 import CountUp from 'react-countup';
 import { motion } from "framer-motion";
 import {
-  FiPlus, FiCode, FiCheckCircle, FiEdit, FiArrowRight,
+  FiPlus, FiCode, FiCheckCircle, FiArrowRight,
   FiZap, FiBookOpen, FiSun, FiMoon
 } from 'react-icons/fi';
 import AlphaBadge from "../../components/AlphaBadge";
@@ -54,7 +54,7 @@ const useSubmissions = () => {
 
 // --- ICONS ---
 const TrashIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 hover:text-red-500 transition-colors">
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-red-500 transition-colors">
     <polyline points="3 6 5 6 21 6"></polyline>
     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
     <line x1="10" y1="11" x2="10" y2="17"></line>
@@ -83,7 +83,7 @@ const IconAward = () => (
   </svg>
 );
 
-// --- NEW COMPONENT: Dynamic Greeting ---
+// --- COMPONENT: Dynamic Greeting ---
 const WelcomeSection = ({ user }) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
@@ -94,11 +94,11 @@ const WelcomeSection = ({ user }) => {
       animate={{ opacity: 1, y: 0 }}
       className="mb-8"
     >
-      <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-widest text-xs mb-2">
+      <div className="flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest text-xs mb-2">
         {hour < 18 ? <FiSun className="text-orange-500" /> : <FiMoon className="text-indigo-400" />}
         {greeting}, {user?.name?.split(" ")[0]}
       </div>
-      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-black leading-[0.9] tracking-tighter">
+      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[0.9] tracking-tighter">
         Ready to <br />
         <span className="text-transparent bg-clip-text bg-gradient-to-r pr-2 from-indigo-600 via-purple-600 to-pink-600">
           ship something?
@@ -108,13 +108,13 @@ const WelcomeSection = ({ user }) => {
   );
 };
 
-// --- NEW COMPONENT: Quick Actions ---
+// --- COMPONENT: Quick Actions ---
 const QuickActions = () => {
   const navigate = useNavigate();
   const actions = [
-    { label: "Take Quiz", icon: <FiZap />, path: "/quizzes", color: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200" },
-    { label: "Explore Project", icon: <FiCode />, path: "/community", color: "bg-indigo-100 text-indigo-700 hover:bg-indigo-200" },
-    { label: "My Courses", icon: <FiBookOpen />, path: "/courses", color: "bg-pink-100 text-pink-700 hover:bg-pink-200" },
+    { label: "Take Quiz", icon: <FiZap />, path: "/quizzes", color: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border-yellow-200" },
+    { label: "Explore Project", icon: <FiCode />, path: "/community", color: "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-indigo-200" },
+    { label: "My Courses", icon: <FiBookOpen />, path: "/courses", color: "bg-pink-100 text-pink-700 hover:bg-pink-200 border-pink-200" },
   ];
 
   return (
@@ -125,7 +125,7 @@ const QuickActions = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate(action.path)}
-          className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-colors ${action.color} border border-transparent cursor-pointer`}
+          className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all ${action.color} border shadow-sm cursor-pointer`}
         >
           <div className="text-2xl mb-2">{action.icon}</div>
           <span className="text-xs font-bold uppercase tracking-wide">{action.label}</span>
@@ -141,18 +141,19 @@ const BuildHubStatus = ({ user }) => {
   const isAvailable = user?.builderProfile?.lookingForTeam;
 
   return (
-    <div className="relative overflow-hidden bg-zinc-900 text-white p-6 rounded-[2rem] shadow-2xl flex flex-col sm:flex-row items-center justify-between mb-8 border border-zinc-800 transition-all hover:border-indigo-500/50 group">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+    <div className="relative overflow-hidden bg-white text-gray-900 p-6 rounded-[2rem] shadow-sm flex flex-col sm:flex-row items-center justify-between mb-8 border border-gray-200 transition-all hover:border-indigo-300 hover:shadow-md group">
+      {/* Subtle background accent instead of neon blur */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gray-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
       <div className="flex items-center gap-4 mb-4 sm:mb-0 relative z-10">
-        <div className={`p-4 rounded-2xl ${isAvailable ? 'bg-green-500/10 text-green-500' : 'bg-indigo-500/10 text-indigo-500'}`}>
+        <div className={`p-4 rounded-2xl ${isAvailable ? 'bg-green-100 text-green-600' : 'bg-indigo-50 text-indigo-600'}`}>
           {isAvailable ? <FiCheckCircle size={28} /> : <FiCode size={28} />}
         </div>
         <div>
-          <h4 className="text-xl font-bold tracking-tight">
+          <h4 className="text-xl font-bold tracking-tight text-gray-900">
             {isAvailable ? "You are in the Pool" : "Ready to Build?"}
           </h4>
-          <p className="text-sm text-zinc-400 mt-0.5">
+          <p className="text-sm text-gray-500 mt-0.5">
             {isAvailable
               ? "The matching engine is currently finding teams for you."
               : "Sync your builder profile to start collaborating on projects."}
@@ -161,7 +162,7 @@ const BuildHubStatus = ({ user }) => {
       </div>
       <button
         onClick={() => navigate(isAvailable ? "/community" : "/settings")}
-        className="relative z-10 w-full sm:w-auto bg-white text-black px-8 py-3 rounded-2xl font-black text-xs tracking-widest hover:bg-indigo-50 transition-all shadow-lg hover:shadow-indigo-500/20"
+        className="relative z-10 w-full sm:w-auto bg-gray-900 text-white px-8 py-3 rounded-2xl font-black text-xs tracking-widest hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl"
       >
         {isAvailable ? "BROWSE HUB" : "SYNC PROFILE"}
       </button>
@@ -212,15 +213,14 @@ const StudyStreak = () => {
   };
 
   return (
-    <div className="relative w-full bg-zinc-800/50 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between shadow-lg mb-6 overflow-hidden backdrop-blur-sm">
+    <div className="relative w-full bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-center justify-between shadow-sm mb-6 overflow-hidden">
       {showConfetti && width > 0 && height > 0 && (
         <Confetti width={width} height={height} recycle={false} numberOfPieces={200} />
       )}
-      <div className="absolute top-0 left-0 w-full h-full bg-orange-500/5 pointer-events-none"></div>
-
+      
       <div className="flex flex-col relative z-10">
-        <span className="text-xs uppercase font-bold text-orange-400 tracking-wider mb-1">Current Streak</span>
-        <span key={key} className="text-3xl font-black text-white animate-in fade-in slide-in-from-bottom-2 duration-500 flex items-center gap-2">
+        <span className="text-xs uppercase font-bold text-orange-600 tracking-wider mb-1">Current Streak</span>
+        <span key={key} className="text-3xl font-black text-gray-900 animate-in fade-in slide-in-from-bottom-2 duration-500 flex items-center gap-2">
           {user?.studyStreak || 0} <span className="text-lg text-gray-400 font-medium">DAYS</span> 🔥
         </span>
       </div>
@@ -228,8 +228,8 @@ const StudyStreak = () => {
         onClick={handleCheckIn}
         disabled={checkedInToday}
         className={`relative z-10 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all border ${checkedInToday
-          ? "bg-zinc-700/50 border-zinc-600 text-zinc-400 cursor-not-allowed"
-          : "bg-orange-500 text-black border-orange-400 hover:bg-orange-400 hover:scale-105"
+          ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+          : "bg-orange-500 text-white border-orange-600 hover:bg-orange-600 hover:shadow-md"
           }`}
       >
         {checkedInToday ? "Checked In" : "Check In"}
@@ -262,16 +262,16 @@ const Clock = () => {
   const ampm = !is24HourFormat ? timeString.substring(timeString.length - 2).toLowerCase() : "";
 
   return (
-    <div className="w-full h-32 bg-zinc-900/50 border border-zinc-800 rounded-2xl mb-6 flex flex-col items-center justify-center p-4 text-white relative shadow-inner">
+    <div className="w-full h-32 bg-white border border-gray-200 rounded-2xl mb-6 flex flex-col items-center justify-center p-4 text-gray-900 relative shadow-sm">
       <div className="relative z-10 flex flex-col items-center">
         <div className="text-5xl font-mono flex items-baseline leading-none">
-          <span className="text-indigo-400 font-black">{hour}:</span>
-          <span className="text-gray-100 font-black">{minute}</span>
+          <span className="text-indigo-600 font-black">{hour}:</span>
+          <span className="text-gray-900 font-black">{minute}</span>
           {ampm && <span className="text-sm font-semibold ml-1 self-end text-gray-500">{ampm}</span>}
         </div>
-        <div className="flex bg-zinc-800 rounded-full p-0.5 mt-2 scale-90">
-          <button onClick={() => setIs24HourFormat(false)} className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${!is24HourFormat ? "bg-white text-black" : "text-gray-500 hover:text-white"}`}>12H</button>
-          <button onClick={() => setIs24HourFormat(true)} className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${is24HourFormat ? "bg-white text-black" : "text-gray-500 hover:text-white"}`}>24H</button>
+        <div className="flex bg-gray-100 rounded-full p-0.5 mt-2 scale-90 border border-gray-200">
+          <button onClick={() => setIs24HourFormat(false)} className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${!is24HourFormat ? "bg-white text-black shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>12H</button>
+          <button onClick={() => setIs24HourFormat(true)} className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${is24HourFormat ? "bg-white text-black shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>24H</button>
         </div>
       </div>
     </div>
@@ -299,12 +299,12 @@ const LearningGoals = () => {
 
   return (
     <div className="w-full">
-      <div className="flex flex-col gap-2 mb-3 max-h-[150px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-        {goals.length === 0 ? <p className="text-sm text-gray-500 italic p-2">No goals yet. Add one!</p> :
+      <div className="flex flex-col gap-2 mb-3 max-h-[150px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+        {goals.length === 0 ? <p className="text-sm text-gray-400 italic p-2">No goals yet. Add one!</p> :
           goals.map(goal => (
-            <div key={goal.id} className={`p-2 rounded-lg flex items-center justify-between transition-all text-sm group ${goal.completed ? "bg-green-900/20 text-gray-500" : "bg-zinc-800/50 hover:bg-zinc-800 text-gray-200"}`}>
+            <div key={goal.id} className={`p-2 rounded-lg flex items-center justify-between transition-all text-sm group ${goal.completed ? "bg-green-50 text-gray-400" : "bg-white border border-gray-100 hover:bg-gray-50 text-gray-700"}`}>
               <div onClick={() => toggleGoal(goal.id)} className="flex items-center cursor-pointer flex-grow mr-2">
-                <div className={`w-4 h-4 mr-3 rounded border flex items-center justify-center transition-colors ${goal.completed ? "bg-green-500 border-green-500" : "border-zinc-600 group-hover:border-indigo-500"}`}>
+                <div className={`w-4 h-4 mr-3 rounded border flex items-center justify-center transition-colors ${goal.completed ? "bg-green-500 border-green-500" : "border-gray-300 group-hover:border-indigo-500"}`}>
                   {goal.completed && <FiCheckCircle size={10} className="text-white" />}
                 </div>
                 <span className={goal.completed ? "line-through" : ""}>{goal.text}</span>
@@ -315,8 +315,8 @@ const LearningGoals = () => {
         }
       </div>
       <form onSubmit={handleAddGoal} className="flex gap-2">
-        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="New goal..." className="flex-grow bg-zinc-800/50 border border-zinc-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-zinc-600" />
-        <button type="submit" className="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-500 transition-colors"><FiPlus /></button>
+        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="New goal..." className="flex-grow bg-white border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-gray-400" />
+        <button type="submit" className="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-500 transition-colors shadow-sm"><FiPlus /></button>
       </form>
     </div>
   );
@@ -348,16 +348,16 @@ const ResourceHub = () => {
   return (
     <div className="w-full relative">
       <div className="flex justify-end mb-2">
-        <button onClick={() => setIsModalOpen(true)} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-wider flex items-center gap-1"><FiPlus /> Add New</button>
+        <button onClick={() => setIsModalOpen(true)} className="text-xs text-indigo-600 hover:text-indigo-500 font-bold uppercase tracking-wider flex items-center gap-1"><FiPlus /> Add New</button>
       </div>
-      <div className="flex flex-col gap-2 max-h-[150px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+      <div className="flex flex-col gap-2 max-h-[150px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
         {resources.length === 0 ? <p className="text-sm text-gray-500 italic">No resources yet.</p> :
           resources.map(res => (
-            <div key={res.id} className="bg-zinc-800/50 p-2 rounded-lg flex items-center justify-between gap-2 hover:bg-zinc-800 transition-colors text-sm group border border-transparent hover:border-zinc-700">
+            <div key={res.id} className="bg-white border border-gray-100 p-2 rounded-lg flex items-center justify-between gap-2 hover:bg-gray-50 transition-colors text-sm group hover:border-gray-300">
               <a href={res.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 flex-grow overflow-hidden">
-                <img src={getFavicon(res.url)} alt="" className="w-6 h-6 rounded bg-white/10 p-0.5" />
+                <img src={getFavicon(res.url)} alt="" className="w-6 h-6 rounded bg-gray-100 p-0.5" />
                 <div className="truncate">
-                  <p className="font-semibold text-gray-200 truncate">{res.title}</p>
+                  <p className="font-semibold text-gray-800 truncate">{res.title}</p>
                   <p className="text-[10px] text-gray-500 uppercase tracking-wide">{res.category}</p>
                 </div>
               </a>
@@ -367,16 +367,16 @@ const ResourceHub = () => {
         }
       </div>
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 text-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-gray-200 text-gray-900 rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
             <h2 className="text-lg font-bold mb-4">Add Link</h2>
             <form onSubmit={handleAddResource} className="flex flex-col gap-3">
-              <input type="text" placeholder="Title (e.g. React Docs)" value={newResource.title} onChange={(e) => setNewResource({ ...newResource, title: e.target.value })} className="bg-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-              <input type="url" placeholder="URL (https://...)" value={newResource.url} onChange={(e) => setNewResource({ ...newResource, url: e.target.value })} className="bg-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-              <input type="text" placeholder="Category (optional)" value={newResource.category} onChange={(e) => setNewResource({ ...newResource, category: e.target.value })} className="bg-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <input type="text" placeholder="Title (e.g. React Docs)" value={newResource.title} onChange={(e) => setNewResource({ ...newResource, title: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <input type="url" placeholder="URL (https://...)" value={newResource.url} onChange={(e) => setNewResource({ ...newResource, url: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <input type="text" placeholder="Category (optional)" value={newResource.category} onChange={(e) => setNewResource({ ...newResource, category: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               <div className="flex justify-end gap-2 mt-2">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-zinc-800 rounded-xl hover:bg-zinc-700 transition-colors text-sm font-bold">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-indigo-600 rounded-xl hover:bg-indigo-500 transition-colors font-bold text-sm">Save</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors text-sm font-bold text-gray-700">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-600 rounded-xl text-white hover:bg-indigo-500 transition-colors font-bold text-sm">Save</button>
               </div>
             </form>
           </div>
@@ -391,12 +391,12 @@ const ProfileHeader = ({ user }) => {
   return (
     <div className="flex items-center gap-4 w-full mb-6">
       <div className="relative w-16 h-16 group flex-shrink-0">
-        <img src={user?.avatar || "https://i.pinimg.com/736x/51/19/95/511995729851564ed88c865f42e1844b.jpg"} alt={user?.name || "User"} className="w-full h-full rounded-full object-cover border-2 border-zinc-700 group-hover:border-indigo-500 transition-colors" />
+        <img src={user?.avatar || "https://i.pinimg.com/736x/51/19/95/511995729851564ed88c865f42e1844b.jpg"} alt={user?.name || "User"} className="w-full h-full rounded-full object-cover border-2 border-gray-100 group-hover:border-indigo-500 transition-colors shadow-sm" />
       </div>
       <div className="flex flex-col">
-        <span className="font-bold text-lg text-white leading-tight">{user?.name || "Full Name"}</span>
+        <span className="font-bold text-lg text-gray-900 leading-tight">{user?.name || "Full Name"}</span>
         <div className="mt-1"><AlphaBadge /></div>
-        <span className="text-sm text-gray-400 font-medium mt-1">@{user?.username || "username"}</span>
+        <span className="text-sm text-gray-500 font-medium mt-1">@{user?.username || "username"}</span>
       </div>
     </div>
   );
@@ -425,17 +425,18 @@ const ProfileCard = ({ user }) => {
   }, []);
 
   return (
-    <div className="w-full lg:w-[380px] bg-black/95 backdrop-blur-2xl text-white rounded-[2rem] p-6 flex flex-col items-center relative shadow-2xl border border-zinc-800">
+    // Clean & Professional Look: White background, 2rem radius, subtle border
+    <div className="w-full lg:w-[380px] bg-white text-gray-900 rounded-[2rem] p-6 flex flex-col items-center relative shadow-sm border border-gray-200">
       <div className="absolute top-8 right-6 flex items-center gap-3">
         <button
           onClick={() => navigate("/notifications")}
-          className="relative text-xl text-gray-400 hover:text-white transition-colors"
+          className="relative text-xl text-gray-400 hover:text-indigo-600 transition-colors"
         >
           <span className={unreadCount > 0 ? "animate-swing inline-block origin-top" : ""}>
             🔔
           </span>
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-black">
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-white">
               {unreadCount}
             </span>
           )}
@@ -447,15 +448,15 @@ const ProfileCard = ({ user }) => {
       <button onClick={() => navigate("/leaderboard")} className="w-full px-6 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black rounded-xl font-bold hover:brightness-110 transition-all flex items-center justify-center gap-2 mb-6 shadow-lg shadow-yellow-500/20">
         🏆 Leaderboard
       </button>
-      <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4">
-        <div className="flex border-b border-zinc-800 mb-4 pb-2">
-          <button onClick={() => setActiveTab("goals")} className={`flex-1 pb-2 text-xs font-bold uppercase tracking-wider transition-colors relative ${activeTab === "goals" ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
+      <div className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4">
+        <div className="flex border-b border-gray-200 mb-4 pb-2">
+          <button onClick={() => setActiveTab("goals")} className={`flex-1 pb-2 text-xs font-bold uppercase tracking-wider transition-colors relative ${activeTab === "goals" ? "text-indigo-600" : "text-gray-400 hover:text-gray-600"}`}>
             Goals
-            {activeTab === "goals" && <span className="absolute bottom-[-9px] left-0 w-full h-0.5 bg-indigo-500 rounded-full"></span>}
+            {activeTab === "goals" && <span className="absolute bottom-[-9px] left-0 w-full h-0.5 bg-indigo-600 rounded-full"></span>}
           </button>
-          <button onClick={() => setActiveTab("resources")} className={`flex-1 pb-2 text-xs font-bold uppercase tracking-wider transition-colors relative ${activeTab === "resources" ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
+          <button onClick={() => setActiveTab("resources")} className={`flex-1 pb-2 text-xs font-bold uppercase tracking-wider transition-colors relative ${activeTab === "resources" ? "text-indigo-600" : "text-gray-400 hover:text-gray-600"}`}>
             Resources
-            {activeTab === "resources" && <span className="absolute bottom-[-9px] left-0 w-full h-0.5 bg-indigo-500 rounded-full"></span>}
+            {activeTab === "resources" && <span className="absolute bottom-[-9px] left-0 w-full h-0.5 bg-indigo-600 rounded-full"></span>}
           </button>
         </div>
         <div className="w-full">{activeTab === "goals" ? <LearningGoals /> : <ResourceHub />}</div>
@@ -505,7 +506,8 @@ const PerformanceSnapshot = ({ submissions, isLoading }) => {
 // --- COMPONENT: Recent Performance ---
 const RecentPerformance = ({ submissions, isLoading }) => {
   const navigate = useNavigate();
-  const getScoreColor = (percentage) => percentage >= 80 ? "text-green-500" : percentage >= 50 ? "text-amber-500" : "text-red-500";
+  const getScoreColor = (percentage) => percentage >= 80 ? "text-green-600" : percentage >= 50 ? "text-amber-500" : "text-red-500";
+  const getScoreBar = (percentage) => percentage >= 80 ? "bg-green-500" : percentage >= 50 ? "bg-amber-500" : "bg-red-500";
 
   if (isLoading) return <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4"><div className="h-6 w-1/3 bg-gray-200 rounded-md animate-pulse" /><div className="h-16 w-full bg-gray-200 rounded-md animate-pulse" /></div>;
 
@@ -517,14 +519,14 @@ const RecentPerformance = ({ submissions, isLoading }) => {
       className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm"
     >
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-bold text-xl">Recent Performance</h3>
+        <h3 className="font-bold text-xl text-gray-900">Recent Performance</h3>
         <button onClick={() => navigate('/quizzes')} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wide">View All</button>
       </div>
 
       {(!submissions || submissions.length === 0) ? (
         <div className="text-center py-8">
           <p className="text-gray-500 mb-4">No quiz submissions yet.</p>
-          <button onClick={() => navigate('/quizzes')} className="bg-black text-white font-bold px-6 py-3 rounded-xl hover:bg-zinc-800 transition-colors">Take a Quiz</button>
+          <button onClick={() => navigate('/quizzes')} className="bg-gray-900 text-white font-bold px-6 py-3 rounded-xl hover:bg-gray-800 transition-colors">Take a Quiz</button>
         </div>
       ) : (
         <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
@@ -545,7 +547,7 @@ const RecentPerformance = ({ submissions, isLoading }) => {
                   <p className={`font-black text-xl ${getScoreColor(sub.percentage)}`}>{Math.round(sub.percentage)}%</p>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                  <div className={`${sub.percentage >= 80 ? 'bg-green-500' : sub.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'} h-1.5 rounded-full`} style={{ width: `${sub.percentage}%` }}></div>
+                  <div className={`${getScoreBar(sub.percentage)} h-1.5 rounded-full`} style={{ width: `${sub.percentage}%` }}></div>
                 </div>
               </div>
             </motion.div>
@@ -592,7 +594,7 @@ const ExploreCourses = () => {
       className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm"
     >
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-bold text-xl">Explore Courses</h3>
+        <h3 className="font-bold text-xl text-gray-900">Explore Courses</h3>
         <button onClick={() => navigate('/courses')} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wide">See All</button>
       </div>
 
@@ -629,7 +631,8 @@ const Home = () => {
   if (!user || !token) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div></div>;
 
   return (
-    <div className="relative w-full flex flex-col lg:flex-row gap-8 lg:gap-12 font-sans p-2 sm:p-4">
+    // Applied "Clean & Professional" Light Theme (bg-gray-50 instead of zinc-900)
+    <div className="relative w-full flex flex-col lg:flex-row gap-8 lg:gap-12 font-sans p-2 sm:p-4 min-h-screen">
 
       {/* --- LEFT COLUMN (MAIN CONTENT) --- */}
       <div className="flex-1 flex flex-col z-10">
@@ -656,7 +659,8 @@ const Home = () => {
       </div>
 
       {/* --- RIGHT COLUMN (SIDEBAR) --- */}
-      <div className="lg:sticky lg:top-8 h-fit z-10">
+      {/* Made Sticky as requested */}
+      <div className="lg:sticky lg:top-8 h-fit z-10 order-first lg:order-last">
         <ProfileCard user={user} />
       </div>
     </div>

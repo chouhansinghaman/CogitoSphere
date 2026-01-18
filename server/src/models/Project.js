@@ -3,23 +3,22 @@ import mongoose from "mongoose";
 const projectSchema = mongoose.Schema(
   {
     title: { type: String, required: true },
-    description: { type: String, required: true }, // This acts as the "Blog/Story"
+    description: { type: String, required: true },
     techStack: [{ type: String }],
     githubLink: { type: String, required: true },
     liveDemoLink: { type: String },
+    image: { type: String },
+    videoLink: { type: String },
     
-    // 👇 NEW FIELDS
-    image: { 
-      type: String, 
-      default: "https://via.placeholder.com/800x400?text=Project+Showcase" // Default placeholder
-    },
-    videoLink: { type: String }, // YouTube link for the tutorial
+    user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
     
-    user: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      required: true, 
-      ref: "User" 
+    // 👇 NEW FIELD FOR LEADERBOARD
+    seasonRank: { 
+        type: Number, 
+        default: 0, // 0 = Unranked, 1 = Gold, 2 = Silver, 3 = Bronze
+        enum: [0, 1, 2, 3] 
     },
+
     status: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],

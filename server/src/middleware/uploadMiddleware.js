@@ -22,3 +22,6 @@ const upload = multer({
 
 // Middleware to be used in routes
 export const uploadSingleImage = upload.single("avatar");
+
+// 👇 ADD THIS: For Project Submission (Listens for "image")
+export const uploadProjectImage = upload.single("image");
