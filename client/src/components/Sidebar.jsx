@@ -9,15 +9,15 @@ const PaperGalaxyBackground = () => {
   return (
     <div className="fixed inset-0 -z-10 bg-black">
       {/* The Moving Dot Pattern */}
-      <div 
+      <div
         className="absolute inset-0 opacity-40"
         style={{
           backgroundImage: 'radial-gradient(blue 1.5px)',
-          backgroundSize: '32px 32px', 
+          backgroundSize: '32px 32px',
           animation: 'paperDrift 120s linear infinite',
         }}
       ></div>
-      
+
       {/* Subtle Vignette to keep focus center */}
       <div className="absolute inset-0 bg-radial-gradient from-transparent via-white/10 to-white/60 pointer-events-none"></div>
 
@@ -88,7 +88,7 @@ export default function Sidebar() {
       const childRect = menuRefs.current[activeIndex].getBoundingClientRect();
       const childTop = childRect.top || 0;
       const childHeight = childRect.height || 0;
-      const pillHeight = 40; 
+      const pillHeight = 40;
       setPillTop(childTop - parentTop + childHeight / 2 - pillHeight / 2);
     }
   }, [activeIndex, menuItems]);
@@ -96,7 +96,7 @@ export default function Sidebar() {
   return (
     // 2. Layout Wrapper: p-0 on mobile (Full Bleed), p-4 on desktop (Card look)
     <div className="relative flex flex-col md:flex-row h-screen w-full p-0 md:p-4 font-sans overflow-hidden text-gray-900">
-      
+
       <PaperGalaxyBackground />
 
       {/* MOBILE HEADER: Sticky top, glass effect, full width */}
@@ -196,35 +196,35 @@ export default function Sidebar() {
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl border border-gray-100 text-center relative animate-in zoom-in-95 duration-200">
-            <button 
-                onClick={() => setShowLogoutModal(false)}
-                className="absolute top-5 right-5 text-gray-400 hover:text-black transition-colors"
+            <button
+              onClick={() => setShowLogoutModal(false)}
+              className="absolute top-5 right-5 text-gray-400 hover:text-black transition-colors"
             >
-                <FiX size={24} />
+              <FiX size={24} />
             </button>
 
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiLogOut size={28} className="ml-1" />
+              <FiLogOut size={28} className="ml-1" />
             </div>
 
             <h3 className="text-2xl font-black text-gray-900 mb-2">Leaving so soon?</h3>
             <p className="text-gray-500 font-medium mb-8">
-                Are you sure you want to log out? <br/> Come back soon!
+              Are you sure you want to log out? <br /> Come back soon!
             </p>
 
             <div className="flex gap-3">
-                <button 
-                    onClick={() => setShowLogoutModal(false)}
-                    className="flex-1 py-3.5 rounded-xl font-bold text-gray-500 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
-                >
-                    Cancel
-                </button>
-                <button 
-                    onClick={confirmLogout}
-                    className="flex-1 py-3.5 rounded-xl font-bold text-white bg-black hover:bg-gray-900 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
-                >
-                    Logout
-                </button>
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 py-3.5 rounded-xl font-bold text-gray-500 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="flex-1 py-3.5 rounded-xl font-bold text-white bg-black hover:bg-gray-900 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>

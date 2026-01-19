@@ -18,7 +18,7 @@ const useWindowSize = () => {
 };
 
 // --- LOADER COMPONENT ---
-const CalculatingLoader = () => (
+const CalculatingGridGlitchGame = () => (
   <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center text-white">
     <div className="relative">
       <div className="w-24 h-24 border-t-4 border-indigo-500 border-solid rounded-full animate-spin"></div>
@@ -282,7 +282,7 @@ const TakeQuiz = () => {
   // 2. ACTIVE QUIZ MODE (Focus Mode)
   // ---------------------------------------------------------
 
-  if (isCalculating) return <CalculatingLoader />;
+  if (isCalculating) return <CalculatingGridGlitchGame />;
 
   if (isSubmitted && scoreData) {
     const isPass = scoreData.percentage >= 50;

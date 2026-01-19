@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import Loader from "../../components/Loader"; 
+import GridGlitchGame from "../../components/GridGlitchGame"; 
 import logo from "../../assets/logo.png";
 
 import { 
@@ -159,7 +159,7 @@ const LandingPage = () => {
     if (section) section.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (loading) return <Loader />;
+  if (loading) return <GridGlitchGame />;
 
   return (
     <div className="relative min-h-screen font-sans text-zinc-100 overflow-x-hidden selection:bg-indigo-500/30">

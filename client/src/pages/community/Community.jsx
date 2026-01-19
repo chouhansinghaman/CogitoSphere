@@ -145,15 +145,11 @@ const IdeaDetailsModal = ({ idea, isOpen, onClose, onJoin, onLeave, userId, onAd
     );
 };
 
-// --- SUB-COMPONENT: Project Card ---
-const ProjectCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
+// --- SUB-COMPONENT: Project Card (UPDATED for Blog System) ---
+const ProjectCard = ({ idea, onEdit, onDelete, user }) => {
     const isOwner = idea.postedBy?._id === user._id;
     const isAdmin = user.role === 'admin';
-    const isMember = idea.members?.some(m => m._id === user._id);
     const commentCount = idea.comments?.length || 0;
-    const maxMembers = idea.maxMembers || 5;
-    const currentMembers = idea.members?.length || 0;
-    const isFull = currentMembers >= maxMembers;
 
     return (
         <div className="group relative w-full h-full flex flex-col">
@@ -167,9 +163,6 @@ const ProjectCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
                                 <img key={i} src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m._id}`} className="w-8 h-8 rounded-full border-2 border-white bg-gray-100" />
                             ))}
                         </div>
-                        <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${isFull ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                            {currentMembers}/{maxMembers}
-                        </span>
                     </div>
 
                     <div className="flex gap-2">
@@ -179,47 +172,45 @@ const ProjectCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
                 </div>
 
                 <div className="mb-6 flex-1 flex flex-col">
-                    <h3 className="text-xl font-black text-gray-900 mb-1 leading-tight line-clamp-2 group-hover:text-indigo-600 transition-colors">{idea.title}</h3>
+                    <Link to={`/project/${idea._id}`}>
+                        <h3 className="text-xl font-black text-gray-900 mb-1 leading-tight line-clamp-2 group-hover:text-indigo-600 transition-colors">{idea.title}</h3>
+                    </Link>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">by <span className="text-gray-600">{idea.postedBy?.name}</span></p>
                     
-                    {/* DESCRIPTION WITH READ MORE BUTTON */}
                     <div className="relative">
+                        {/* ✅ Handles the new shortDescription or falls back to old description */}
                         <p className="text-sm text-gray-500 font-medium leading-relaxed line-clamp-3 mb-1">
-                            {idea.description}
+                            {idea.shortDescription || idea.description}
                         </p>
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onViewDetails(idea); }}
+                        {/* ✅ Link to the new Project Blog page */}
+                        <Link 
+                            to={`/project/${idea._id}`}
                             className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 flex items-center gap-1 mt-1 hover:underline"
                         >
-                            Read Full Details <IoExpandOutline />
-                        </button>
+                            Read Full Story <IoExpandOutline />
+                        </Link>
                     </div>
                 </div>
 
                 <div className="mt-auto">
                     <div className="flex flex-wrap gap-2 mb-5">
-                        {idea.tags.slice(0, 3).map((tag, idx) => (
+                        {idea.tags?.slice(0, 3).map((tag, idx) => (
                             <span key={idx} className="px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-600 tracking-wide">{tag}</span>
                         ))}
                     </div>
 
                     <div className="flex gap-2">
-                        <button onClick={() => onViewDetails(idea)} className="px-4 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black transition-colors flex items-center gap-1 font-bold text-xs">
+                        <Link to={`/project/${idea._id}`} className="px-4 py-2 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black transition-colors flex items-center gap-1 font-bold text-xs">
                             <FiMessageSquare /> {commentCount}
-                        </button>
+                        </Link>
 
-                        <button
-                            onClick={() => !isFull && onViewDetails(idea)}
-                            disabled={isFull && !isMember && !isOwner}
-                            className={`flex-1 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-md ${isMember
-                                    ? "bg-green-50 text-green-700 border border-green-200"
-                                    : isFull
-                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                        : "bg-black text-white hover:scale-[1.02] hover:shadow-lg"
-                                }`}
+                        {/* ✅ Button updated to navigate to the Project Detail/Blog Page */}
+                        <Link
+                            to={`/project/${idea._id}`}
+                            className="flex-1 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-md bg-black text-white hover:scale-[1.02] hover:shadow-lg text-center"
                         >
-                            {isMember ? "Joined ✓" : isFull ? "Team Full" : "View Details"}
-                        </button>
+                            Read Blog <FiArrowRight />
+                        </Link>
                     </div>
                 </div>
             </div>

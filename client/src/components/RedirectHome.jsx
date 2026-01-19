@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Loader from './Loader';
+import GridGlitchGame from './GridGlitchGame';
 
 const RedirectHome = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -19,7 +19,7 @@ const RedirectHome = () => {
     }
   }, [isAuthenticated, loading, navigate]);
 
-  return <Loader />;
+  return <GridGlitchGame />;
 };
 
 export default RedirectHome;

@@ -21,31 +21,45 @@ const uploadFromBuffer = (buffer) => {
 
 export const createProject = async (req, res) => {
   try {
-    const { title, description, techStack, githubLink, liveDemoLink } = req.body;
+    // 1. Extract new fields
+    const { 
+        title, 
+        shortDescription, 
+        blogContent, 
+        techStack, 
+        githubLink, 
+        liveDemoLink, 
+        videoLink 
+    } = req.body;
 
-    let imageUrl = "https://via.placeholder.com/800x400?text=No+Image"; // Default
-
-    // 👇 HANDLE IMAGE UPLOAD HERE
-    if (req.file) {
-      const result = await uploadFromBuffer(req.file.buffer);
-      imageUrl = result.secure_url; // Get the URL from Cloudinary
+    // 2. Validate Compulsory Live Link
+    if (!liveDemoLink) {
+        return res.status(400).json({ message: "Live Demo Link is required!" });
     }
 
-    const project = new Project({
+    let image = "";
+    if (req.file) {
+      // Assuming you have cloudinary or local upload logic here
+      image = req.file.path; 
+    }
+
+    // 3. Create
+    const project = await Project.create({
       title,
-      description,
-      techStack: techStack.split(","), // Convert string "React, Node" to Array
+      shortDescription,
+      blogContent,
+      techStack: techStack.split(",").map(t => t.trim()), // Ensure array
       githubLink,
       liveDemoLink,
-      image: imageUrl, // Save the Cloudinary URL
+      videoLink,
+      image,
       user: req.user._id,
     });
 
-    const createdProject = await project.save();
-    res.status(201).json(createdProject);
+    res.status(201).json(project);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error: Could not create project" });
+    console.log(error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
