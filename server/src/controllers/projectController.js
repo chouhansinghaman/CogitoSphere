@@ -1,27 +1,16 @@
 import Project from "../models/Project.js";
-import { v2 as cloudinary } from "cloudinary";
-import streamifier from "streamifier";
+import { v2 as cloudinary } from 'cloudinary';
 
-// Helper: Upload Buffer to Cloudinary
-const uploadFromBuffer = (buffer) => {
-  return new Promise((resolve, reject) => {
-    let stream = cloudinary.uploader.upload_stream(
-      { folder: "cogito_projects" }, // Folder name in Cloudinary
-      (error, result) => {
-        if (result) {
-          resolve(result);
-        } else {
-          reject(error);
-        }
-      }
-    );
-    streamifier.createReadStream(buffer).pipe(stream);
-  });
-};
+// --- CLOUDINARY CONFIG ---
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
+// --- 1. CREATE PROJECT (With Image Upload) ---
 export const createProject = async (req, res) => {
   try {
-    // 1. Extract new fields
     const { 
         title, 
         shortDescription, 
@@ -32,76 +21,128 @@ export const createProject = async (req, res) => {
         videoLink 
     } = req.body;
 
-    // 2. Validate Compulsory Live Link
+    // Validation
     if (!liveDemoLink) {
         return res.status(400).json({ message: "Live Demo Link is required!" });
     }
 
-    let image = "";
+    let imageUrl = "";
+
+    // Handle Cloudinary Upload from Buffer
     if (req.file) {
-      // Assuming you have cloudinary or local upload logic here
-      image = req.file.path; 
+        const b64 = Buffer.from(req.file.buffer).toString("base64");
+        const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+        
+        const result = await cloudinary.uploader.upload(dataURI, {
+            folder: "season0-projects",
+        });
+        imageUrl = result.secure_url;
     }
 
-    // 3. Create
+    // Create Entry
     const project = await Project.create({
       title,
       shortDescription,
       blogContent,
-      techStack: techStack.split(",").map(t => t.trim()), // Ensure array
+      techStack: techStack ? techStack.split(",").map(t => t.trim()) : [],
       githubLink,
       liveDemoLink,
       videoLink,
-      image,
+      image: imageUrl,
       user: req.user._id,
     });
 
     res.status(201).json(project);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("Create Project Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-// @desc    Get all projects (For Dashboard)
-// @route   GET /api/projects
-// @access  Private
+// --- 2. GET ALL PROJECTS ---
 export const getProjects = async (req, res) => {
-  try {
-    // .populate("user") fetches the name/email of the student who posted it
-    const projects = await Project.find({}).populate("user", "name email");
-    res.json(projects);
-  } catch (error) {
-    res.status(500).json({ message: "Server Error: Could not fetch projects" });
-  }
+    try {
+        const projects = await Project.find({})
+            .populate("user", "name avatar")
+            .sort({ createdAt: -1 }); // Newest first
+        res.json(projects);
+    } catch (error) {
+        res.status(500).json({ message: "Server Error" });
+    }
 };
 
-// @desc    Admin: Assign Rank (1, 2, 3) to a project
-// @route   PUT /api/projects/:id/rank
-// @access  Private/Admin
+// --- 3. GET SINGLE PROJECT ---
+export const getProjectById = async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id).populate("user", "name avatar");
+        if(project) {
+            res.json(project);
+        } else {
+            res.status(404).json({ message: "Project not found" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+// --- 4. LIKE PROJECT ---
+export const likeProject = async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id);
+        if(project) {
+            // If logged in, use ID. If guest, use IP (or simple increment if you prefer)
+            const likerId = req.user ? req.user._id.toString() : req.ip; 
+            
+            // Check if already liked
+            if(!project.likes.includes(likerId)){
+                project.likes.push(likerId);
+                await project.save();
+            }
+            res.json(project);
+        } else {
+            res.status(404).json({ message: "Project not found" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+// --- 5. DELETE PROJECT ---
+export const deleteProject = async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id);
+        
+        if (project) {
+            // Check ownership or admin status
+            if (project.user.toString() === req.user._id.toString() || req.user.role === 'admin') {
+                await project.deleteOne();
+                res.json({ message: "Project removed" });
+            } else {
+                res.status(401).json({ message: "Not authorized" });
+            }
+        } else {
+            res.status(404).json({ message: "Project not found" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+// --- 6. RESTORED: SET PROJECT RANK ---
+// (Used by Admins to assign Season Ranks: 0, 1, 2, 3)
 export const setProjectRank = async (req, res) => {
-  try {
-    const { rank } = req.body; // Expects 0, 1, 2, or 3
-    const project = await Project.findById(req.params.id);
+    try {
+        const { rank } = req.body;
+        const project = await Project.findById(req.params.id);
 
-    if (!project) {
-      return res.status(404).json({ message: "Project not found" });
+        if (project) {
+            project.seasonRank = rank;
+            const updatedProject = await project.save();
+            res.json(updatedProject);
+        } else {
+            res.status(404).json({ message: "Project not found" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Server Error" });
     }
-
-    // If we are setting a rank (1, 2, 3), remove this rank from any other project first
-    // (Only one Gold, one Silver, one Bronze allowed)
-    if (rank > 0) {
-      await Project.updateMany(
-        { seasonRank: rank }, // Find others with this rank
-        { $set: { seasonRank: 0 } } // Reset them to 0
-      );
-    }
-
-    project.seasonRank = rank;
-    await project.save();
-
-    res.json({ message: `Project rank set to ${rank}`, project });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
-  }
 };
