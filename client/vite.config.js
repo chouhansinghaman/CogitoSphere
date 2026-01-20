@@ -3,11 +3,19 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: './', // makes asset paths relative (important for deployment)
+  base: './', 
   server: {
-    historyApiFallback: true, // enables React Router fallback in dev
+    historyApiFallback: true,
+    // 👇 PROXY MUST BE INSIDE THE SERVER OBJECT
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000', // Ensure this matches your backend port
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   preview: {
-    historyApiFallback: true, // ensures same behavior in vite preview
+    historyApiFallback: true, 
   },
 });

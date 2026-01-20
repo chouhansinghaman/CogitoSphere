@@ -8,37 +8,28 @@ import {
   setProjectRank 
 } from "../controllers/projectController.js";
 import { protect, admin } from "../middleware/authMiddleware.js";
-import multer from "multer";
+// 👇 Import your new unified middleware
+import { uploadProjectImage } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
-// --- 1. MULTER CONFIG (Memory Storage) ---
-// This passes the file 'buffer' to the controller, where Cloudinary handles it.
-const storage = multer.memoryStorage();
-const upload = multer({ 
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
-});
+// --- ROUTES ---
 
-// --- 2. PUBLIC & PROTECTED ROUTES ---
-
-// Root: Get All & Create New
+// Root: Get All & Create New (Uses uploadProjectImage)
 router.route("/")
-  .get(getProjects) // Public: View all projects
-  .post(protect, upload.single("image"), createProject); // Protected: Post new (with image)
+  .get(getProjects)
+  .post(protect, uploadProjectImage, createProject); 
 
 // Single Project Operations
 router.route("/:id")
-  .get(getProjectById) // Public: View details
-  .delete(protect, deleteProject); // Protected: Owner/Admin can delete
+  .get(getProjectById)
+  .delete(protect, deleteProject); 
 
 // Like Project
 router.route("/:id/like")
-  .put(likeProject); // Public/Protected mixed logic in controller (handles guests)
+  .put(likeProject); 
 
-// --- 3. ADMIN ROUTES ---
-
-// Set Season Rank (Admin Only)
+// Admin Rank
 router.route("/:id/rank")
   .put(protect, admin, setProjectRank);
 

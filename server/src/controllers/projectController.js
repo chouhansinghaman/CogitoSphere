@@ -2,6 +2,11 @@ import Project from "../models/Project.js";
 import { v2 as cloudinary } from 'cloudinary';
 
 // --- CLOUDINARY CONFIG ---
+// Ensure your .env file has these keys!
+if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    console.error("❌ ERROR: Cloudinary keys are missing in .env file!");
+}
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -11,6 +16,10 @@ cloudinary.config({
 // --- 1. CREATE PROJECT (With Image Upload) ---
 export const createProject = async (req, res) => {
   try {
+    console.log("🚀 STARTING PROJECT UPLOAD..."); 
+    // console.log("User:", req.user?._id); // Uncomment to debug User ID
+    // console.log("Body:", req.body);      // Uncomment to see text fields
+
     const { 
         title, 
         shortDescription, 
@@ -28,18 +37,29 @@ export const createProject = async (req, res) => {
 
     let imageUrl = "";
 
-    // Handle Cloudinary Upload from Buffer
+    // ✅ Handle Cloudinary Upload from Memory Buffer
     if (req.file) {
+        console.log("📸 Image detected, uploading to Cloudinary...");
+        
+        // Convert buffer to Base64 data URI
         const b64 = Buffer.from(req.file.buffer).toString("base64");
         const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
         
-        const result = await cloudinary.uploader.upload(dataURI, {
-            folder: "season0-projects",
-        });
-        imageUrl = result.secure_url;
+        try {
+            const result = await cloudinary.uploader.upload(dataURI, {
+                folder: "season0-projects", // Folder in Cloudinary
+            });
+            imageUrl = result.secure_url;
+            console.log("✅ Image Upload Success:", imageUrl);
+        } catch (uploadError) {
+            console.error("❌ Cloudinary Error:", uploadError);
+            return res.status(500).json({ message: "Image Upload Failed", error: uploadError.message });
+        }
     }
 
-    // Create Entry
+    // Create Entry in Database
+    console.log("💾 Saving to Database...");
+    
     const project = await Project.create({
       title,
       shortDescription,
@@ -52,9 +72,11 @@ export const createProject = async (req, res) => {
       user: req.user._id,
     });
 
+    console.log("🎉 Project Created Successfully!");
     res.status(201).json(project);
+
   } catch (error) {
-    console.error("Create Project Error:", error);
+    console.error("🔥 CONTROLLER CRASH:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -90,10 +112,10 @@ export const likeProject = async (req, res) => {
     try {
         const project = await Project.findById(req.params.id);
         if(project) {
-            // If logged in, use ID. If guest, use IP (or simple increment if you prefer)
+            // Use User ID if logged in, otherwise IP address for guests
             const likerId = req.user ? req.user._id.toString() : req.ip; 
             
-            // Check if already liked
+            // Toggle Like (Prevent duplicates)
             if(!project.likes.includes(likerId)){
                 project.likes.push(likerId);
                 await project.save();
@@ -128,8 +150,7 @@ export const deleteProject = async (req, res) => {
     }
 };
 
-// --- 6. RESTORED: SET PROJECT RANK ---
-// (Used by Admins to assign Season Ranks: 0, 1, 2, 3)
+// --- 6. SET PROJECT RANK (Admin Only) ---
 export const setProjectRank = async (req, res) => {
     try {
         const { rank } = req.body;
