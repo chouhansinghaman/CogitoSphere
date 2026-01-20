@@ -7,8 +7,9 @@ import {
   deleteProject, 
   setProjectRank 
 } from "../controllers/projectController.js";
-import { protect, admin } from "../middleware/authMiddleware.js";
+import { protect } from "../middleware/authMiddleware.js";
 import { uploadProjectImage } from "../middleware/uploadMiddleware.js";
+import { adminOnly } from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
@@ -34,6 +35,6 @@ router.route("/:id/like")
 // --- 4. ADMIN ROUTES ---
 // PUT /api/projects/:id/rank -> Set official rank (Admin only)
 router.route("/:id/rank")
-  .put(protect, admin, setProjectRank);
+  .put(protect, adminOnly, setProjectRank);
 
 export default router;
