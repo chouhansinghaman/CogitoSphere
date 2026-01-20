@@ -2,29 +2,66 @@ import mongoose from "mongoose";
 
 const projectSchema = mongoose.Schema(
   {
-    title: { type: String, required: true },
+    // 1. Basic Info
+    title: { 
+        type: String, 
+        required: true,
+        trim: true 
+    },
     
-    // 👇 NEW: Split Description
-    shortDescription: { type: String, required: true, maxLength: 300 }, 
-    blogContent: { type: String, required: true }, // Stores HTML from the editor
+    // ✨ NEW: A catchy one-liner for the card
+    tagline: { 
+        type: String, 
+        required: true, 
+        maxLength: 100 // Keep it punchy
+    },
+
+    // ✨ NEW: A quick summary for previews
+    shortDescription: { 
+        type: String, 
+        required: true, 
+        maxLength: 300 
+    },
+
+    // 2. Main Content
+    // This stores the HTML from your Rich Text Editor
+    blogContent: { 
+        type: String, 
+        required: true 
+    }, 
     
-    techStack: [{ type: String }],
+    // 3. Visuals
+    // Stores the Cloudinary URL (like user avatar)
+    image: { 
+        type: String, 
+        default: "" // Can be empty initially if upload fails, but we'll enforce it in controller
+    },
     
-    // 👇 CHANGED: Validation Rules
-    githubLink: { type: String }, // Optional now
-    liveDemoLink: { type: String, required: true }, // Compulsory now
+    // 4. Tech Details
+    techStack: [{ type: String }], // Array of strings like ["React", "Node"]
     
-    image: { type: String },
-    videoLink: { type: String },
+    githubLink: { type: String },
+    liveDemoLink: { type: String, required: true },
+    videoLink: { type: String }, // Optional YouTube demo
     
-    user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
+    // 5. Relationships & Social
+    user: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        required: true, 
+        ref: "User" // Links back to the Builder who posted it
+    },
     
-    likes: [{ type: String }], // Store IP addresses or simple counts if public
+    likes: [{ type: String }], // Simple array of User IDs or IPs
     
-    seasonRank: { type: Number, default: 0, enum: [0, 1, 2, 3] },
-    status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
+    // 6. Admin/System Flags
+    seasonRank: { type: Number, default: 0 }, // For your "Hall of Fame"
+    status: { 
+        type: String, 
+        enum: ["Pending", "Approved", "Rejected"], 
+        default: "Pending" 
+    },
   },
-  { timestamps: true }
+  { timestamps: true } // Auto-adds createdAt and updatedAt
 );
 
 const Project = mongoose.model("Project", projectSchema);

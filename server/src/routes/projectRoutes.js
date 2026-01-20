@@ -8,28 +8,31 @@ import {
   setProjectRank 
 } from "../controllers/projectController.js";
 import { protect, admin } from "../middleware/authMiddleware.js";
-// 👇 Import your new unified middleware
 import { uploadProjectImage } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
-// --- ROUTES ---
-
-// Root: Get All & Create New (Uses uploadProjectImage)
+// --- 1. GENERAL ROUTES ---
+// GET /api/projects   -> Fetch all projects
+// POST /api/projects  -> Create new project (Needs Login + Image Upload)
 router.route("/")
   .get(getProjects)
-  .post(protect, uploadProjectImage, createProject); 
+  .post(protect, uploadProjectImage, createProject);
 
-// Single Project Operations
+// --- 2. SPECIFIC PROJECT ROUTES ---
+// GET /api/projects/:id    -> View single project details
+// DELETE /api/projects/:id -> Delete project (Owner or Admin only)
 router.route("/:id")
   .get(getProjectById)
-  .delete(protect, deleteProject); 
+  .delete(protect, deleteProject);
 
-// Like Project
+// --- 3. INTERACTION ROUTES ---
+// PUT /api/projects/:id/like -> Like a project
 router.route("/:id/like")
-  .put(likeProject); 
+  .put(likeProject);
 
-// Admin Rank
+// --- 4. ADMIN ROUTES ---
+// PUT /api/projects/:id/rank -> Set official rank (Admin only)
 router.route("/:id/rank")
   .put(protect, admin, setProjectRank);
 
