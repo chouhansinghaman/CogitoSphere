@@ -5,34 +5,41 @@ import { useAuth } from "../../context/AuthContext";
 import {
     FiSend, FiTrash2, FiMessageSquare, FiX,
     FiArrowRight, FiEdit2, FiLogOut, FiUsers, FiTag,
-    FiCpu, FiLayers, FiLock
+    FiCpu, FiLayers, FiLock, FiSearch
 } from "react-icons/fi";
 import { IoRocketOutline, IoBulbOutline, IoTimeOutline, IoExpandOutline, IoImageOutline } from "react-icons/io5";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- 1. NEW CARD: For Submitted Projects (Links to Blog Page) ---
+// --- 1. NEW CARD: Submitted Projects (Blog Style) ---
 const SubmittedProjectCard = ({ project, user, onDelete }) => {
     const isOwner = project.user?._id === user._id;
     const isAdmin = user.role === 'admin';
+    const [imgError, setImgError] = useState(false);
 
     return (
         <div className="group relative w-full flex flex-col h-full">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
             <div className="relative bg-white border border-gray-200 rounded-[2rem] overflow-hidden flex flex-col h-full shadow-sm hover:shadow-xl transition-all duration-300">
                 
-                {/* Cover Image - Links to Project Details */}
+                {/* Cover Image */}
                 <div className="h-48 w-full bg-gray-100 relative overflow-hidden group">
-                    <Link to={`/project/${project._id}`}>
-                        {project.image ? (
-                            <img src={project.image} alt={project.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    {/* 👇 FIX: Route matches App.jsx (/projects/) */}
+                    <Link to={`/projects/${project._id}`}>
+                        {!imgError && project.image ? (
+                            <img 
+                                src={project.image} 
+                                alt={project.title} 
+                                onError={() => setImgError(true)}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                            />
                         ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gray-50">
                                 <IoImageOutline className="text-4xl" />
                             </div>
                         )}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                     </Link>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-indigo-600 shadow-sm">
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-indigo-600 shadow-sm z-10">
                         Season 0
                     </div>
                 </div>
@@ -41,10 +48,14 @@ const SubmittedProjectCard = ({ project, user, onDelete }) => {
                 <div className="p-6 flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-2">
                         <h3 className="text-xl font-black text-gray-900 leading-tight line-clamp-2 group-hover:text-indigo-600 transition-colors">
-                            <Link to={`/project/${project._id}`}>{project.title}</Link>
+                            <Link to={`/projects/${project._id}`}>{project.title}</Link>
                         </h3>
                         {(isOwner || isAdmin) && (
-                            <button onClick={(e) => { e.preventDefault(); onDelete(project._id, 'project'); }} className="text-gray-300 hover:text-red-500 transition-colors">
+                            <button 
+                                onClick={(e) => { e.preventDefault(); onDelete(project._id, 'project'); }} 
+                                className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                                title="Delete Project"
+                            >
                                 <FiTrash2 />
                             </button>
                         )}
@@ -61,7 +72,7 @@ const SubmittedProjectCard = ({ project, user, onDelete }) => {
                     {/* Footer */}
                     <div className="mt-auto flex items-center gap-2">
                         <Link 
-                            to={`/project/${project._id}`}
+                            to={`/projects/${project._id}`}
                             className="flex-1 bg-black text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all shadow-md group-hover:shadow-lg"
                         >
                             Read Story <FiArrowRight />
@@ -73,7 +84,7 @@ const SubmittedProjectCard = ({ project, user, onDelete }) => {
     );
 };
 
-// --- 2. ORIGINAL IDEA CARD: Restored Functionality (Opens Modal) ---
+// --- 2. OLD IDEA CARD (Team Formation - Disabled) ---
 const IdeaCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
     const isOwner = idea.postedBy?._id === user._id;
     const isAdmin = user.role === 'admin';
@@ -85,12 +96,10 @@ const IdeaCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
         <div className="group relative w-full h-full flex flex-col opacity-90 hover:opacity-100 transition-opacity">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-[2rem] blur opacity-20 group-hover:opacity-60 transition duration-500"></div>
             
-            {/* CLICKING THE CARD BODY OPENS THE MODAL (Original Feature) */}
             <div 
                 onClick={() => onViewDetails(idea)} 
                 className="relative bg-white border border-gray-200 rounded-[2rem] p-6 flex-1 flex flex-col shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
             >
-
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
                         <div className="flex -space-x-2">
@@ -134,12 +143,7 @@ const IdeaCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
                         <div className="px-4 py-2 rounded-xl bg-gray-100 text-gray-500 flex items-center gap-1 font-bold text-xs">
                             <FiMessageSquare /> {commentCount}
                         </div>
-
-                        {/* 🚫 DISABLED JOIN BUTTON (Original Style but Grayed Out) */}
-                        <button
-                            disabled
-                            className="flex-1 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-none bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                        >
+                        <button disabled className="flex-1 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-none bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200">
                             <FiLock /> Formation Closed
                         </button>
                     </div>
@@ -149,13 +153,14 @@ const IdeaCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
     );
 };
 
-// --- 3. MODAL (For Old Ideas - Unchanged) ---
-const IdeaDetailsModal = ({ idea, isOpen, onClose, onJoin, onLeave, userId, onAddComment }) => {
+// --- 3. MODAL (Old Ideas) ---
+const IdeaDetailsModal = ({ idea, isOpen, onClose, userId, onAddComment }) => {
     const [commentText, setCommentText] = useState("");
     const [localComments, setLocalComments] = useState(idea.comments || []);
     const chatRef = useRef(null);
 
     if (!isOpen || !idea) return null;
+
     const handleSendComment = async (e) => {
         e.preventDefault();
         if (!commentText.trim()) return;
@@ -172,7 +177,7 @@ const IdeaDetailsModal = ({ idea, isOpen, onClose, onJoin, onLeave, userId, onAd
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
                 <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 hover:rotate-90 transition-all z-10"><FiX size={24} /></button>
                 <div className="p-8 border-b border-gray-100 bg-gray-50/50">
-                    <h2 className="text-3xl font-black text-gray-900 leading-tight mb-3">{idea.title}</h2>
+                    <h2 className="text-3xl font-black text-gray-900 leading-tight mb-3 pr-8">{idea.title}</h2>
                     <div className="flex items-center gap-3">
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Posted by {idea.postedBy?.name}</span>
                         <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-yellow-200">Archived</span>
@@ -212,21 +217,21 @@ const IdeaDetailsModal = ({ idea, isOpen, onClose, onJoin, onLeave, userId, onAd
 // --- MAIN COMPONENT ---
 const Community = () => {
     const { user, token } = useAuth();
-    // ✅ Use correct Env Var to prevent 404/500 errors
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
     const [activeTab, setActiveTab] = useState("ideas");
-    const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState("");
-    const chatEndRef = useRef(null);
-
+    const [searchTerm, setSearchTerm] = useState(""); // 👈 NEW: Search State
+    
     // Data State
     const [ideas, setIdeas] = useState([]);
     const [projects, setProjects] = useState([]); 
     const [loading, setLoading] = useState(false);
-
-    // Modals
+    
+    // Modals & Chat
     const [selectedIdea, setSelectedIdea] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState("");
+    const chatEndRef = useRef(null);
 
     // --- FETCH DATA ---
     const fetchData = async () => {
@@ -241,8 +246,8 @@ const Community = () => {
             if (projectsRes.ok) setProjects(await projectsRes.json());
 
         } catch (error) { 
-            // Silent fail or toast
             console.error("Failed to load community data"); 
+            toast.error("Could not load community data.");
         } finally { 
             setLoading(false); 
         }
@@ -250,13 +255,25 @@ const Community = () => {
 
     useEffect(() => { if (activeTab === 'ideas') fetchData(); }, [activeTab]);
 
-    // Chat Logic
+    // --- FILTER LOGIC ---
+    const filteredProjects = projects.filter(p => 
+        p.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        p.techStack?.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    const filteredIdeas = ideas.filter(i => 
+        i.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        i.tags?.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    // --- CHAT LOGIC ---
     const fetchMessages = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/chat`, { headers: { Authorization: `Bearer ${token}` } });
             if (res.ok) setMessages(await res.json());
         } catch (error) { console.error(error); }
     };
+
     useEffect(() => {
         if (activeTab === 'chat') {
             fetchMessages();
@@ -264,6 +281,7 @@ const Community = () => {
             return () => clearInterval(interval);
         }
     }, [activeTab]);
+    
     useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
     const handleSendMessage = async (e) => {
@@ -286,15 +304,17 @@ const Community = () => {
     };
 
     const handleDelete = async (id, type) => {
-        if (!window.confirm("Are you sure?")) return;
+        if (!window.confirm("Are you sure you want to delete this?")) return;
         const endpoint = type === 'project' ? 'projects' : 'ideas';
         try {
             const res = await fetch(`${API_BASE_URL}/${endpoint}/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
             if (res.ok) {
-                toast.success("Deleted");
+                toast.success("Deleted successfully");
                 fetchData();
+            } else {
+                toast.error("You are not authorized to delete this.");
             }
-        } catch(e) { toast.error("Error deleting"); }
+        } catch(e) { toast.error("Error deleting item"); }
     };
 
     return (
@@ -311,47 +331,66 @@ const Community = () => {
                 </div>
             </div>
 
+            {/* SEARCH BAR (Visible only on Ideas tab) */}
+            {activeTab === 'ideas' && (
+                <div className="relative mb-8 max-w-md">
+                    <FiSearch className="absolute left-4 top-3.5 text-gray-400" size={18} />
+                    <input 
+                        type="text" 
+                        placeholder="Search projects by title or tag..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-2xl pl-12 pr-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 shadow-sm transition-all"
+                    />
+                </div>
+            )}
+
             {/* TAB: PORTAL & PROJECTS */}
             {activeTab === 'ideas' && (
                 <div className="animate-in fade-in duration-500">
                     
                     {/* 1. HERO PORTAL (Submission Info) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-16">
-                        <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-8 md:p-12 border border-gray-100 relative overflow-hidden group shadow-sm">
-                            <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity"><IoRocketOutline className="text-9xl text-gray-900" /></div>
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 border border-green-200 text-green-700 text-[10px] font-bold uppercase tracking-wider mb-6 animate-pulse">
-                                <span className="w-2 h-2 rounded-full bg-green-500"></span> Submission Portal Live
+                    {!searchTerm && (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-16">
+                            <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-8 md:p-12 border border-gray-100 relative overflow-hidden group shadow-sm">
+                                <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity"><IoRocketOutline className="text-9xl text-gray-900" /></div>
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 border border-green-200 text-green-700 text-[10px] font-bold uppercase tracking-wider mb-6 animate-pulse">
+                                    <span className="w-2 h-2 rounded-full bg-green-500"></span> Submission Portal Live
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 mb-4 leading-tight">Build. Submit. <br /><span className="text-indigo-600">Dominate.</span></h2>
+                                <p className="text-gray-500 max-w-md text-sm md:text-base leading-relaxed mb-8">
+                                    The submission window for Season 0 is officially open. Submit your project to enter the Hall of Fame.
+                                </p>
+                                <Link to="/add-project" className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg shadow-gray-200 flex items-center gap-2 w-fit">
+                                    Launch Project 🚀
+                                </Link>
                             </div>
-                            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 mb-4 leading-tight">Build. Submit. <br /><span className="text-indigo-600">Dominate.</span></h2>
-                            <p className="text-gray-500 max-w-md text-sm md:text-base leading-relaxed mb-8">
-                                The submission window for Season 0 is officially open. Submit your project to enter the Hall of Fame.
-                            </p>
-                            <Link to="/add-project" className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg shadow-gray-200 flex items-center gap-2 w-fit">
-                                Launch Project 🚀
-                            </Link>
+                            <div className="lg:col-span-1 bg-gray-100 rounded-[2.5rem] p-8 border border-gray-200 shadow-none flex flex-col justify-center relative overflow-hidden">
+                                <div className="absolute top-6 right-6"><span className="bg-red-100 text-red-500 px-2 py-1 rounded text-[10px] font-bold uppercase border border-red-200">Ended</span></div>
+                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-300 mb-4 text-2xl border border-gray-200"><IoBulbOutline /></div>
+                                <h3 className="text-2xl font-black text-gray-400 mb-2">Post an Idea</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed mb-6">The idea discussion phase has concluded. You can no longer post new ideas.</p>
+                                <button disabled className="w-full py-3 bg-white text-gray-400 font-bold rounded-xl border border-gray-200 cursor-not-allowed text-xs uppercase tracking-wide flex items-center justify-center gap-2">
+                                    <IoTimeOutline /> Closed
+                                </button>
+                            </div>
                         </div>
-                        <div className="lg:col-span-1 bg-gray-100 rounded-[2.5rem] p-8 border border-gray-200 shadow-none flex flex-col justify-center relative overflow-hidden">
-                            <div className="absolute top-6 right-6"><span className="bg-red-100 text-red-500 px-2 py-1 rounded text-[10px] font-bold uppercase border border-red-200">Ended</span></div>
-                            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-300 mb-4 text-2xl border border-gray-200"><IoBulbOutline /></div>
-                            <h3 className="text-2xl font-black text-gray-400 mb-2">Post an Idea</h3>
-                            <p className="text-gray-400 text-sm leading-relaxed mb-6">The idea discussion phase has concluded. You can no longer post new ideas.</p>
-                            <button disabled className="w-full py-3 bg-white text-gray-400 font-bold rounded-xl border border-gray-200 cursor-not-allowed text-xs uppercase tracking-wide flex items-center justify-center gap-2">
-                                <IoTimeOutline /> Closed
-                            </button>
-                        </div>
-                    </div>
+                    )}
 
                     {/* 2. SUBMITTED PROJECTS SECTION (New) */}
                     <div className="mb-6 flex items-center justify-between">
                          <h3 className="text-2xl font-black text-gray-900 flex items-center gap-2"><FiCpu /> Community Projects</h3>
-                         <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg uppercase tracking-widest">{projects.length} Submitted</span>
+                         <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg uppercase tracking-widest">{filteredProjects.length} Submitted</span>
                     </div>
 
                     {loading ? (
-                        <div className="text-center py-20 text-gray-400 text-xs font-bold uppercase tracking-widest animate-pulse">Loading...</div>
-                    ) : projects.length > 0 ? (
+                        <div className="text-center py-20 flex flex-col items-center justify-center gap-3">
+                            <div className="w-8 h-8 border-4 border-gray-200 border-t-black rounded-full animate-spin"></div>
+                            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Loading Projects...</span>
+                        </div>
+                    ) : filteredProjects.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-                            {projects.map(project => (
+                            {filteredProjects.map(project => (
                                 <SubmittedProjectCard
                                     key={project._id}
                                     project={project}
@@ -362,7 +401,7 @@ const Community = () => {
                         </div>
                     ) : (
                         <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-200 mb-20">
-                            <p className="text-gray-400 font-bold mb-2">No projects submitted yet.</p>
+                            <p className="text-gray-400 font-bold mb-2">No projects found.</p>
                             <p className="text-xs text-gray-300">Be the first to enter the Hall of Fame.</p>
                         </div>
                     )}
@@ -374,24 +413,28 @@ const Community = () => {
                         <div className="h-px bg-gray-300 flex-1"></div>
                     </div>
 
-                    {/* 3. OLD IDEAS SECTION (Original Cards, Disabled Join) */}
+                    {/* 3. OLD IDEAS SECTION */}
                     <div className="mb-6 flex items-center justify-between opacity-60">
                          <h3 className="text-xl font-bold text-gray-500 flex items-center gap-2"><FiLayers /> Team Formation Ideas</h3>
-                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{ideas.length} Archived</span>
+                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{filteredIdeas.length} Archived</span>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {ideas.map(idea => (
-                            <IdeaCard
-                                key={idea._id}
-                                idea={idea}
-                                user={user}
-                                onDelete={handleDelete}
-                                onEdit={() => toast("Editing is closed")}
-                                onViewDetails={setSelectedIdea}
-                            />
-                        ))}
-                    </div>
+                    {filteredIdeas.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredIdeas.map(idea => (
+                                <IdeaCard
+                                    key={idea._id}
+                                    idea={idea}
+                                    user={user}
+                                    onDelete={handleDelete}
+                                    onEdit={() => toast("Editing is closed")}
+                                    onViewDetails={setSelectedIdea}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-center text-gray-400 text-sm italic">No archived ideas match your search.</p>
+                    )}
 
                     {/* Modal for Old Ideas */}
                     <AnimatePresence>
