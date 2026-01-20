@@ -115,7 +115,7 @@ export default function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/add-project" element={<AddProject />} />
               <Route path="/u/:id" element={<PublicProfile />} />
-              <Route path="/project/:id" element={<ProjectDetails />} />
+              <Route path="/projects/:id" element={<ProjectDetails />} />
 
               {/* Admin only */}
               <Route element={<AdminRoute />}>

@@ -27,7 +27,6 @@ const ProjectDetails = () => {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        // 👇👇👇 FIX IS HERE: Change '/project/' to '/projects/' (Plural)
         const res = await fetch(`${API_BASE_URL}/projects/${id}`);
         
         if (!res.ok) {

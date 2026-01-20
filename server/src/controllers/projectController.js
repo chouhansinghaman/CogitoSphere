@@ -130,23 +130,39 @@ export const likeProject = async (req, res) => {
 };
 
 // --- 5. DELETE PROJECT ---
+// backend/controllers/projectController.js
+
 export const deleteProject = async (req, res) => {
     try {
+        console.log(`🗑️ ATTEMPTING DELETE: ${req.params.id}`);
+        console.log(`👤 User requesting: ${req.user._id}, Role: ${req.user.role}`);
+
+        // 1. Try to find the project
         const project = await Project.findById(req.params.id);
         
-        if (project) {
-            // Check ownership or admin status
-            if (project.user.toString() === req.user._id.toString() || req.user.role === 'admin') {
-                await project.deleteOne();
-                res.json({ message: "Project removed" });
-            } else {
-                res.status(401).json({ message: "Not authorized" });
-            }
-        } else {
-            res.status(404).json({ message: "Project not found" });
+        // 2. If it doesn't exist, tell us LOUDLY
+        if (!project) {
+            console.log("❌ DELETE FAILED: Project ID not found in Database.");
+            return res.status(404).json({ message: "Project ID not found in DB" });
         }
+
+        console.log(`✅ Project Found: ${project.title}`);
+        console.log(`👑 Owner: ${project.user}, Requestor: ${req.user._id}`);
+
+        // 3. Check Permissions (Admin OR Owner)
+        // We use .toString() to ensure we compare strings, not objects
+        if (project.user.toString() === req.user._id.toString() || req.user.role === 'admin') {
+            await project.deleteOne();
+            console.log("🗑️ DELETE SUCCESSFUL");
+            res.json({ message: "Project removed" });
+        } else {
+            console.log("⛔ DELETE BLOCKED: Not authorized");
+            res.status(401).json({ message: "Not authorized" });
+        }
+
     } catch (error) {
-        res.status(500).json({ message: "Server Error" });
+        console.error("🔥 DELETE CONTROLLER CRASH:", error);
+        res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
 

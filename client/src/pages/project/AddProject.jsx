@@ -11,7 +11,6 @@ import {
   IoImageOutline,
   IoRocketOutline,
   IoEyeOutline,
-  IoCodeSlash,
   IoClose,
   IoPersonCircleOutline,
   IoCalendarOutline
@@ -22,7 +21,7 @@ const AddProject = () => {
   const navigate = useNavigate();
   const { token, user } = useAuth();
   
-  // 👇 CRITICAL FIX: Use the Environment Variable for the URL
+  // ✅ FIX: Use the Environment Variable for the URL
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api"; 
   
   // State
@@ -78,7 +77,7 @@ const AddProject = () => {
 
       console.log(`🚀 Sending to: ${API_BASE_URL}/projects`);
 
-      // 👇 FIX: Use the full dynamic URL
+      // ✅ FIX: Use the full dynamic URL & Plural Route
       const res = await fetch(`${API_BASE_URL}/projects`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
