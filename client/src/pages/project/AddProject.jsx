@@ -22,6 +22,9 @@ const AddProject = () => {
   const navigate = useNavigate();
   const { token, user } = useAuth();
   
+  // 👇 CRITICAL FIX: Use the Environment Variable for the URL
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api"; 
+  
   // State
   const [formData, setFormData] = useState({
     title: "",
@@ -73,14 +76,24 @@ const AddProject = () => {
       data.append("videoLink", formData.videoLink);
       if (imageFile) data.append("image", imageFile);
 
-      // ✅ Fetch using the Proxy URL (No http://localhost:5000 needed due to vite.config.js)
-      const res = await fetch("/api/projects", {
+      console.log(`🚀 Sending to: ${API_BASE_URL}/projects`);
+
+      // 👇 FIX: Use the full dynamic URL
+      const res = await fetch(`${API_BASE_URL}/projects`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: data,
       });
 
-      const responseData = await res.json();
+      // Handle Non-JSON responses (like 404 HTML pages) gracefully
+      const textResponse = await res.text();
+      let responseData;
+      try {
+        responseData = JSON.parse(textResponse);
+      } catch (err) {
+        console.error("Server returned non-JSON:", textResponse);
+        throw new Error(`Server Error: ${res.status}`);
+      }
       
       if (res.ok) {
         toast.success("✨ Project Launched Successfully!");
@@ -90,7 +103,7 @@ const AddProject = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Network error. Please try again.");
+      toast.error(err.message || "Network error. Please try again.");
     } finally {
       setLoading(false);
     }
