@@ -12,6 +12,7 @@ import {
   updateUserProfile,
   getPublicUserProfile,
   deleteUserByAdmin,
+  searchUsers,
 } from "../controllers/userController.js";
 
 import { adminOnly } from "../middleware/adminMiddleware.js";
@@ -33,6 +34,7 @@ router.put("/update-password", protect, updatePassword);
 // --- Feature Routes ---
 router.put("/avatar", protect, uploadSingleImage, updateUserAvatar);
 router.post("/check-in", protect, handleCheckIn);
+router.get("/search", protect, searchUsers);
 
 // --- Admin Routes ---
 router.post("/make-admin", protect, makeUserAdmin);

@@ -60,6 +60,14 @@ const projectSchema = mongoose.Schema(
         enum: ["Pending", "Approved", "Rejected"], 
         default: "Pending" 
     },
+
+    //7. Tagging all team members
+    teamMembers: [
+        { 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: "User" 
+        }
+    ],
   },
   { timestamps: true } // Auto-adds createdAt and updatedAt
 );

@@ -276,3 +276,27 @@ export const deleteUserByAdmin = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
+// --- SEARCH USERS (For Team Tagging) ---
+export const searchUsers = async (req, res) => {
+  try {
+    const keyword = req.query.search
+      ? {
+          $or: [
+            { name: { $regex: req.query.search, $options: "i" } }, // Case-insensitive name match
+            { email: { $regex: req.query.search, $options: "i" } }, // Case-insensitive email match
+          ],
+        }
+      : {};
+
+    // Find users matching keyword, but exclude the person searching (req.user._id)
+    // We only need their ID, Name, and Avatar to display in the UI
+    const users = await User.find(keyword)
+      .find({ _id: { $ne: req.user._id } }) 
+      .select("name avatar email");
+
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};

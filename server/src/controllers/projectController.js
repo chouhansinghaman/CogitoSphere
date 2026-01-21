@@ -8,21 +8,34 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// --- 1. CREATE PROJECT ---
+// --- 1. UPDATE: CREATE PROJECT ---
 export const createProject = async (req, res) => {
   try {
     console.log("🚀 CONTROLLER: Starting Create Project");
-    const { title, tagline, shortDescription, blogContent, techStack, githubLink, liveDemoLink, videoLink } = req.body;
+    
+    // 👇 Destructure teamMembers from body
+    const { title, tagline, shortDescription, blogContent, techStack, githubLink, liveDemoLink, videoLink, teamMembers } = req.body;
 
     let imageUrl = "";
-
-    // Image Upload Logic
     if (req.file) {
-        console.log("📸 CONTROLLER: Image file detected. Uploading...");
+        // ... (Keep existing Cloudinary logic) ...
         const b64 = Buffer.from(req.file.buffer).toString("base64");
         const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
         const result = await cloudinary.uploader.upload(dataURI, { folder: "season0-projects" });
         imageUrl = result.secure_url;
+    }
+
+    // 🚨 PARSE TEAM MEMBERS
+    // Since we are using FormData (multipart/form-data), arrays usually come as JSON strings.
+    // We need to parse it back into a JavaScript Array.
+    let membersArray = [];
+    if (teamMembers) {
+        try {
+            membersArray = JSON.parse(teamMembers);
+        } catch (e) {
+            console.error("Error parsing teamMembers:", e);
+            membersArray = []; // Fallback to empty if invalid
+        }
     }
 
     const newProject = new Project({
@@ -36,14 +49,15 @@ export const createProject = async (req, res) => {
       videoLink,
       image: imageUrl,
       user: req.user._id,
+      teamMembers: membersArray // 👈 SAVE THE TEAM
     });
 
     const savedProject = await newProject.save();
     
-    // Populate user details immediately so the frontend can display it
+    // Populate User AND Team Members for the response
     await savedProject.populate("user", "name avatar");
+    await savedProject.populate("teamMembers", "name avatar"); // 👈 POPULATE TEAM
 
-    console.log("✅ CONTROLLER: Project Created:", savedProject._id);
     res.status(201).json(savedProject);
 
   } catch (error) {
@@ -52,22 +66,26 @@ export const createProject = async (req, res) => {
   }
 };
 
-// --- 2. GET ALL PROJECTS ---
+// --- 2. UPDATE: GET ALL PROJECTS ---
 export const getProjects = async (req, res) => {
     try {
         const projects = await Project.find({})
-            .populate("user", "name avatar") // Fill in the author details
-            .sort({ createdAt: -1 }); // Newest first
+            .populate("user", "name avatar") 
+            .populate("teamMembers", "name avatar")
+            .sort({ createdAt: -1 });
         res.json(projects);
     } catch (error) {
         res.status(500).json({ message: "Server Error" });
     }
 };
 
-// --- 3. GET SINGLE PROJECT ---
+// --- 3. UPDATE: GET PROJECT BY ID ---
 export const getProjectById = async (req, res) => {
     try {
-        const project = await Project.findById(req.params.id).populate("user", "name avatar");
+        const project = await Project.findById(req.params.id)
+            .populate("user", "name avatar")
+            .populate("teamMembers", "name avatar");
+            
         if(project) {
             res.json(project);
         } else {
@@ -143,3 +161,4 @@ export const setProjectRank = async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 };
+
