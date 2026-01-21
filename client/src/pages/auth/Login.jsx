@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import { loginApi } from "../../services/api.auth.js"; 
-import Loader from "../../components/Loader";
+import GridGlitchGame from "../../components/GridGlitchGame";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 
 // Icons
@@ -20,7 +20,7 @@ export default function Login() {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   // ✅ Reduced wait time to 500ms
-  const shouldDisplayLoader = useMinimumLoadingTime(
+  const shouldDisplayGridGlitchGame = useMinimumLoadingTime(
     isApiLoading || isTransitioning,
     500
   );
@@ -70,7 +70,7 @@ export default function Login() {
     setTimeout(() => navigate("/register"), 500);
   };
 
-  if (shouldDisplayLoader) return <Loader />;
+  if (shouldDisplayGridGlitchGame) return <GridGlitchGame />;
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 font-sans bg-[#FDF6E3] text-gray-900 selection:bg-indigo-500/30">

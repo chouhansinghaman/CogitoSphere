@@ -166,7 +166,7 @@ export const updateUserAvatar = async (req, res) => {
     const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
 
     // Upload
-    const result = await cloudinary.uploader.upload(dataURI, {
+    const result = await cloudinary.upGridGlitchGame.upload(dataURI, {
       folder: "CogitoSphere_avatars",
     });
 

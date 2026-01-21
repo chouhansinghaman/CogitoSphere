@@ -17,7 +17,7 @@ const useWindowSize = () => {
   return windowSize;
 };
 
-// --- LOADER COMPONENT ---
+// --- GridGlitchGame COMPONENT ---
 const CalculatingGridGlitchGame = () => (
   <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center text-white">
     <div className="relative">

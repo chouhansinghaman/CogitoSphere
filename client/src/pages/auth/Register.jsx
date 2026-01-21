@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
-import Loader from "../../components/Loader";
+import GridGlitchGame from "../../components/GridGlitchGame";
 import { useMinimumLoadingTime } from "../../hooks/useMinimumLoadingTime";
 import { registerApi, loginApi } from "../../services/api.auth.js";
 
@@ -31,7 +31,7 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // ✅ Reduced wait time to 500ms
-  const shouldDisplayLoader = useMinimumLoadingTime(
+  const shouldDisplayGridGlitchGame = useMinimumLoadingTime(
     isApiLoading || isTransitioning,
     500
   );
@@ -82,7 +82,7 @@ export default function Register() {
   };
 
   if (user) return null; 
-  if (shouldDisplayLoader) return <Loader />;
+  if (shouldDisplayGridGlitchGame) return <GridGlitchGame />;
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 font-sans bg-[#FDF6E3] text-gray-900 selection:bg-indigo-500/30">

@@ -10,7 +10,7 @@ import {
 import { IoRocketOutline, IoBulbOutline, IoTimeOutline, IoExpandOutline, IoImageOutline } from "react-icons/io5";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- 1. NEW CARD: Submitted Projects (Blog Style) ---
+// --- 1. NEW CARD: Submitted Projects (Now with Tagline!) ---
 const SubmittedProjectCard = ({ project, user, onDelete }) => {
     const isOwner = project.user?._id === user._id;
     const isAdmin = user.role === 'admin';
@@ -23,7 +23,6 @@ const SubmittedProjectCard = ({ project, user, onDelete }) => {
                 
                 {/* Cover Image */}
                 <div className="h-48 w-full bg-gray-100 relative overflow-hidden group">
-                    {/* 👇 FIX: Route matches App.jsx (/projects/) */}
                     <Link to={`/projects/${project._id}`}>
                         {!imgError && project.image ? (
                             <img 
@@ -46,7 +45,7 @@ const SubmittedProjectCard = ({ project, user, onDelete }) => {
 
                 {/* Content */}
                 <div className="p-6 flex-1 flex flex-col">
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="flex justify-between items-start mb-1">
                         <h3 className="text-xl font-black text-gray-900 leading-tight line-clamp-2 group-hover:text-indigo-600 transition-colors">
                             <Link to={`/projects/${project._id}`}>{project.title}</Link>
                         </h3>
@@ -60,6 +59,13 @@ const SubmittedProjectCard = ({ project, user, onDelete }) => {
                             </button>
                         )}
                     </div>
+
+                    {/* ✨ NEW: Display the Tagline here */}
+                    {project.tagline && (
+                        <p className="text-xs font-bold text-indigo-500 mb-3 line-clamp-1">
+                            {project.tagline}
+                        </p>
+                    )}
 
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
                         by <span className="text-gray-700">{project.user?.name || "Builder"}</span>
@@ -84,7 +90,7 @@ const SubmittedProjectCard = ({ project, user, onDelete }) => {
     );
 };
 
-// --- 2. OLD IDEA CARD (Team Formation - Disabled) ---
+// --- 2. OLD IDEA CARD (Legacy) ---
 const IdeaCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
     const isOwner = idea.postedBy?._id === user._id;
     const isAdmin = user.role === 'admin';
@@ -153,7 +159,7 @@ const IdeaCard = ({ idea, onViewDetails, onEdit, onDelete, user }) => {
     );
 };
 
-// --- 3. MODAL (Old Ideas) ---
+// --- 3. MODAL (Legacy Ideas) ---
 const IdeaDetailsModal = ({ idea, isOpen, onClose, userId, onAddComment }) => {
     const [commentText, setCommentText] = useState("");
     const [localComments, setLocalComments] = useState(idea.comments || []);
@@ -220,7 +226,7 @@ const Community = () => {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
     const [activeTab, setActiveTab] = useState("ideas");
-    const [searchTerm, setSearchTerm] = useState(""); // 👈 NEW: Search State
+    const [searchTerm, setSearchTerm] = useState("");
     
     // Data State
     const [ideas, setIdeas] = useState([]);
@@ -331,7 +337,7 @@ const Community = () => {
                 </div>
             </div>
 
-            {/* SEARCH BAR (Visible only on Ideas tab) */}
+            {/* SEARCH BAR */}
             {activeTab === 'ideas' && (
                 <div className="relative mb-8 max-w-md">
                     <FiSearch className="absolute left-4 top-3.5 text-gray-400" size={18} />
@@ -377,7 +383,7 @@ const Community = () => {
                         </div>
                     )}
 
-                    {/* 2. SUBMITTED PROJECTS SECTION (New) */}
+                    {/* 2. SUBMITTED PROJECTS SECTION */}
                     <div className="mb-6 flex items-center justify-between">
                          <h3 className="text-2xl font-black text-gray-900 flex items-center gap-2"><FiCpu /> Community Projects</h3>
                          <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg uppercase tracking-widest">{filteredProjects.length} Submitted</span>

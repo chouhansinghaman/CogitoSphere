@@ -21,7 +21,7 @@ export const createProject = async (req, res) => {
         // ... (Keep existing Cloudinary logic) ...
         const b64 = Buffer.from(req.file.buffer).toString("base64");
         const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-        const result = await cloudinary.uploader.upload(dataURI, { folder: "season0-projects" });
+        const result = await cloudinary.upGridGlitchGame.upload(dataURI, { folder: "season0-projects" });
         imageUrl = result.secure_url;
     }
 

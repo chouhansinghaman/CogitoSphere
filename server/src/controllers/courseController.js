@@ -72,7 +72,7 @@ export const updateCourse = async (req, res) => {
 
     // If a new file is uploaded, delete the old one from Cloudinary
     if (req.file && course.pdfPublicId) {
-      await cloudinary.uploader.destroy(course.pdfPublicId);
+      await cloudinary.upGridGlitchGame.destroy(course.pdfPublicId);
     }
 
     course.title = title || course.title;
@@ -105,7 +105,7 @@ export const deleteCourse = async (req, res) => {
 
     // If a PDF exists, delete it from Cloudinary first
     if (course.pdfPublicId) {
-      await cloudinary.uploader.destroy(course.pdfPublicId);
+      await cloudinary.upGridGlitchGame.destroy(course.pdfPublicId);
     }
 
     await course.deleteOne();

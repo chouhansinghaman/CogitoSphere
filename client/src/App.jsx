@@ -22,6 +22,8 @@ import Quizzes from "./pages/quizzes/Quizzes.jsx";
 import TakeQuiz from "./pages/quizzes/TakeQuiz.jsx";
 import Leaderboard from "./pages/leaderboard/Leaderboard.jsx";
 import PublicProfile from "./pages/public/PublicProfile.jsx";
+
+// 👇 NEW: Project Pages
 import AddProject from "./pages/project/AddProject.jsx";
 import ProjectDetails from "./pages/project/ProjectDetails.jsx";
 
@@ -47,10 +49,6 @@ export default function App() {
   useEffect(() => {
     const checkServer = async () => {
       try {
-        // 🚀 REAL: Replace with your actual simple GET endpoint (e.g. /api/health)
-        // const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/health`);
-        // if (res.ok) setIsServerAwake(true);
-        
         // 🕹️ SIMULATION: Fakes a 4-second boot up time
         setTimeout(() => {
           setIsServerAwake(true);
@@ -110,12 +108,15 @@ export default function App() {
               <Route path="/courses/:slug" element={<CourseDetail />} />
               <Route path="/quizzes" element={<Quizzes />} />
               <Route path="/community" element={<Community />} />
+              
+              {/* 👇 NEW: Project Routes (Plural matches your Backend) */}
+              <Route path="/add-project" element={<AddProject />} />
+              <Route path="/projects/:id" element={<ProjectDetails />} />
+
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/add-project" element={<AddProject />} />
               <Route path="/u/:id" element={<PublicProfile />} />
-              <Route path="/projects/:id" element={<ProjectDetails />} />
 
               {/* Admin only */}
               <Route element={<AdminRoute />}>
